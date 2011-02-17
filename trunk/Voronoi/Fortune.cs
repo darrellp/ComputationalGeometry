@@ -9,9 +9,6 @@ using TPT = System.Single;
 
 using System.Collections.Generic;
 using System.Collections;
-using System.Drawing;
-using System.IO;
-using System.Text;
 using System;
 using NUnit.Framework;
 using NetTrace;
@@ -58,7 +55,7 @@ namespace DAP.CompGeom
 		Beachline _bchl = new Beachline();						// The beachline which is the primary data structure
 																// kept as we sweep downward throught the points
 		EventQueue _qevEvents = new EventQueue();				// Priority queue for events which occur during the sweep
-		List<FortunePoly> _lstPolys = new List<FortunePoly>();	// The list of Polygons which are the output of the algorithm
+		readonly List<FortunePoly> _lstPolys = new List<FortunePoly>();	// The list of Polygons which are the output of the algorithm
 		#endregion
 
 		#region Constructor
@@ -86,7 +83,7 @@ namespace DAP.CompGeom
 				_lstPolys.Count, pt.X, pt.Y);
 
 			// The count is being passed in only as a unique identifier for this point.
-			FortunePoly poly = new FortunePoly(pt, _lstPolys.Count);
+			var poly = new FortunePoly(pt, _lstPolys.Count);
 			_lstPolys.Add(poly);
 			return poly;
 		}
@@ -164,12 +161,12 @@ namespace DAP.CompGeom
 		/// <returns>The winged edge structure for the diagram</returns>
 		public WingedEdge BuildWingedEdge()
 		{
-			/// The first infinite polygon we locate and the index for the infinite
-			/// edge ccw to that polygon
+			// The first infinite polygon we locate and the index for the infinite
+			// edge ccw to that polygon
 			FortunePoly polyInfinityStart = null;
 			int iLeadingInfiniteEdgeCw = -1;
 
-			WingedEdge we = new WingedEdge();
+			var we = new WingedEdge();
 
 			foreach (FortunePoly poly in _lstPolys)
 			{
@@ -181,9 +178,9 @@ namespace DAP.CompGeom
 
 				for (int iEdge = 0; iEdge < poly.VertexCount; iEdge++)
 				{
-					FortuneEdge edge = poly.EdgesCW[iEdge] as FortuneEdge;
+					var edge = poly.EdgesCW[iEdge] as FortuneEdge;
 					int iEdgeNext = (iEdge + 1) % poly.VertexCount;
-					FortuneEdge edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
+					var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
 
 					Tracer.Trace(tv.FinalEdges, edge.ToString());
 
@@ -228,9 +225,9 @@ namespace DAP.CompGeom
 				{
 					for (int iEdge = 0; iEdge < polyInfinityStart.VertexCount; iEdge++)
 					{
-						FortuneEdge edge = polyInfinityStart.EdgesCW[iEdge] as FortuneEdge;
+						var edge = polyInfinityStart.EdgesCW[iEdge] as FortuneEdge;
 						int iEdgeNext = (iEdge + 1) % polyInfinityStart.VertexCount;
-						FortuneEdge edgeNextCW = polyInfinityStart.EdgesCW[iEdgeNext] as FortuneEdge;
+						var edgeNextCW = polyInfinityStart.EdgesCW[iEdgeNext] as FortuneEdge;
 						if (edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
 						{
 							iLeadingInfiniteEdgeCw = iEdgeNext;
@@ -262,27 +259,27 @@ namespace DAP.CompGeom
 		/// <param name="we">WingedEdge structure we'll add the polygon at infinity to</param>
 		/// <param name="polyStart">Infinite polygon to start it's polygon list with</param>
 		/// <param name="iLeadingEdgeCw">Starting infinite edge</param>
-		private void AddEdgesAtInfinity(WingedEdge we, FortunePoly polyStart, int iLeadingEdgeCw)
+		private static void AddEdgesAtInfinity(WingedEdge we, FortunePoly polyStart, int iLeadingEdgeCw)
 		{
 			if (polyStart == null)
 			{
 				return;
 			}
 
-			FortunePoly polyCur = polyStart;
-			FortunePoly polyNext;
+			var polyCur = polyStart;
 			int iLeadingEdgeNext;
 			// The infamous polygon at infinity...
-			FortunePoly polyAtInfinity = new FortunePoly(new PT(0, 0), -1);
+			var polyAtInfinity = new FortunePoly(new PT(0, 0), -1);
 			FortuneEdge edgePreviousAtInfinity = null;
 
 			polyAtInfinity.FAtInfinity = true;
 			we.AddPoly(polyAtInfinity);
   
-			/// Loop through the "outer" infinite polygons of the diagram, setting each of them up
-			/// with an edge at infinity to separate them from the polygon at infinity
+			// Loop through the "outer" infinite polygons of the diagram, setting each of them up
+			// with an edge at infinity to separate them from the polygon at infinity
 			do
 			{
+				FortunePoly polyNext;
 				edgePreviousAtInfinity = AddEdgeAtInfinity(
 					polyAtInfinity,
 					polyCur,
@@ -295,10 +292,10 @@ namespace DAP.CompGeom
 				iLeadingEdgeCw = iLeadingEdgeNext;
 			} while (polyCur != polyStart);
 
-			/// Thread the last poly back to the first
-			WeEdge EdgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
-			edgePreviousAtInfinity.EdgeCCWPredecessor = EdgeFirstAtInfinity;
-			EdgeFirstAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
+			// Thread the last poly back to the first
+			WeEdge edgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
+			edgePreviousAtInfinity.EdgeCCWPredecessor = edgeFirstAtInfinity;
+			edgeFirstAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
 		}
 
 		/// <summary>
@@ -312,7 +309,7 @@ namespace DAP.CompGeom
 		/// <param name="polyNextCcw">Returns the next infinite polygon to be processed</param>
 		/// <param name="iLeadingEdgeNext">Returns the next infinite edge</param>
 		/// <returns></returns>
-		private FortuneEdge AddEdgeAtInfinity(
+		private static FortuneEdge AddEdgeAtInfinity(
 			FortunePoly polyAtInfinity,
 			FortunePoly poly,
 			int iLeadingEdgeCw,
@@ -322,8 +319,8 @@ namespace DAP.CompGeom
 		{
 			int iTrailingEdgeCw = (iLeadingEdgeCw + 1) % poly.VertexCount;
 
-			FortuneEdge edgeLeadingCw = poly.EdgesCW[iLeadingEdgeCw] as FortuneEdge;
-			FortuneEdge edgeTrailingCw = poly.EdgesCW[iTrailingEdgeCw] as FortuneEdge;
+			var edgeLeadingCw = poly.EdgesCW[iLeadingEdgeCw] as FortuneEdge;
+			var edgeTrailingCw = poly.EdgesCW[iTrailingEdgeCw] as FortuneEdge;
 
 			// Next polygon in order is to the left of our leading edge
 			polyNextCcw = edgeLeadingCw.PolyLeft as FortunePoly;
@@ -337,13 +334,15 @@ namespace DAP.CompGeom
 			// "position" of the edge at infinity, but allows us to maintain a properly
 			// set up winged edge structure.
 
-			FortuneEdge edgeAtInfinity = new FortuneEdge();
+			var edgeAtInfinity = new FortuneEdge
+			                     	{
+			                     		PolyRight = poly,
+			                     		PolyLeft = polyAtInfinity,
+			                     		VtxStart = edgeLeadingCw.VtxEnd,
+			                     		VtxEnd = edgeTrailingCw.VtxEnd
+			                     	};
 			// The poly at infinity is to the left of the edge, the infinite poly is to its right
-			edgeAtInfinity.PolyRight = poly;
-			edgeAtInfinity.PolyLeft = polyAtInfinity;
 			// Start and end vertices are the trailing and leading infinite edges
-			edgeAtInfinity.VtxStart = edgeLeadingCw.VtxEnd;
-			edgeAtInfinity.VtxEnd = edgeTrailingCw.VtxEnd;
 			// Add the edge at infinity to the poly at infinity and the current infinite poly
 			polyAtInfinity.AddEdge(edgeAtInfinity);
 			poly.EdgesCW.Insert(iTrailingEdgeCw, edgeAtInfinity);
@@ -378,25 +377,25 @@ namespace DAP.CompGeom
 		/// Insert the edge at infinity into the edge list for the vertices at infinty
 		/// </summary>
 		/// <param name="edge">Edge at infinity being added</param>
-		/// <param name="LeadingVtxCw">Vertex on the left of infinite poly as we look out</param>
-		/// <param name="TrailingVtxCw">Vertex on the right</param>
-		private void AddEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex LeadingVtxCw, FortuneVertex TrailingVtxCw)
+		/// <param name="leadingVtxCw">Vertex on the left of infinite poly as we look out</param>
+		/// <param name="trailingVtxCw">Vertex on the right</param>
+		private static void AddEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex leadingVtxCw, FortuneVertex trailingVtxCw)
 		{
-			if (LeadingVtxCw.Edges.Count == 1)
+			if (leadingVtxCw.Edges.Count == 1)
 			{
 				// This will be overwritten later but we have to insert here so that we can insert ourselves at
 				// index 2...
-				LeadingVtxCw.Edges.Add(edge);
+				leadingVtxCw.Edges.Add(edge);
 			}
-			LeadingVtxCw.Edges.Add(edge);
-			if (TrailingVtxCw.Edges.Count == 3)
+			leadingVtxCw.Edges.Add(edge);
+			if (trailingVtxCw.Edges.Count == 3)
 			{
 				// Here is where the overwriting referred to above occurs
-				TrailingVtxCw.Edges[1] = edge;
+				trailingVtxCw.Edges[1] = edge;
 			}
 			else
 			{
-				TrailingVtxCw.Edges.Add(edge);
+				trailingVtxCw.Edges.Add(edge);
 			}
 		}
 		#endregion
@@ -433,8 +432,8 @@ namespace DAP.CompGeom
 					}
 					else if (tpCur == typeof(CircleEvent))
 					{
-						CircleEvent cevt = evt as CircleEvent;
-						CircleEvent cevtPrev = evtPrev as CircleEvent;
+						var cevt = evt as CircleEvent;
+						var cevtPrev = evtPrev as CircleEvent;
 
 						// Identically placed circle events still have to be processed but we handle the
 						// case specially.  The implication of identically placed circle events is that
@@ -480,7 +479,7 @@ namespace DAP.CompGeom
 				// the null vertices with the proper infinite vertices.
 				foreach (WeEdge wedge in poly.EdgesCW)
 				{
-					FortuneEdge edge = wedge as FortuneEdge;
+					var edge = wedge as FortuneEdge;
 
 					Tracer.Assert(t.Assertion, edge != null, "Non-FortuneEdge in FortunePoly list");
 					if (edge.VtxStart == null || edge.VtxEnd == null)
@@ -493,21 +492,18 @@ namespace DAP.CompGeom
 							// true infinite lines in our winged edge data structure, so we turn the infinite lines into
 							// two rays pointing in opposite directions and originating at the midpoint of the two generators.
 
-							PT pt1 = edge.Poly1.Pt;
-							PT pt2 = edge.Poly2.Pt;
-							TPT dx = pt2.X - pt1.X;
-							TPT dy = pt2.Y - pt1.Y;
-							PT ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
-							FortuneVertex vtx1, vtx2;
+							var pt1 = edge.Poly1.Pt;
+							var pt2 = edge.Poly2.Pt;
+							var dx = pt2.X - pt1.X;
+							var dy = pt2.Y - pt1.Y;
+							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
-							vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
-							vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
+							FortuneVertex vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
+							FortuneVertex vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
 
 							edge.VtxStart = new FortuneVertex(ptMid);
 							edge.VtxEnd = vtx1;
-							FortuneEdge edgeNew = new FortuneEdge();
-							edgeNew.VtxStart = edge.VtxStart;
-							edgeNew.VtxEnd = vtx2;
+							var edgeNew = new FortuneEdge {VtxStart = edge.VtxStart, VtxEnd = vtx2};
 							edgeNew.SetPolys(edge.Poly1, edge.Poly2);
 							edge.Poly1.AddEdge(edgeNew);
 							edge.Poly2.AddEdge(edgeNew);
@@ -549,19 +545,19 @@ namespace DAP.CompGeom
 
 							// Replace the null vertex with an infinite vertex
 
-							PT pt1 = edge.Poly1.Pt;
-							PT pt2 = edge.Poly2.Pt;
-							PT ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
+							var pt1 = edge.Poly1.Pt;
+							var pt2 = edge.Poly2.Pt;
+							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
 							// We have to be careful to get this ray pointed in the proper orientation.  We find
 							// the third polygon at the "base" of this ray and point the ray "away" from it.
-							FortunePoly polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
-							bool fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.Pt);
-							TPT dx = pt2.X - pt1.X;
-							TPT dy = pt2.Y - pt1.Y;
-							PT ptProposedDirection = new PT(dy, -dx);
-							PT ptInProposedDirection = new PT(ptMid.X + dy, ptMid.Y - dx);
-							bool fProposedOnLeft = Geometry.FLeft(pt1, pt2, ptInProposedDirection);
+							var polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
+							var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.Pt);
+							var dx = pt2.X - pt1.X;
+							var dy = pt2.Y - pt1.Y;
+							var ptProposedDirection = new PT(dy, -dx);
+							var ptInProposedDirection = new PT(ptMid.X + dy, ptMid.Y - dx);
+							var fProposedOnLeft = Geometry.FLeft(pt1, pt2, ptInProposedDirection);
 
 							if (fProposedOnLeft == fThirdOnLeft)
 							{
@@ -582,9 +578,9 @@ namespace DAP.CompGeom
 		[TestFixture]
 		public class TestVoronoi
 		{
-			Fortune Example()
+			static Fortune Example()
 			{
-				PT[] pts = new PT[] {
+				var pts = new[] {
 					new PT(0, 0),
 					new PT(1, 1),
 					new PT(1, -1)
@@ -611,7 +607,8 @@ namespace DAP.CompGeom
 	internal class EventQueue : PQWithDeletions<FortuneEvent>
 	{
 		#region Private Variables
-		List<CircleEvent> _lstcevt = new List<CircleEvent>();		// List of circle events so we can keep track of them
+
+		readonly List<CircleEvent> _lstcevt = new List<CircleEvent>();		// List of circle events so we can keep track of them
 		#endregion
 
 		#region Circle event special handling
@@ -634,21 +631,17 @@ namespace DAP.CompGeom
 	public class FortuneEdge : WeEdge
 	{
 		#region Private Variables
-		bool _fSplit = false;							// True if this is really half of an infinite split edge
-		bool _fStartVertexSet = false;					// True if the first vertex has already been set on this edge
-		bool _fAddedToWingedEdge = false;				// True if we've already been added to a winged edge data structure
-		FortunePoly[] _arPoly = new FortunePoly[2];		// The polygons on each side of us
+
+		bool _fStartVertexSet;					// True if the first vertex has already been set on this edge
+		bool _fAddedToWingedEdge;				// True if we've already been added to a winged edge data structure
+		readonly FortunePoly[] _arPoly = new FortunePoly[2];		// The polygons on each side of us
 		#endregion
 
 		#region Properties
 		internal FortunePoly Poly1 { get { return _arPoly[0]; } }
 		internal FortunePoly Poly2 { get { return _arPoly[1]; } }
 
-		public bool FSplit
-		{
-			get { return _fSplit; }
-			set { _fSplit = value; }
-		}
+		public bool FSplit { get; set; }
 
 		public bool FAtInfinity
 		{
@@ -671,18 +664,15 @@ namespace DAP.CompGeom
 				{
 					return Geometry.MidPoint(VtxStart.Pt, VtxEnd.Pt);
 				}
-				else if (!VtxStart.FAtInfinity)
+				if (!VtxStart.FAtInfinity)
 				{
 					return new PT(
 						VtxStart.Pt.X + VtxEnd.Pt.X,
 						VtxStart.Pt.Y + VtxEnd.Pt.Y);
 				}
-				else
-				{
-					return Geometry.MidPoint(
-						EdgeCCWSuccessor.VtxStart.Pt,
-						EdgeCWPredecessor.VtxStart.Pt);
-				}
+				return Geometry.MidPoint(
+					EdgeCCWSuccessor.VtxStart.Pt,
+					EdgeCWPredecessor.VtxStart.Pt);
 			}
 		}
 		#endregion
@@ -711,7 +701,7 @@ namespace DAP.CompGeom
 		/// <returns>Index in the vertice's edge list of this edge</returns>
 		internal int EdgeIndex(bool fStartVertex)
 		{
-			FortuneVertex vtx = (FortuneVertex)(fStartVertex ? VtxStart : VtxEnd);
+			var vtx = (FortuneVertex)(fStartVertex ? VtxStart : VtxEnd);
 
 			for (int iEdge = 0; iEdge < vtx.Edges.Count; iEdge++)
 			{
@@ -748,25 +738,25 @@ namespace DAP.CompGeom
 			fEdge1ConnectsAtStartVtx = false;
 			fEdge2ConnectsAtStartVtx = false;
 
-			if (Object.ReferenceEquals(edge1.VtxStart, edge2.VtxStart))
+			if (ReferenceEquals(edge1.VtxStart, edge2.VtxStart))
 			{
 				fEdge1ConnectsAtStartVtx = true;
 				fEdge2ConnectsAtStartVtx = true;
-				fRet = true; ;
+				fRet = true;
 			}
-			else if(Object.ReferenceEquals(edge1.VtxStart, edge2.VtxEnd))
+			else if(ReferenceEquals(edge1.VtxStart, edge2.VtxEnd))
 			{
 				fEdge1ConnectsAtStartVtx = true;
-				fRet = true; ;
+				fRet = true;
 			}
-			else if (Object.ReferenceEquals(edge1.VtxEnd, edge2.VtxStart))
+			else if (ReferenceEquals(edge1.VtxEnd, edge2.VtxStart))
 			{
 				fEdge2ConnectsAtStartVtx = true;
-				fRet = true; ;
+				fRet = true;
 			}
-			else if (Object.ReferenceEquals(edge1.VtxEnd, edge2.VtxEnd))
+			else if (ReferenceEquals(edge1.VtxEnd, edge2.VtxEnd))
 			{
-				fRet = true; ;
+				fRet = true;
 			}
 			return fRet;
 		}
@@ -953,7 +943,7 @@ namespace DAP.CompGeom
 			Tracer.Assert(t.Assertion, vtx.Edges.Count == 3, "Vertex without valency of 3");
 			for (iEdge = 0; iEdge < 3; iEdge++)
 			{
-				if (Object.ReferenceEquals(vtx.Edges[iEdge], this))
+				if (ReferenceEquals(vtx.Edges[iEdge], this))
 				{
 					break;
 				}
@@ -991,7 +981,7 @@ namespace DAP.CompGeom
 			{
 				// Half Infinite Edge forming half of fully infinite edge
 				WeEdge edgeTest = VtxStart.Edges[0];
-				if (Object.ReferenceEquals(this, edgeTest))
+				if (ReferenceEquals(this, edgeTest))
 				{
 					EdgeCCWPredecessor = EdgeCWPredecessor = VtxStart.Edges[1];
 				}
@@ -1076,12 +1066,12 @@ namespace DAP.CompGeom
 		/// <returns>The common polygon</returns>
 		private FortunePoly PolyCommon(FortuneEdge edge)
 		{
-			if (Object.ReferenceEquals(Poly1, edge.Poly1) || Object.ReferenceEquals(Poly1, edge.Poly2))
+			if (ReferenceEquals(Poly1, edge.Poly1) || ReferenceEquals(Poly1, edge.Poly2))
 			{
 				return Poly1;
 			}
 			Tracer.Assert(t.Assertion,
-				Object.ReferenceEquals(Poly2, edge.Poly1) || Object.ReferenceEquals(Poly2, edge.Poly2),
+				ReferenceEquals(Poly2, edge.Poly1) || ReferenceEquals(Poly2, edge.Poly2),
 				"Calling GenCommon on two edges with no common generator");
 			return Poly2;
 		}
@@ -1096,11 +1086,11 @@ namespace DAP.CompGeom
 		/// <returns>Comparison output</returns>
 		public override int CompareToVirtual(WeEdge edgeIn)
 		{
-			FortuneEdge edge = edgeIn as FortuneEdge;
+			var edge = edgeIn as FortuneEdge;
 
 			Tracer.Assert(t.Assertion, edge != null, "Non-fortuneEdge passed to fortuneEdge compare");
 
-			if (Object.ReferenceEquals(edgeIn, this))
+			if (ReferenceEquals(edgeIn, this))
 			{
 				return 0;
 			}
@@ -1113,43 +1103,28 @@ namespace DAP.CompGeom
 	public class FortunePoly : WePolygon
 	{
 		#region Private Variables
-		int _iGen = -1;						// Index for this polygon in the polygon list of the Fortune class 
-		PT _pt;								// The generator for this polygon
-		bool _fAtInfinity = false;			// True if this is the polygon at infinity
-		bool _fZeroLengthEdge = false;		// True if there is a zero length edge in this polygon
+
 		#endregion
 
 		#region Properties
-		public bool FAtInfinity
-		{
-			get { return _fAtInfinity; }
-			set { _fAtInfinity = value; }
-		}
 
-		public bool FZeroLengthEdge
-		{
-			get { return _fZeroLengthEdge; }
-			set { _fZeroLengthEdge = value; }
-		}
+		public bool FAtInfinity { get; set; }
 
-		public PT Pt
-		{
-			get { return _pt; }
-			set { _pt = value; }
-		}
+		public bool FZeroLengthEdge { get; set; }
 
-		public int Index
-		{
-			get { return _iGen; }
-			set { _iGen = value; }
-		}
+		public PT Pt { get; set; }
+
+		public int Index { get; set; }
+
 		#endregion
 
 		#region Constructor
 		internal FortunePoly(PT pt, int iGen)
 		{
-			_iGen = iGen;
-			_pt = pt;
+			FZeroLengthEdge = false;
+			FAtInfinity = false;
+			Index = iGen;
+			Pt = pt;
 		}
 		#endregion
 
@@ -1231,7 +1206,7 @@ namespace DAP.CompGeom
 
 			for (int i = 0; i < VertexCount; i++)
 			{
-				FortuneEdge edgeCheck = (FortuneEdge)EdgesCW[i];
+				var edgeCheck = (FortuneEdge)EdgesCW[i];
 				if (edgeCheck.FZeroLength())
 				{
 					Tracer.Trace(tv.ZeroLengthEdges, "Fixing zero length edge {0} for poly {1}", edgeCheck, this);
@@ -1289,20 +1264,20 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestEdgeSort()
 			{
-				FortunePoly poly1 = new FortunePoly(new PT(0, 0), 0);
-				FortunePoly poly2 = new FortunePoly(new PT(0, 2), 1);
-				FortunePoly poly3 = new FortunePoly(new PT(2, 0), 2);
-				FortunePoly poly4 = new FortunePoly(new PT(0, -2), 3);
-				FortunePoly poly5 = new FortunePoly(new PT(-2, 0), 4);
-				FortuneVertex vtx1 = new FortuneVertex(new PT(1, 1));
-				FortuneVertex vtx2 = new FortuneVertex(new PT(1, -1));
-				FortuneVertex vtx3 = new FortuneVertex(new PT(-1, -1));
-				FortuneVertex vtx4 = new FortuneVertex(new PT(-1, 1));
+				var poly1 = new FortunePoly(new PT(0, 0), 0);
+				var poly2 = new FortunePoly(new PT(0, 2), 1);
+				var poly3 = new FortunePoly(new PT(2, 0), 2);
+				var poly4 = new FortunePoly(new PT(0, -2), 3);
+				var poly5 = new FortunePoly(new PT(-2, 0), 4);
+				var vtx1 = new FortuneVertex(new PT(1, 1));
+				var vtx2 = new FortuneVertex(new PT(1, -1));
+				var vtx3 = new FortuneVertex(new PT(-1, -1));
+				var vtx4 = new FortuneVertex(new PT(-1, 1));
 				FortuneVertex vtx5;
-				FortuneEdge edge1 = new FortuneEdge();
-				FortuneEdge edge2 = new FortuneEdge();
-				FortuneEdge edge3 = new FortuneEdge();
-				FortuneEdge edge4 = new FortuneEdge();
+				var edge1 = new FortuneEdge();
+				var edge2 = new FortuneEdge();
+				var edge3 = new FortuneEdge();
+				var edge4 = new FortuneEdge();
 				edge2.SetPolys(poly1, poly2);
 				edge3.SetPolys(poly1, poly3);
 				edge4.SetPolys(poly1, poly4);
@@ -1316,17 +1291,17 @@ namespace DAP.CompGeom
 				edge4.VtxStart = vtx3;
 				edge4.VtxEnd = vtx4;
 
-				FortunePoly polyTest = new FortunePoly(new PT(0, 0), 0);
+				var polyTest = new FortunePoly(new PT(0, 0), 0);
 				polyTest.AddEdge(edge1);
 				polyTest.AddEdge(edge3);
 				polyTest.AddEdge(edge2);
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
 
 				vtx1.Pt = new PT(3, 4);
 				vtx2.Pt = new PT(4, 3);
@@ -1340,10 +1315,10 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge2);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
 
 				poly1.Pt = new PT(10, 10);
 				vtx1.Pt = new PT(13, 14);
@@ -1358,10 +1333,10 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
 
 				poly1.Pt = new PT(0, 0);
 				vtx1 = FortuneVertex.InfiniteVertex(new PT(1, 2), true);
@@ -1385,10 +1360,10 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(Object.ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
 			}
 		}
 #endif
@@ -1398,13 +1373,13 @@ namespace DAP.CompGeom
 	public class FortuneVertex : WeVertex
 	{
 		#region Private variables
-		bool _fAlreadyOrdered = false;			// True after this vertex has had its edges ordered in post processing
-		bool _fAddedToWingedEdge = false;		// True if this vertex has already been added to the winged edge data structure
+		bool _fAlreadyOrdered;			// True after this vertex has had its edges ordered in post processing
+		bool _fAddedToWingedEdge;		// True if this vertex has already been added to the winged edge data structure
 		#endregion
 
 		#region Constructors
 		internal FortuneVertex(PT pt) : base(pt) { }
-		internal FortuneVertex() : base() { }
+		internal FortuneVertex() { }
 		#endregion
 
 		#region Polygons
@@ -1423,17 +1398,13 @@ namespace DAP.CompGeom
 			{
 				if (edgeDifferent != edge)
 				{
-					int i1Diff = edgeDifferent.Poly1.Index;
-					int i2Diff = edgeDifferent.Poly2.Index;
+					var i1Diff = edgeDifferent.Poly1.Index;
 
 					if (i1Diff == i1 || i1Diff == i2)
 					{
 						return edgeDifferent.Poly2;
 					}
-					else
-					{
-						return edgeDifferent.Poly1;
-					}
+					return edgeDifferent.Poly1;
 				}
 			}
 			Tracer.Assert(t.Assertion, false, "Couldn't find third generator");
@@ -1486,8 +1457,8 @@ namespace DAP.CompGeom
 		/// <returns></returns>
 		int CompareEdges(WeEdge e1, WeEdge e2)
 		{
-			FortuneEdge fe1 = (FortuneEdge)e1;
-			FortuneEdge fe2 = (FortuneEdge)e2;
+			var fe1 = (FortuneEdge)e1;
+			var fe2 = (FortuneEdge)e2;
 			return Geometry.ICompareCw(Pt, fe1.PolyOrderingTestPoint, fe2.PolyOrderingTestPoint);
 		}
 
@@ -1533,7 +1504,7 @@ namespace DAP.CompGeom
 		/// <returns>The vertex at infinity</returns>
 		internal static FortuneVertex InfiniteVertex(PT ptDirection, bool fNormalize)
 		{
-			FortuneVertex vtx = new FortuneVertex(ptDirection);
+			var vtx = new FortuneVertex(ptDirection);
 			vtx.SetInfinite(ptDirection, fNormalize);
 			return vtx;
 		}
