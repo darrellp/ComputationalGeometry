@@ -3,18 +3,32 @@ using System.Collections.Generic;
 
 namespace DAP.CompGeom
 {
-	/// <summary>
-	/// Double precision points
-	/// </summary>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	Double precision points. </summary>
+	///
+	/// <remarks>	Darrellp, 2/17/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	public struct PointD
 	{
+		/// <summary> The x coordinate </summary>
 		public double X;
+		/// <summary> The y coordinate </summary>
 		public double Y;
 
-		public PointD(double XParm, double YParm)
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Constructor. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="x">	The x coordinate. </param>
+		/// <param name="y">	The y coordinate. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public PointD(double x, double y)
 		{
-			X = XParm;
-			Y = YParm;
+			X = x;
+			Y = y;
 		}
 	}
 }
