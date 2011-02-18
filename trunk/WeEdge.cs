@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using NetTrace;
 
 namespace DAP.CompGeom
 {
@@ -93,7 +94,7 @@ namespace DAP.CompGeom
 		/// <returns></returns>
 		internal bool Validate()
 		{
-			// All variables should be set
+			// RQS- All variables should be set
 			if (VtxEnd == null)
 			{
 				return Failure();
@@ -126,7 +127,10 @@ namespace DAP.CompGeom
 			{
 				return Failure();
 			}
-			
+			// -RQS
+
+			// RQS- Check adjacencies
+			//
 			// Make sure that we and all our CW/CCW successor/predecessor edges
 			// are marked as adjacent in our start/end vertices
 			if (!VtxEnd.FValidateEdgeIsAdjacent(this))
@@ -153,8 +157,9 @@ namespace DAP.CompGeom
 			{
 				return Failure();
 			}
+			// -RQS
 
-			// Check adjacency of all listed edges to the proper polygons
+			// RQS- Check adjacency of all listed edges to the proper polygons
 			if (!PolyLeft.FValidateEdgeIsAdjacent(this))
 			{
 				return Failure();
@@ -179,6 +184,7 @@ namespace DAP.CompGeom
 			{
 				return Failure();
 			}
+			// -RQS
 
 			return true;
 		}
@@ -217,29 +223,19 @@ namespace DAP.CompGeom
 
 		public bool FLeftOf(PointF pt)
 		{
-			PointF pt1, pt2;
+			// We should never have a start vertex at infinity
+			//
+			// FixInfiniteEdges, which creates the vertices at infinity, specifically makes sure that
+			// this never happens (except with edges at infinity which are really placeholders for the
+			// winged edge structure and have no position at all.  They aren't processed here (and if they
+			// were, it would be a problem).
+			Tracer.Assert(t.Assertion, !VtxStart.FAtInfinity, "Found non-infinite edge with start vertex at infinity");
+			
+			// If the end vtx is at infinity, convert it to a real point
+			PointF pt1 = VtxStart.Pt;
+			PointF pt2 = VtxEnd.FAtInfinity ? VtxEnd.ConvertToReal(pt1, 10) : VtxEnd.Pt;
 
-			// If one of the points is at infinity, replace it with a real point
-			if (VtxEnd.FAtInfinity || VtxStart.FAtInfinity)
-			{
-
-				if (VtxEnd.FAtInfinity)
-				{
-					pt1 = VtxStart.Pt;
-					pt2 = VtxEnd.ConvertToReal(pt1, 10);
-				}
-				else
-				{
-					pt1 = VtxEnd.Pt;
-					pt2 = VtxStart.ConvertToReal(pt1, 10);
-				}
-			}
-			else
-			{
-				pt1 = VtxStart.Pt;
-				pt2 = VtxEnd.Pt;
-			}
-
+			// Do the geometry on pt1 and pt2
 			return Geometry.FLeft(pt1, pt2, pt);
 		}
 		#endregion

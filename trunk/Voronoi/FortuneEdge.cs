@@ -25,7 +25,24 @@ namespace DAP.CompGeom
 		internal FortunePoly Poly1 { get { return _arPoly[0]; } }
 		internal FortunePoly Poly2 { get { return _arPoly[1]; } }
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or sets a value indicating whether this is part of a split doubly infinite edge. </summary>
+		///
+		/// <value>	true if split, false if not. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public bool FSplit { get; set; }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets a value indicating whether at this is an edge at infinity. </summary>
+		/// 
+		/// <remarks>
+		/// Edges at infinity are essentially placeholders in the winged edge data structure which separate
+		/// the polygon at infinity from the infinite polygons.  They've got two infinite vertices at each end.
+		/// </remarks>
+		///
+		/// <value>	true if at infinity, false if not. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		public bool FAtInfinity
 		{
