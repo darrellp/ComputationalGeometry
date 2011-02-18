@@ -215,97 +215,20 @@ namespace DAP.CompGeom
 			// for all polygons in the voronoi diagram
 			foreach (var poly in _lstPolys)
 			{
-				// Diagnostics
-				Tracer.Trace(tv.FinalEdges, "Edges for generator {0}", poly.Index);
-				Tracer.Indent();
-
-				// Add the poly to the winged edge struct and sort it's edges
-				we.AddPoly(poly);
-				poly.SortEdges();
-
-				// For each edge in the polygon
-				for (var iEdge = 0; iEdge < poly.VertexCount; iEdge++)
-				{
-					// Get the edge following the current edge in clockwise order
-					var edge = poly.EdgesCW[iEdge] as FortuneEdge;
-					var iEdgeNext = (iEdge + 1) % poly.VertexCount;
-					var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
-					Tracer.Trace(tv.FinalEdges, edge.ToString());
-
-					// Incorporate the edge into the winged edge
-					edge.Process(poly, we);
-
-					// If this is an infinite polygon and we've not located any infinite polygons before
-					if (polyInfinityStart == null && edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
-					{
-						// Keep track of the first infinite polygon we've seen
-						//
-						// iLeadingInfiniteEdgeCw is the edge on the "left" as we look "out" from
-						// the infinite polygon
-						iLeadingInfiniteEdgeCw = iEdge;
-						polyInfinityStart = poly;
-					}
-				}
-
-				// Remove any zero length edges in the polygon
-				poly.HandleZeroLengthEdges();
-				Tracer.Unindent();
+				// Process the polygon's edges
+				ProcessPolygonEdges(poly, we, ref polyInfinityStart, ref iLeadingInfiniteEdgeCw);
 			}
 
-			// Find the leading edge to infinity
+			// Take care of a corner case with zero length edges in the starting infinite polygon
 			//
-			// We define the "leading edge" as the one to the left when looking outward.  We have to
-			// explicitly locate this first one - after that, we can locate the leading edge
-			// for the next polygon to the right as the edge which follows the current poly's
-			// leading edge.  As we work our way around the outside in AddPolygonAtInfinity we can
-			// therefore easily set leading edges on successive polygons.
+			// In odd cases, if the starting infinite polygon has zero length edges, then when they were dropped
+			// in HandleZeroLengthEdges, our indices changed so that iLeadingInfiniteEdgeCw might be wrong
+			// now.  In that corner case, we have to just do a linear search once again to recalculate
+			// iLeadingInfiniteEdgeCw correctly.
 			if (polyInfinityStart != null && polyInfinityStart.FZeroLengthEdge)
 			{
-				// If this is a fully infinite line
-				//
-				// If there are only two edges, they'll both be at infinity and we can't just use their
-				// indices to distinguish - we have to actually check the angles to see which one is
-				// "leading".
-				if (polyInfinityStart.VertexCount == 2)
-				{
-					// Diagnostics
-					Tracer.Assert(t.Assertion,
-						polyInfinityStart.EdgesCW[0].VtxEnd.FAtInfinity && polyInfinityStart.EdgesCW[1].VtxEnd.FAtInfinity,
-						"Two edged polygon without both edges at infinity");
-					// If we run clockwise from the origin through edge 0 through edge 1
-					if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.EdgesCW[0].VtxEnd.Pt, polyInfinityStart.EdgesCW[1].VtxEnd.Pt) > 0)
-					{
-						// Edge 1 is our leading edge
-						iLeadingInfiniteEdgeCw = 1;
-					}
-					else
-					{
-						// Edge 0 is our leading edge
-						iLeadingInfiniteEdgeCw = 0;
-					}
-				}
-				else
-				{
-					// Find the leading edge which goes to infinity
-					for (var iEdge = 0; iEdge < polyInfinityStart.VertexCount; iEdge++)
-					{
-						// Retrieve the edge and the next edge in CW order
-						var edge = polyInfinityStart.EdgesCW[iEdge] as FortuneEdge;
-						var iEdgeNext = (iEdge + 1) % polyInfinityStart.VertexCount;
-						var edgeNextCW = polyInfinityStart.EdgesCW[iEdgeNext] as FortuneEdge;
-
-						// If this edge and the next both end at infinity
-						if (edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
-						{
-							// Then this is our leading CW edge to infinity
-							//
-							// This means that this edge is to the left as we look "out" from the
-							// interior of the voronoi diagram.
-							iLeadingInfiniteEdgeCw = iEdgeNext;
-							break;
-						}
-					}
-				}
+				// Recalc the index
+				iLeadingInfiniteEdgeCw = RecalcLeadingInfiniteEdge(polyInfinityStart);
 			}
 
 			// Create the polygon at infinity
@@ -322,6 +245,141 @@ namespace DAP.CompGeom
 			// Return the final winged edge
 			return we;
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Recalc leading infinite edge. </summary>
+		///
+		/// <remarks>	
+		/// This is a lot of code for a very corner case.  If an initial infinite polygon has some of
+		/// it's edges removed because they were zero length then a previously calculated index for the
+		/// leading infinite edge will be wrong and we have to recalculate it which is the purpose of
+		/// this little routine. Darrellp, 2/18/2011. 
+		/// </remarks>
+		///
+		/// <param name="polyInfinityStart">	The starting infinite polygon. </param>
+		///
+		/// <returns>	The newly calculated index for the leading edge. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static int RecalcLeadingInfiniteEdge(FortunePoly polyInfinityStart)
+		{
+			// Initialize our return index to an illegal value
+			var iLeadingInfiniteEdgeCw = -1;
+
+			// If this is a fully infinite line
+			//
+			// If there are only two edges, they'll both be at infinity and we can't just use their
+			// indices to distinguish - we have to actually check the angles to see which one is
+			// "leading".
+			if (polyInfinityStart.VertexCount == 2)
+			{
+				// Diagnostics
+				Tracer.Assert(t.Assertion,
+				              polyInfinityStart.EdgesCW[0].VtxEnd.FAtInfinity && polyInfinityStart.EdgesCW[1].VtxEnd.FAtInfinity,
+				              "Two edged polygon without both edges at infinity");
+				// If we run clockwise from the origin through edge 0 through edge 1
+				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.EdgesCW[0].VtxEnd.Pt, polyInfinityStart.EdgesCW[1].VtxEnd.Pt) > 0)
+				{
+					// Edge 1 is our leading edge
+					iLeadingInfiniteEdgeCw = 1;
+				}
+				else
+				{
+					// Edge 0 is our leading edge
+					iLeadingInfiniteEdgeCw = 0;
+				}
+			}
+			else
+			{
+				// Find the leading edge which goes to infinity
+				for (var iEdge = 0; iEdge < polyInfinityStart.VertexCount; iEdge++)
+				{
+					// Retrieve the edge and the next edge in CW order
+					var edge = polyInfinityStart.EdgesCW[iEdge] as FortuneEdge;
+					var iEdgeNext = (iEdge + 1) % polyInfinityStart.VertexCount;
+					var edgeNextCW = polyInfinityStart.EdgesCW[iEdgeNext] as FortuneEdge;
+
+					// If this edge and the next both end at infinity
+					if (edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
+					{
+						// Then this is our leading CW edge to infinity
+						//
+						// This means that this edge is to the left as we look "out" from the
+						// interior of the voronoi diagram.
+						iLeadingInfiniteEdgeCw = iEdgeNext;
+						break;
+					}
+				}
+			}
+			return iLeadingInfiniteEdgeCw;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Process a polygon's edges. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="poly">						Polygon to be processed. </param>
+		/// <param name="we">						WingedEdge structure we'll add the polygon to. </param>
+		/// <param name="polyInfinityStart">		[in,out] The current infinite polygon or null if none
+		/// 										yet found. </param>
+		/// <param name="iLeadingInfiniteEdgeCw">	[in,out] The CW leading infinite edge if a new
+		/// 										infinite polygon has been found. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void ProcessPolygonEdges(
+			FortunePoly poly,
+			WingedEdge we,
+			ref FortunePoly polyInfinityStart,
+			ref int iLeadingInfiniteEdgeCw)
+		{
+			// Diagnostics
+			Tracer.Trace(tv.FinalEdges, "Edges for generator {0}", poly.Index);
+			Tracer.Indent();
+
+			// Add the poly to the winged edge struct and sort it's edges
+			we.AddPoly(poly);
+			poly.SortEdges();
+
+			// For each edge in the polygon
+			for (var iEdge = 0; iEdge < poly.VertexCount; iEdge++)
+			{
+				// Get the edge following the current edge in clockwise order
+				var edge = poly.EdgesCW[iEdge] as FortuneEdge;
+				var iEdgeNext = (iEdge + 1) % poly.VertexCount;
+				var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
+				Tracer.Trace(tv.FinalEdges, edge.ToString());
+
+				// Incorporate the edge into the winged edge
+				edge.Process(poly, we);
+
+				// If this is an infinite polygon and we've not located any infinite polygons before
+				if (polyInfinityStart == null && edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
+				{
+					// Keep track of the first infinite polygon we've seen
+					//
+					// We define the "leading edge" as the one to the left when looking outward.  We have to
+					// explicitly locate this first one - after that, we can locate the leading edge
+					// for the next polygon to the right as the edge which follows the current poly's
+					// leading edge.  As we work our way around the outside in AddPolygonAtInfinity we can
+					// therefore easily set leading edges on successive polygons.
+					iLeadingInfiniteEdgeCw = iEdge;
+					polyInfinityStart = poly;
+				}
+			}
+
+			// Remove any zero length edges in the polygon
+			//
+			// We have to put this after we've processed all the edges since that's where we determine any
+			// zero length edges.  This is not as good as I'd like it because it means that this may, on rare
+			// occasions, jigger the indices for the poly which in turn means that the iLeadingInfiniteEdgeCw
+			// value may be off and we have to check for that later.  It's ugly code, but rarely occurs in
+			// practice so isn't a performance hit.
+			poly.HandleZeroLengthEdges();
+			Tracer.Unindent();
+			return;
+		}
+
 		#endregion
 
 		#region Polygon and edges at infinity
@@ -363,10 +421,6 @@ namespace DAP.CompGeom
 			// Add it to the winged edge
 			we.AddPoly(polyAtInfinity);
   
-			// Loop through the "outer" infinite polygons of the diagram
-			//
-			// Set each of the outer infinite polygons up with an edge at infinity to separate
-			// them from the polygon at infinity
 			do
 			{
 				// Add the edge at infinity between our current poly and the poly at infinity
@@ -383,7 +437,12 @@ namespace DAP.CompGeom
 				// Move to the neighboring polygon at infinity
 				polyCur = polyNext;
 				iLeadingEdgeCw = iLeadingEdgeNext;
-			} while (polyCur != polyStart);
+			}
+			// we reach the end of the "outer" infinite polygons of the diagram
+			//
+			// Set each of the outer infinite polygons up with an edge at infinity to separate
+			// them from the polygon at infinity
+			while (polyCur != polyStart);
 
 			// Thread the last poly back to the first
 			var edgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
@@ -391,17 +450,26 @@ namespace DAP.CompGeom
 			edgeFirstAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
 		}
 
-		/// <summary>
-		/// Add an edge at infinity and step the polygon and edge along to the next
-		/// infinite polygon and rayed edge.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Add an edge at infinity and step the polygon and edge along to the next infinite polygon and
+		/// rayed edge. 
 		/// </summary>
-		/// <param name="polyAtInfinity">Polygon at infinity</param>
-		/// <param name="poly">Infinite polygon we're adding the edge to</param>
-		/// <param name="iLeadingEdgeCw">index to rayed edge  we start with</param>
-		/// <param name="edgePreviousAtInfinity">Edge at infinity we added in the previous infinite polygon</param>
-		/// <param name="polyNextCcw">Returns the next infinite polygon to be processed</param>
-		/// <param name="iLeadingEdgeNext">Returns the next infinite edge</param>
-		/// <returns></returns>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="polyAtInfinity">			Polygon at infinity. </param>
+		/// <param name="poly">						Infinite polygon we're adding the edge to. </param>
+		/// <param name="iLeadingEdgeCw">			index to rayed edge  we start with. </param>
+		/// <param name="edgePreviousAtInfinity">	Edge at infinity we added in the previous infinite
+		/// 										polygon. </param>
+		/// <param name="polyNextCcw">				[out] Returns the next infinite polygon to be
+		/// 										processed. </param>
+		/// <param name="iLeadingEdgeNext">			[out] Returns the next infinite edge. </param>
+		///
+		/// <returns>	. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private static FortuneEdge AddEdgeAtInfinity(
 			FortunePoly polyAtInfinity,
 			FortunePoly poly,
@@ -410,23 +478,27 @@ namespace DAP.CompGeom
 			out FortunePoly polyNextCcw,
 			out int iLeadingEdgeNext)
 		{
-			int iTrailingEdgeCw = (iLeadingEdgeCw + 1) % poly.VertexCount;
-
+			// Get the other infinite edge
+			//
+			// This is the edge to the right as we look outward
+			var iTrailingEdgeCw = (iLeadingEdgeCw + 1) % poly.VertexCount;
 			var edgeLeadingCw = poly.EdgesCW[iLeadingEdgeCw] as FortuneEdge;
 			var edgeTrailingCw = poly.EdgesCW[iTrailingEdgeCw] as FortuneEdge;
 
 			// Next polygon in order is to the left of our leading edge
 			polyNextCcw = edgeLeadingCw.PolyLeft as FortunePoly;
-			// polyNextCcw = edgeTrailingCw.PolyLeft as FortunePoly;
+
+			// Diagnostics
 			Tracer.Assert(t.Assertion, polyNextCcw.Index != poly.Index,
 				"Next polygon in AddEdgeAtInfinity is the same as the current poly");
-
+			
+			// Create the edge at infinity
+			//
 			// Create the edge at infinity separating the current infinite polygon from
 			// the polygon at infinity.  The vertices for this edge will both be vertices
 			// at infinity.  This, of course, doesn't really have any real impact on the
 			// "position" of the edge at infinity, but allows us to maintain a properly
 			// set up winged edge structure.
-
 			var edgeAtInfinity = new FortuneEdge
 									{
 										PolyRight = poly,
@@ -434,35 +506,49 @@ namespace DAP.CompGeom
 										VtxStart = edgeLeadingCw.VtxEnd,
 										VtxEnd = edgeTrailingCw.VtxEnd
 									};
+
 			// The poly at infinity is to the left of the edge, the infinite poly is to its right
+			//
 			// Start and end vertices are the trailing and leading infinite edges
 			// Add the edge at infinity to the poly at infinity and the current infinite poly
 			polyAtInfinity.AddEdge(edgeAtInfinity);
 			poly.EdgesCW.Insert(iTrailingEdgeCw, edgeAtInfinity);
+
 			// Set up the wings of the wingedEdge
 			edgeAtInfinity.EdgeCWPredecessor = edgeLeadingCw;
 			edgeAtInfinity.EdgeCCWSuccessor = edgeTrailingCw;
 			edgeLeadingCw.EdgeCCWSuccessor = edgeAtInfinity;
 			edgeTrailingCw.EdgeCWSuccessor = edgeAtInfinity;
+
+			// If we've got a previous edge at infinity
 			if (edgePreviousAtInfinity != null)
 			{
+				// Incorporate it properly
 				edgePreviousAtInfinity.EdgeCCWPredecessor = edgeAtInfinity;
 				edgeAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
 			}
+			
+			// Hook up our edge at infinity to our vertices at infinity
 			AddEdgeAtInfinityToVerticesAtInfinity(
 				edgeAtInfinity,
 				edgeAtInfinity.VtxStart as FortuneVertex,
 				edgeAtInfinity.VtxEnd as FortuneVertex);
 
 			// Locate the leading edge index in the next polygon
+
+			// For each Edge of the infinite polygon to our left
 			for (iLeadingEdgeNext = 0; iLeadingEdgeNext < polyNextCcw.VertexCount; iLeadingEdgeNext++)
 			{
+				// If it's the same as our leading CW infinite edge
 				if (polyNextCcw.EdgesCW[iLeadingEdgeNext] == edgeLeadingCw)
 				{
+					// then their leading edge is the one immediately preceding it in CW order
 					iLeadingEdgeNext = (polyNextCcw.VertexCount + iLeadingEdgeNext - 1) % polyNextCcw.VertexCount;
 					break;
 				}
 			}
+
+			// Return the edge at infinity we've created
 			return edgeAtInfinity;
 		}
 
@@ -557,43 +643,61 @@ namespace DAP.CompGeom
 			FixInfiniteEdges();
 		}
 
-		/// <summary>
-		/// In the course of processing, edges are created initially without endpoints.  The endpoints are filled in
-		/// during the course of processing.  When we finish processing, any missing endpoints represent "points at
-		/// infinity" where the edge is a ray or (rarely) an infinitely extended line.  We have to go through and fix
-		/// up any of these loose ends to turn them into points at infinity.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// In the course of processing, edges are created initially with null endpoints.  The endpoints
+		/// are filled in during the course of the Fortune algorithm.  When we finish processing, any null
+		/// endpoints represent "points at infinity" where the edge is a ray or (rarely) an infinitely
+		/// extended line.  We have to go through and fix up any of these loose ends to turn them into
+		/// points at infinity.
+		/// 
+		/// This is a lot of really tedious, detail oriented, nitpicky code.  I'd avoid it if I were you.
 		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private void FixInfiniteEdges()
 		{
+			// For each of our polygons
 			foreach(FortunePoly poly in _lstPolys)
 			{
-				// Handle infinite edges.  Ensure that singly infinite edges have the infinite vertex in the
+				// Loop through the edges of the poly searching for infinite ones
+				//
+				// Ensure that singly infinite edges have the infinite vertex in the
 				// VtxEnd position and split doubly infinite edges into two singly infinite edges.  Replace
 				// the null vertices with the proper infinite vertices.
-				foreach (WeEdge wedge in poly.EdgesCW)
+				foreach (var wedge in poly.EdgesCW)
 				{
+					// Obtain our fortune edge
 					var edge = wedge as FortuneEdge;
-
 					Tracer.Assert(t.Assertion, edge != null, "Non-FortuneEdge in FortunePoly list");
+
+					// Is this an infinite edge?
 					if (edge.VtxStart == null || edge.VtxEnd == null)
 					{
 						if (edge.VtxEnd == null && edge.VtxStart == null)
 						{
-							// Split a doubly infinite edge into two singly infinite edges.  This only occurs in rare
+							// If they're both null, we've got a double infinite edge
+							//
+							// Split doubly infinite edges into two singly infinite edges.  This only occurs in rare
 							// cases where there are only two generators or all the generators are collinear so that
 							// we end up with parallel infinite lines rather than infinite rays.  We can't handle
 							// true infinite lines in our winged edge data structure, so we turn the infinite lines into
 							// two rays pointing in opposite directions and originating at the midpoint of the two generators.
 
+							// Initialize
 							var pt1 = edge.Poly1.VoronoiPoint;
 							var pt2 = edge.Poly2.VoronoiPoint;
 							var dx = pt2.X - pt1.X;
 							var dy = pt2.Y - pt1.Y;
 							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
-							FortuneVertex vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
-							FortuneVertex vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
+							// Infinite vertices have directions in them rather than locations
+							var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
+							var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
 
+							// Create the new edge an link it in 
 							edge.VtxStart = new FortuneVertex(ptMid);
 							edge.VtxEnd = vtx1;
 							var edgeNew = new FortuneEdge {VtxStart = edge.VtxStart, VtxEnd = vtx2};
@@ -606,23 +710,33 @@ namespace DAP.CompGeom
 							vtx2.Add(edgeNew);
 							edge.FSplit = edgeNew.FSplit = true;
 
+							// If the edge "leans right"
+							//
+							// We have to be very picky about how we set up the left and right
+							// polygons for our new rays.
 							if (dx == 0 || dx * dy > 0) // dy == 0 case needs to fall through...
 							{
+								// Set up left and right polygons one way
 								edge.PolyRight = edgeNew.PolyLeft = edge.Poly1;
 								edge.PolyLeft = edgeNew.PolyRight = edge.Poly2;
 							}
 							else
 							{
+								// Set left and right polygons the other way
 								edge.PolyLeft = edgeNew.PolyRight = edge.Poly1;
 								edge.PolyRight = edgeNew.PolyLeft = edge.Poly2;
 							}
 
+							// Diagnostics
 							Tracer.Trace(tv.FinalEdges, "Edge split into {0} and {1}", edge, edgeNew);
 
-							// Can't continue or C# will complain that we're messing with the collection
-							// in the foreach statement.  It's okay because there can be at most two doubly
-							// infinite edges per generator and if there's a second it will be handled by
-							// the generator on the other side of that edge.
+							// Can't continue or C# will complain
+							//
+							// If we continue then we'll be messing with the collection in the foreach
+							// statement which C# will complain about.  It's okay because to break here
+							// because there can be at most two doubly infinite edges per generator and
+							// if there's a second it will be handled by the generator on the other side
+							// of that edge.
 							break;
 						}
 						else
@@ -631,19 +745,25 @@ namespace DAP.CompGeom
 							if (edge.VtxStart == null)
 							{
 								// Swap if necessary to ensure that the infinite vertex is in the VtxEnd position
-
+								//
+								// This is what justifies the assertion in WeEdge.FLeftOf() (see the code).
 								edge.VtxStart = edge.VtxEnd;
 								edge.VtxEnd = null;
 							}
 
 							// Replace the null vertex with an infinite vertex
-
 							var pt1 = edge.Poly1.VoronoiPoint;
 							var pt2 = edge.Poly2.VoronoiPoint;
 							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
-							// We have to be careful to get this ray pointed in the proper orientation.  We find
-							// the third polygon at the "base" of this ray and point the ray "away" from it.
+							// Point the ray in the proper direction
+							//
+							// We have to be careful to get this ray pointed in the proper orientation.  At
+							// this point we just have a vertex and points which are the original voronoi
+							// points which created these infinite polys.  That's enough to figure out the
+							// absolute direction the voronoi points but not enough to determine which "orientation"
+							// it points along.  To do this, we find the third polygon at the "base" of this ray
+							// and point the ray "away" from it.
 							var polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
 							var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.VoronoiPoint);
 							var dx = pt2.X - pt1.X;

@@ -73,6 +73,7 @@
     <Compile Include="Set.cs" />
     <Compile Include="Voronoi\Beachline.cs" />
     <Compile Include="Voronoi\Fortune.cs" />
+    <Compile Include="Voronoi\FortuneEdge.cs" />
     <Compile Include="Voronoi\FortuneEvent.cs" />
     <Compile Include="WeEdge.cs" />
     <Compile Include="WePolygon.cs" />
