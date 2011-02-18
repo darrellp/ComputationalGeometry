@@ -391,7 +391,7 @@ namespace DAP.CompGeom
 			}
 
 			// Make sure we don't insert the same circle eventin twice
-			if (ICcwVoronoi(lfnLeft.Poly.Pt, lfnCenter.Poly.Pt, lfnRight.Poly.Pt) > 0)
+			if (ICcwVoronoi(lfnLeft.Poly.VoronoiPoint, lfnCenter.Poly.VoronoiPoint, lfnRight.Poly.VoronoiPoint) > 0)
 			{
 				Tracer.Trace(tv.CCreate, "Rejected circle event because it is not properly clockwise");
 				return;
@@ -447,7 +447,7 @@ namespace DAP.CompGeom
 			LeafNode lfnAdjacentParabolaLeft = lfn.LeftAdjacentLeaf;
 			LeafNode lfnAdjacentParabolaRight = lfn.RightAdjacentLeaf;
 
-			if (lfnNewParabola.Poly.Pt.X < lfn.Poly.Pt.X)
+			if (lfnNewParabola.Poly.VoronoiPoint.X < lfn.Poly.VoronoiPoint.X)
 			{
 				lfnLeft = lfnNewParabola;
 				lfnRight = lfn;
@@ -557,7 +557,7 @@ namespace DAP.CompGeom
 
 			// Watch for the odd corner case of the top n generators having the same y coordinate.  See comments
 			// on NdInsertAtSameY().
-			if (Geometry.FCloseEnough(evt.Pt.Y, lfn.Poly.Pt.Y))
+			if (Geometry.FCloseEnough(evt.Pt.Y, lfn.Poly.VoronoiPoint.Y))
 			{
 				NdInsertAtSameY(lfn, lfnNewParabola, innParent, innSubRoot, fLeftChild);
 			}
@@ -684,8 +684,8 @@ namespace DAP.CompGeom
 			while (lfn.RightAdjacentLeaf != null)
 			{
 				TPT tptBreakpoint = Geometry.ParabolicCut(
-					lfn.RightAdjacentLeaf.Poly.Pt,
-					lfn.Poly.Pt,
+					lfn.RightAdjacentLeaf.Poly.VoronoiPoint,
+					lfn.Poly.VoronoiPoint,
 					yScanLine);
 
 				Tracer.Trace(tv.Beachline, "bpt between gens {0} and {1}: {2}", 
@@ -933,7 +933,7 @@ namespace DAP.CompGeom
 		#region Information
 		internal TPT CurrentEdgeXPos(TPT yScanLine)
 		{
-			return Geometry.ParabolicCut(PolyRight.Pt, PolyLeft.Pt, yScanLine);
+			return Geometry.ParabolicCut(PolyRight.VoronoiPoint, PolyLeft.VoronoiPoint, yScanLine);
 		}
 		#endregion
 
@@ -1065,7 +1065,7 @@ namespace DAP.CompGeom
 			else
 			{
 				// Calculate where we intersect the parabola to our right
-				return Geometry.ParabolicCut(RightAdjacentLeaf.Poly.Pt, Poly.Pt, yScanLine);
+				return Geometry.ParabolicCut(RightAdjacentLeaf.Poly.VoronoiPoint, Poly.VoronoiPoint, yScanLine);
 			}
 		}
 
@@ -1084,7 +1084,7 @@ namespace DAP.CompGeom
 			else
 			{
 				// Calculate where we intersect the parabola to our left
-				return Geometry.ParabolicCut(Poly.Pt, LeftAdjacentLeaf.Poly.Pt, yScanLine);
+				return Geometry.ParabolicCut(Poly.VoronoiPoint, LeftAdjacentLeaf.Poly.VoronoiPoint, yScanLine);
 			}
 		}
 		#endregion

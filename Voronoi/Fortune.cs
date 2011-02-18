@@ -15,40 +15,44 @@ using NetTrace;
 
 namespace DAP.CompGeom
 {
-	/// <summary>
-	/// Fortune implements the Fortune algorithm for Voronoi diagrams.
-	/// </summary>
-	/// <remarks>
-	/// When run initially, Fortune.Voronoi() returns
-	/// a list of polytons that make up the diagram.  These can be transformed into a fully blown
-	/// winged edge data structure if desired.  It's input is simply a list of points to calculate the
-	/// diagram for.  It is based on the description of the algorithm given in "Computational Geometry -
-	/// Algorithms and Applications" by M. de Berg et al. with a LOT of details filled in.  Some
-	/// differences between the book's solution and mine:
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	Fortune implements the Fortune algorithm for Voronoi diagrams. </summary>
+	///
+	/// <remarks>	
+	/// When run initially, Fortune.Voronoi() returns a list of polytons that make up the diagram.
+	/// These can be transformed into a fully blown winged edge data structure if desired.  It's
+	/// input is simply a list of points to calculate the diagram for.  It is based on the
+	/// description of the algorithm given in "Computational Geometry - Algorithms and Applications"
+	/// by M. de Berg et al. with a LOT of details filled in.  Some differences between the book's
+	/// solution and mine:
 	/// 
-	/// The book suggests a doubly connected edge list.  I prefer a winged edge data structure.  Internally
-	/// I use a structure which is a primitive winged edge structure which contains polygons, edges and
-	/// vertices but not much of the redundancy available in a fully fleshed out winged edge, but
-	/// optionally allow for a conversion to a fully fleshed out winged edge data structure.  This conversion
-	/// is a bit expensive and may not be necessary (for instance, it suffices to merely draw the diagram) so
-	/// is made optional.
+	/// The book suggests a doubly connected edge list.  I prefer a winged edge data structure.
+	/// Internally I use a structure which is a primitive winged edge structure which contains
+	/// polygons, edges and vertices but not much of the redundancy available in a fully fleshed out
+	/// winged edge, but optionally allow for a conversion to a fully fleshed out winged edge data
+	/// structure.  This conversion is a bit expensive and may not be necessary (for instance, it
+	/// suffices to merely draw the diagram) so is made optional.
 	/// 
-	/// Another big difference between this algorithm and the one there is the handling of polygons which extend to
-	/// infinity.  These don't necessarily fit into winged edge which requires a cycle of edges on each
-	/// polygon and another polygon on the opposite site of each edge.  The book suggests surrounding the
-	/// diagram with a rectangle to solve this problem.  Outside of the fact that I still don't see how
-	/// that truly solves the problem (what's on the other side of the edges of the rectangle?), I hate the
-	/// solution which introduces a bunch of spurious elements which have nothing to do with the diagram.
-	/// I solve it by using a "polygon at infinity" and a bunch of "sides at infinity".  The inspiration
-	/// for all this is projective geometry which has a "point at infinity".  This maintains the winged edge
-	/// structure with the introduction of these "at infinity" elements which are natural extensions of
-	/// the diagram rather than the ugly introduced rectangle suggested in the book.  They also allow easy
-	/// reference to these extended polygons.  For instance, to enumerate them, just step off all the polygons
-	/// which "surround" the polygon at infinity.
+	/// Another big difference between this algorithm and the one there is the handling of polygons
+	/// which extend to infinity.  These don't necessarily fit into winged edge which requires a
+	/// cycle of edges on each polygon and another polygon on the opposite site of each edge.  The
+	/// book suggests surrounding the diagram with a rectangle to solve this problem.  Outside of the
+	/// fact that I still don't see how that truly solves the problem (what's on the other side of
+	/// the edges of the rectangle?), I hate the solution which introduces a bunch of spurious
+	/// elements which have nothing to do with the diagram. I solve it by using a "polygon at
+	/// infinity" and a bunch of "sides at infinity".  The inspiration for all this is projective
+	/// geometry which has a "point at infinity".  This maintains the winged edge structure with the
+	/// introduction of these "at infinity" elements which are natural extensions of the diagram
+	/// rather than the ugly introduced rectangle suggested in the book.  They also allow easy
+	/// reference to these extended polygons.  For instance, to enumerate them, just step off all the
+	/// polygons which "surround" the polygon at infinity.
 	/// 
-	/// I take care of a lot of bookkeeping details and border cases not mentioned in the book - zero length
-	/// edges, collinear points, and many other minor to major points not specifically covered in the book.
+	/// I take care of a lot of bookkeeping details and border cases not mentioned in the book - zero
+	/// length edges, collinear points, and many other minor to major points not specifically covered
+	/// in the book. 
 	/// </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	public class Fortune
 	{
 		#region Private Variables
@@ -59,24 +63,38 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Constructor
-		/// <summary>
-		/// Add all points to the event queue as site events
-		/// </summary>
-		/// <param name="points">Points whose Voronoi diagram will be calculated</param>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Add all points to the event queue as site events. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="points">	Points whose Voronoi diagram will be calculated. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public Fortune(IEnumerable points)
 		{
+			// For every point
 			foreach (PT pt in points)
 			{
+				// Add it to our list
 				QevEvents.Add(new SiteEvent(InsertPoly(pt)));
 			}
 		}
-		
-		/// <summary>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
 		/// Each polygon in the final solution is associated with a point in the input.  We initialize
-		/// that polygon for this point here.
+		/// that polygon for this point here. 
 		/// </summary>
-		/// <param name="pt"></param>
-		/// <returns></returns>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="pt">	The point. </param>
+		///
+		/// <returns>	The polygon produced. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		FortunePoly InsertPoly(PT pt)
 		{
 			Tracer.Trace(tv.GeneratorList, "Generator {0}: ({1}, {2})",
@@ -90,7 +108,14 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Properties
-		public List<FortunePoly> PolyList
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets the list of polygons which make up the voronoi diagram. </summary>
+		///
+		/// <value>	The polygons. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public List<FortunePoly> Polygons
 		{
 			get
 			{
@@ -124,6 +149,13 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Public methods
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Calculates the voronoi diagram. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public void Voronoi()
 		{
 			// The algorithm works by a sweepline technique.  As the sweekpline moves down
@@ -135,7 +167,8 @@ namespace DAP.CompGeom
 			Finish();
 		}
 
-		/// <summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
 		/// Return the Winged edge structure for the voronoi diagram.  This is a complicated procedure
 		/// with a lot of details to be taken care of as follows.
 		/// 
@@ -143,67 +176,80 @@ namespace DAP.CompGeom
 		/// 
 		/// Set all the successor edges to each edge and the list of edges to each vertex.
 		/// 
-		/// Zero length edges are elminated and their "endpoints" are consolidated.
+		/// Zero length edges are eliminated and their "endpoints" are consolidated.
 		/// 
 		/// The polygon at infinity and all the edges at infinity must be added
 		/// 
-		/// NOTE ON THE POLYGON AT INFINITY
-		/// In the WingedEdge structure each polygon has a list of edges with another
-		/// polygon on the other side of each edge.  This poses a bit of a difficulty for
-		/// the polygons in a Voronoi diagram whose edges are rays to infinity.  We'll call
-		/// these "infinite polygons" for convenience.  The solution we use in our
-		/// WingedEdge data structure is to produce a single "polygon at infinity" (not to
-		/// be confused with the infinite polygons previously mentioned) and a series of
-		/// edges at infinity which "separate" the infinite polygons from the polygon at
-		/// infinity.  These edges have to be ordered in the same order as the infinite
-		/// polygons around the border.  All of this is done in AddEdgeAtInfinity().
+		/// NOTE ON THE POLYGON AT INFINITY In the WingedEdge structure each polygon has a list of edges
+		/// with another polygon on the other side of each edge.  This poses a bit of a difficulty for
+		/// the polygons in a Voronoi diagram whose edges are rays to infinity.  We'll call these
+		/// "infinite polygons" for convenience.  The solution we use in our WingedEdge data structure is
+		/// to produce a single "polygon at infinity" (not to be confused with the infinite polygons
+		/// previously mentioned) and a series of edges at infinity which "separate" the infinite
+		/// polygons from the polygon at infinity.  These edges have to be ordered in the same order as
+		/// the infinite polygons around the border.  All of this is done in AddEdgeAtInfinity(). 
 		/// </summary>
-		/// <returns>The winged edge structure for the diagram</returns>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <returns>	The winged edge structure for the diagram. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public WingedEdge BuildWingedEdge()
 		{
+			// Initialize
 			// The first infinite polygon we locate and the index for the infinite
 			// edge ccw to that polygon
 			FortunePoly polyInfinityStart = null;
-			int iLeadingInfiniteEdgeCw = -1;
-
+			var iLeadingInfiniteEdgeCw = -1;
 			var we = new WingedEdge();
 
-			foreach (FortunePoly poly in _lstPolys)
+			// for all polygons in the voronoi diagram
+			foreach (var poly in _lstPolys)
 			{
+				// Diagnostics
 				Tracer.Trace(tv.FinalEdges, "Edges for generator {0}", poly.Index);
 				Tracer.Indent();
 
+				// Add the poly to the winged edge struct and sort it's edges
 				we.AddPoly(poly);
 				poly.SortEdges();
 
-				for (int iEdge = 0; iEdge < poly.VertexCount; iEdge++)
+				// For each edge in the polygon
+				for (var iEdge = 0; iEdge < poly.VertexCount; iEdge++)
 				{
+					// Get the next clockwise edge from the sorted list of edges
 					var edge = poly.EdgesCW[iEdge] as FortuneEdge;
-					int iEdgeNext = (iEdge + 1) % poly.VertexCount;
+					var iEdgeNext = (iEdge + 1) % poly.VertexCount;
 					var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
-
 					Tracer.Trace(tv.FinalEdges, edge.ToString());
 
+					// Incorporate the edge into the winged edge
 					edge.Process(poly, we);
 
+					// If this is an infinite polygon and we've not located any infinite polygons before
 					if (polyInfinityStart == null && edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
 					{
-						// If this is the first infinite polygon we've seen, make a note of it.
+						// Keep track of the first infinite polygon we've seen
 						// iLeadingInfiniteEdgeCw is the edge on the "left" as we look "out" from
 						// the infinite polygon
 						iLeadingInfiniteEdgeCw = iEdge;
 						polyInfinityStart = poly;
 					}
 				}
+
+				// Handle any zero length edges in the polygon
 				poly.HandleZeroLengthEdges();
 				Tracer.Unindent();
 			}
 
+			// Check if we have to readjust vertices for infinite polygons
+			//
+			// If there were zero length edges in polyInfinityStart then the edge indices may
+			// have gotten shifted around due to the removal of the zero length edges so
+			// relocate it...
 			if (polyInfinityStart != null && polyInfinityStart.FZeroLengthEdge)
 			{
-				// If there were zero length edges in polyInfinityStart then the edge indices may
-				// have gotten shifted around due to the removal of the zero length edges so
-				// relocate it...
 				
 				// If there are only two edges, they'll both be at infinity and we can't just use their
 				// indices to distinguish - we have to actually check the angles
@@ -237,7 +283,7 @@ namespace DAP.CompGeom
 				}
 			}
 
-			AddEdgesAtInfinity(we, polyInfinityStart, iLeadingInfiniteEdgeCw);
+			AddPolygonAtInfinity(we, polyInfinityStart, iLeadingInfiniteEdgeCw);
 
 #if NETTRACE || DEBUG
 			if (Tracer.FTracing(t.WeValidate))
@@ -252,33 +298,50 @@ namespace DAP.CompGeom
 
 		#region Polygon and edges at infinity
 
-		/// <summary>
-		/// Set up the polygon at infinity.  The main difficulty here consists in traversing
-		/// around the infinite polygons at the edge of the diagram in order.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Set up the polygon at infinity.  The main difficulty here consists in traversing around the
+		/// infinite polygons at the edge of the diagram in order. 
 		/// </summary>
-		/// <param name="we">WingedEdge structure we'll add the polygon at infinity to</param>
-		/// <param name="polyStart">Infinite polygon to start it's polygon list with</param>
-		/// <param name="iLeadingEdgeCw">Starting infinite edge</param>
-		private static void AddEdgesAtInfinity(WingedEdge we, FortunePoly polyStart, int iLeadingEdgeCw)
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="we">				WingedEdge structure we'll add the polygon at infinity to. </param>
+		/// <param name="polyStart">		Infinite polygon to start the polygon at infinity's polygon list with. </param>
+		/// <param name="iLeadingEdgeCw">	Starting infinite edge. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void AddPolygonAtInfinity(WingedEdge we, FortunePoly polyStart, int iLeadingEdgeCw)
 		{
+			// See if we've got a degenerate case
+			//
+			// Such as a single point
 			if (polyStart == null)
 			{
 				return;
 			}
 
+			// Initialize
 			var polyCur = polyStart;
 			int iLeadingEdgeNext;
-			// The infamous polygon at infinity...
+
+			// Create the infamous polygon at infinity...
 			var polyAtInfinity = new FortunePoly(new PT(0, 0), -1);
 			FortuneEdge edgePreviousAtInfinity = null;
 
+			// Declare this the official polygon at infinity
 			polyAtInfinity.FAtInfinity = true;
+
+			// Add it to the winged edge
 			we.AddPoly(polyAtInfinity);
   
-			// Loop through the "outer" infinite polygons of the diagram, setting each of them up
-			// with an edge at infinity to separate them from the polygon at infinity
+			// Loop through the "outer" infinite polygons of the diagram
+			//
+			// Set each of the outer infinite polygons up with an edge at infinity to separate
+			// them from the polygon at infinity
 			do
 			{
+				// Add the edge at infinity between our current poly and the poly at infinity
 				FortunePoly polyNext;
 				edgePreviousAtInfinity = AddEdgeAtInfinity(
 					polyAtInfinity,
@@ -288,12 +351,14 @@ namespace DAP.CompGeom
 					out polyNext,
 					out iLeadingEdgeNext);
 				we.AddEdge(edgePreviousAtInfinity);
+
+				// Move to the neighboring polygon at infinity
 				polyCur = polyNext;
 				iLeadingEdgeCw = iLeadingEdgeNext;
 			} while (polyCur != polyStart);
 
 			// Thread the last poly back to the first
-			WeEdge edgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
+			var edgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
 			edgePreviousAtInfinity.EdgeCCWPredecessor = edgeFirstAtInfinity;
 			edgeFirstAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
 		}
@@ -335,12 +400,12 @@ namespace DAP.CompGeom
 			// set up winged edge structure.
 
 			var edgeAtInfinity = new FortuneEdge
-			                     	{
-			                     		PolyRight = poly,
-			                     		PolyLeft = polyAtInfinity,
-			                     		VtxStart = edgeLeadingCw.VtxEnd,
-			                     		VtxEnd = edgeTrailingCw.VtxEnd
-			                     	};
+									{
+										PolyRight = poly,
+										PolyLeft = polyAtInfinity,
+										VtxStart = edgeLeadingCw.VtxEnd,
+										VtxEnd = edgeTrailingCw.VtxEnd
+									};
 			// The poly at infinity is to the left of the edge, the infinite poly is to its right
 			// Start and end vertices are the trailing and leading infinite edges
 			// Add the edge at infinity to the poly at infinity and the current infinite poly
@@ -492,8 +557,8 @@ namespace DAP.CompGeom
 							// true infinite lines in our winged edge data structure, so we turn the infinite lines into
 							// two rays pointing in opposite directions and originating at the midpoint of the two generators.
 
-							var pt1 = edge.Poly1.Pt;
-							var pt2 = edge.Poly2.Pt;
+							var pt1 = edge.Poly1.VoronoiPoint;
+							var pt2 = edge.Poly2.VoronoiPoint;
 							var dx = pt2.X - pt1.X;
 							var dy = pt2.Y - pt1.Y;
 							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
@@ -545,14 +610,14 @@ namespace DAP.CompGeom
 
 							// Replace the null vertex with an infinite vertex
 
-							var pt1 = edge.Poly1.Pt;
-							var pt2 = edge.Poly2.Pt;
+							var pt1 = edge.Poly1.VoronoiPoint;
+							var pt2 = edge.Poly2.VoronoiPoint;
 							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
 							// We have to be careful to get this ray pointed in the proper orientation.  We find
 							// the third polygon at the "base" of this ray and point the ray "away" from it.
 							var polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
-							var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.Pt);
+							var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.VoronoiPoint);
 							var dx = pt2.X - pt1.X;
 							var dy = pt2.Y - pt1.Y;
 							var ptProposedDirection = new PT(dy, -dx);
@@ -604,7 +669,7 @@ namespace DAP.CompGeom
 		#endregion
 	}
 
-	internal class EventQueue : PQWithDeletions<FortuneEvent>
+	internal class EventQueue : PriorityQueueWithDeletions<FortuneEvent>
 	{
 		#region Private Variables
 
@@ -810,8 +875,8 @@ namespace DAP.CompGeom
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
 			}
 			else
-            {
-            	EdgeCWPredecessor.EdgeCCWPredecessor = EdgeCCWSuccessor;
+			{
+				EdgeCWPredecessor.EdgeCCWPredecessor = EdgeCCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
 			}
 
@@ -822,32 +887,32 @@ namespace DAP.CompGeom
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
 			}
 			else
-            {
-            	EdgeCCWPredecessor.EdgeCWPredecessor = EdgeCWSuccessor;
+			{
+				EdgeCCWPredecessor.EdgeCWPredecessor = EdgeCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
 			}
 
 			// and CW Successor
 			if (EdgeCWSuccessor.VtxStart == VtxStart)
-            {
-            	EdgeCWSuccessor.EdgeCCWSuccessor = EdgeCCWPredecessor;
+			{
+				EdgeCWSuccessor.EdgeCCWSuccessor = EdgeCCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
 			}
 			else
-            {
-            	EdgeCWSuccessor.EdgeCCWPredecessor = EdgeCCWPredecessor;
+			{
+				EdgeCWSuccessor.EdgeCCWPredecessor = EdgeCCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
 			}
 
 			// and CCW Successor
 			if (EdgeCCWSuccessor.VtxStart == VtxStart)
-            {
-            	EdgeCCWSuccessor.EdgeCWSuccessor = EdgeCWPredecessor;
+			{
+				EdgeCCWSuccessor.EdgeCWSuccessor = EdgeCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
 			}
 			else
-            {
-            	EdgeCCWSuccessor.EdgeCWPredecessor = EdgeCWPredecessor;
+			{
+				EdgeCCWSuccessor.EdgeCWPredecessor = EdgeCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
 			}
 
@@ -952,14 +1017,20 @@ namespace DAP.CompGeom
 			edgeCCW = vtx.Edges[(iEdge + 2) % 3] as FortuneEdge;
 		}
 
-		/// <summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
 		/// Place the poly on the proper side of this edge.  We use the generator of the poly to locate
-		/// it properly WRT this edge.
+		/// it properly WRT this edge. 
 		/// </summary>
-		/// <param name="poly">Polygon to locate</param>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="poly">	Polygon to locate. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void SetOrderedPoly(FortunePoly poly)
 		{
-			if (FLeftOf(poly.Pt))
+			if (FLeftOf(poly.VoronoiPoint))
 			{
 				PolyLeft = poly;
 			}
@@ -1018,11 +1089,15 @@ namespace DAP.CompGeom
 			}
 		}
 
-		/// <summary>
-		/// Add a poly to the edge and the edge to the winged edge data structure.
-		/// </summary>
-		/// <param name="poly">Polygon to add</param>
-		/// <param name="we">Winged edge structure to add edge to</param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Add a poly to the edge and the edge to the winged edge data structure. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="poly">	Polygon to add. </param>
+		/// <param name="we">	Winged edge structure to add edge to. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void Process(FortunePoly poly, WingedEdge we)
 		{
 			// Put the poly properly to the left or right of this edge
@@ -1095,10 +1170,16 @@ namespace DAP.CompGeom
 				return 0;
 			}
 
-			return Geometry.ICompareCw(PolyCommon(edge).Pt, PolyOrderingTestPoint, edge.PolyOrderingTestPoint);
+			return Geometry.ICompareCw(PolyCommon(edge).VoronoiPoint, PolyOrderingTestPoint, edge.PolyOrderingTestPoint);
 		}
 		#endregion
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	Fortune polygon. </summary>
+	///
+	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public class FortunePoly : WePolygon
 	{
@@ -1108,11 +1189,23 @@ namespace DAP.CompGeom
 
 		#region Properties
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Indicates that this is the singleton polygon at infinity </summary>
+		///
+		/// <value>	true if at it's the polygon at infinity. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public bool FAtInfinity { get; set; }
 
 		public bool FZeroLengthEdge { get; set; }
 
-		public PT Pt { get; set; }
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	The original point which caused this voronoi cell to exist. </summary>
+		///
+		/// <value>	The point in the original set of data points. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public PT VoronoiPoint { get; set; }
 
 		public int Index { get; set; }
 
@@ -1124,7 +1217,7 @@ namespace DAP.CompGeom
 			FZeroLengthEdge = false;
 			FAtInfinity = false;
 			Index = iGen;
-			Pt = pt;
+			VoronoiPoint = pt;
 		}
 		#endregion
 
@@ -1138,36 +1231,36 @@ namespace DAP.CompGeom
 		/// </summary>
 		internal void SortEdges()
 		{
-			if (LstCWEdges.Count == 2)
+			if (EdgesCW.Count == 2)
 			{
-				if (((FortuneEdge)LstCWEdges[0]).FSplit)
+				if (((FortuneEdge)EdgesCW[0]).FSplit)
 				{
 					if (Geometry.ICcw(
-						((FortuneEdge)LstCWEdges[0]).PolyOrderingTestPoint,
-						((FortuneEdge)LstCWEdges[1]).PolyOrderingTestPoint,
-						Pt) < 0)
+						((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
+						((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint,
+						VoronoiPoint) < 0)
 					{
-						WeEdge edgeT = LstCWEdges[0];
-						LstCWEdges[0] = LstCWEdges[1];
-						LstCWEdges[1] = edgeT;
+						WeEdge edgeT = EdgesCW[0];
+						EdgesCW[0] = EdgesCW[1];
+						EdgesCW[1] = edgeT;
 					}
 				}
 				else
 				{
 					// We want the edges ordered around the single base point properly
-					if (Geometry.ICcw(LstCWEdges[0].VtxStart.Pt,
-						((FortuneEdge)LstCWEdges[0]).PolyOrderingTestPoint,
-						((FortuneEdge)LstCWEdges[1]).PolyOrderingTestPoint) > 0)
+					if (Geometry.ICcw(EdgesCW[0].VtxStart.Pt,
+						((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
+						((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint) > 0)
 					{
-						WeEdge edgeT = LstCWEdges[0];
-						LstCWEdges[0] = LstCWEdges[1];
-						LstCWEdges[1] = edgeT;
+						WeEdge edgeT = EdgesCW[0];
+						EdgesCW[0] = EdgesCW[1];
+						EdgesCW[1] = edgeT;
 					}
 				}
 			}
 			else
 			{
-				LstCWEdges.Sort();
+				EdgesCW.Sort();
 			}
 		}
 
@@ -1187,16 +1280,18 @@ namespace DAP.CompGeom
 			edge.ReassignVertexEdges();
 		}
 
-		/// <summary>
-		/// Sort out zero length edge issues
-		/// </summary>
-		/// <remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Sort out zero length edge issues. </summary>
+		///
+		/// <remarks>	
 		/// Zero length edges are a pain and have to be dealt with specially since they don't sort
-		/// properly using normal geometrical position nor do can "sidedness" be determined solely from
+		/// properly using normal geometrical position nor can "sidedness" be determined solely from
 		/// their geometry (a zero length line has no "sides").  Instead, we have to look at the non-zero
 		/// length edges around them and determine this information by extrapolating from those edges
-		/// topological connection to this edge.
+		/// topological connection to this edge. 
 		/// </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void HandleZeroLengthEdges()
 		{
 			if (!FZeroLengthEdge)
@@ -1298,16 +1393,16 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
 				vtx1.Pt = new PT(3, 4);
 				vtx2.Pt = new PT(4, 3);
 				vtx3.Pt = new PT(-1, -2);
 				vtx4.Pt = new PT(-2, -1);
-				polyTest.LstCWEdges.Clear();
+				polyTest.EdgesCW.Clear();
 
 				polyTest.AddEdge(edge4);
 				polyTest.AddEdge(edge3);
@@ -1315,17 +1410,17 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge2);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
-				poly1.Pt = new PT(10, 10);
+				poly1.VoronoiPoint = new PT(10, 10);
 				vtx1.Pt = new PT(13, 14);
 				vtx2.Pt = new PT(14, 13);
 				vtx3.Pt = new PT(9, 8);
 				vtx4.Pt = new PT(8, 9);
-				polyTest.LstCWEdges.Clear();
+				polyTest.EdgesCW.Clear();
 
 				polyTest.AddEdge(edge1);
 				polyTest.AddEdge(edge3);
@@ -1333,12 +1428,12 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
-				poly1.Pt = new PT(0, 0);
+				poly1.VoronoiPoint = new PT(0, 0);
 				vtx1 = FortuneVertex.InfiniteVertex(new PT(1, 2), true);
 				vtx2.Pt = new PT(8, -1);
 				vtx3.Pt = new PT(0, -3);
@@ -1352,7 +1447,7 @@ namespace DAP.CompGeom
 				edge3.VtxEnd = vtx4;
 				edge4.VtxStart = vtx4;
 				edge4.VtxEnd = vtx5;
-				polyTest.LstCWEdges.Clear();
+				polyTest.EdgesCW.Clear();
 
 				polyTest.AddEdge(edge3);
 				polyTest.AddEdge(edge1);
@@ -1360,10 +1455,10 @@ namespace DAP.CompGeom
 				polyTest.AddEdge(edge4);
 
 				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.LstCWEdges[3], edge4));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
+				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 			}
 		}
 #endif
