@@ -1,222 +1,304 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 using NUnit.Framework;
 using NetTrace;
 
 namespace DAP.CompGeom
 {
-	// A priority queue implemented as an array.  This is a pretty standard implementation.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	A priority queue implemented as an array.  This is a pretty standard implementation. </summary>
+	///
+	/// <remarks>	Darrellp, 2/17/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	public class PriorityQueue<T> : IEnumerable<T> where T : IComparable
 	{
 		#region Private Variables
 		/// <summary>
 		/// Array to keep elements in.  C# lists are actually implemented as arrays.  This is contrary
-		/// to everything I learned about the terms "array" and "list", but that's essentially the way
-		/// they're implemented.
+		/// to everything I learned about the terms "array" and "list", but that's nonetheless the way
+		/// they're implemented in the CLR Framework.
 		/// </summary>
-		protected List<T> _lstHeap = new List<T>();
+		protected List<T> LstHeap = new List<T>();
 		#endregion
 
 		#region Properties
+		///<summary>
+		/// Count of items in the priority queue
+		///</summary>
 		public virtual int Count
 		{
-			get { return _lstHeap.Count; }
+			get { return LstHeap.Count; }
 		}
 		#endregion
 
 		#region Public methods
-		/// <summary>
-		/// Insert a value into the priority queue
-		/// </summary>
-		/// <param name="val">Value to insert</param>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Insert a value into the priority queue. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="val">	Value to insert. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public virtual void Add(T val)
 		{
+			// Tracing
 			Tracer.Trace(t.PqInserts, "Adding {0}...", val.ToString());
 			Tracer.Indent();
-			_lstHeap.Add(val);
-			SetAt(_lstHeap.Count - 1, val);
-			UpHeap(_lstHeap.Count - 1);
+
+			// Add the new element to the end of the list
+			LstHeap.Add(val);
+			SetAt(LstHeap.Count - 1, val);
+
+			// Move it up the tree to it's correct position
+			UpHeap(LstHeap.Count - 1);
 			Tracer.Unindent();
 			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
 			PrintTree();
 		}
 
-		/// <summary>
-		/// Return the maximal element in the queue
-		/// </summary>
-		/// <returns>Maximal element</returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Return the maximal element in the queue. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <exception cref="IndexOutOfRangeException">	Trying to peek at an empty priority queue. </exception>
+		///
+		/// <returns>	Maximal element in the queue. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public virtual T Peek()
 		{
-			if (_lstHeap.Count == 0)
+			// If there are no elements to peek
+			if (LstHeap.Count == 0)
 			{
+				// Throw and exception
 				throw new IndexOutOfRangeException("Peeking at an empty priority queue");
 			}
-			return _lstHeap[0];
+
+			// Otherwise, the root is our largest element
+			// The 0'th element in the list is always the root
+			return LstHeap[0];
 		}
 
-		/// <summary>
-		/// Remove and return the maximal element in the queue
-		/// </summary>
-		/// <returns>Maximal element</returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Remove and return the maximal element in the queue. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <exception cref="IndexOutOfRangeException">	Thrown when the priority queue is empty. </exception>
+		///
+		/// <returns>	Maximal element. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public virtual T Pop()
 		{
-			if (_lstHeap.Count == 0)
+			// If There's nothing to pop
+			if (LstHeap.Count == 0)
 			{
+				// Throw an exception
 				throw new IndexOutOfRangeException("Popping an empty priority queue");
 			}
-			T valRet = _lstHeap[0];
 
+			// Save away the max value in the heap
+			var valRet = LstHeap[0];
+
+			// Diagnostics
 			Tracer.Trace(t.PqDeletes, "Popping {0}", valRet.ToString());
 			Tracer.Indent();
 			Tracer.Trace(
 				t.PqDeletes,
 				"Removing {0} from the array end and placing at the first position",
-				_lstHeap[_lstHeap.Count - 1]);
-			SetAt(0, _lstHeap[_lstHeap.Count - 1]);
-			_lstHeap.RemoveAt(_lstHeap.Count - 1);
+				LstHeap[LstHeap.Count - 1]);
+
+			// Move the last element in the list to the now vacated first
+			// Yea, and I sayeth unto you, the last shall be first...
+			SetAt(0, LstHeap[LstHeap.Count - 1]);
+
+			// Drop the now redundant last item
+			LstHeap.RemoveAt(LstHeap.Count - 1);
+
+			// Move the top item down the tree to its proper position
 			DownHeap(0);
-			Tracer.Trace(t.PqInserts, "Array Count = {0}", _lstHeap.Count);
+			Tracer.Trace(t.PqInserts, "Array Count = {0}", LstHeap.Count);
 			Tracer.Unindent();
 			PrintTree();
 			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
 
+			// Return the element we removed
 			return valRet;
 		}
 		#endregion
 
 		#region Virtual methods
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Sets an element in the list we keep our heap elements in </summary>
+		///
+		/// <remarks>
+		/// This is the only way elements should be inserted into LstHeap.  This ensures, among other things,
+		/// that the elements in a queue with deletions always have their held indices up to date.
+		/// Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="i">	The index into LstHeap. </param>
+		/// <param name="val">	The value to be set. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected virtual void SetAt(int i, T val)
 		{
-			_lstHeap[i] = val;
+			LstHeap[i] = val;
 		}
 		#endregion
 
 		#region Heapifying
-		protected bool FRSonExists(int i)
+		protected bool RightSonExists(int i)
 		{
-			return Rndx(i) < _lstHeap.Count;
+			return RightChildIndex(i) < LstHeap.Count;
 		}
 
-		protected bool FLSonExists(int i)
+		protected bool LeftSonExists(int i)
 		{
-			return Lndx(i) < _lstHeap.Count;
+			return LeftChildIndex(i) < LstHeap.Count;
 		}
 
-		protected int Pndx(int i)
+		protected int ParentIndex(int i)
 		{
 			return (i - 1) / 2;
 		}
 
-		protected int Lndx(int i)
+		protected int LeftChildIndex(int i)
 		{
 			return 2 * i + 1;
 		}
 
-		protected int Rndx(int i)
+		protected int RightChildIndex(int i)
 		{
 			return 2 * (i + 1);
 		}
 
-		protected T Val(int i)
+		protected T ArrayVal(int i)
 		{
-			return _lstHeap[i];
+			return LstHeap[i];
 		}
 
 		protected T Parent(int i)
 		{
-			return _lstHeap[Pndx(i)];
+			return LstHeap[ParentIndex(i)];
 		}
 
 		protected T Left(int i)
 		{
-			return _lstHeap[Lndx(i)];
+			return LstHeap[LeftChildIndex(i)];
 		}
 
 		protected T Right(int i)
 		{
-			return _lstHeap[Rndx(i)];
+			return LstHeap[RightChildIndex(i)];
 		}
 
 		protected void Swap(int i, int j)
 		{
-			T valHold = Val(i);
-			SetAt(i, _lstHeap[j]);
+			var valHold = ArrayVal(i);
+			SetAt(i, LstHeap[j]);
 			SetAt(j, valHold);
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Move an element up the heap to it's proper position </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="i">	The index of the element to move. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected void UpHeap(int i)
 		{
-			while (i > 0 && Val(i).CompareTo(Parent(i)) > 0)
+			// While we're not the root and our parent is smaller than we are
+			while (i > 0 && ArrayVal(i).CompareTo(Parent(i)) > 0)
 			{
+				//Diagnostics
 				Tracer.Trace(t.PqInserts, "Moving {0} to {1}", Parent(i).ToString(), i);
 				Tracer.Trace(t.PqPercolates, "UpHeap: Swapping {0} (indx={1}) and {2} (indx={3})",
-					_lstHeap[i].ToString(),
+					LstHeap[i].ToString(),
 					i,
-					_lstHeap[Pndx(i)],
-					Pndx(i));
-				Swap(i, Pndx(i));
-				i = Pndx(i);
+					LstHeap[ParentIndex(i)],
+					ParentIndex(i));
+				// Swap us with our parents
+				Swap(i, ParentIndex(i));
+				i = ParentIndex(i);
 			}
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Move an element down the heap to it's proper position. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="i">	The index of the element to move. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected void DownHeap(int i)
 		{
+			// Until we've reached our final position
 			while (i >= 0)
 			{
-				int iContinue = -1;
+				// Initialize
+				var iContinue = -1;
 
-				if (FRSonExists(i) && Right(i).CompareTo(Val(i)) > 0)
+				// If we have a right son and he is larger than us
+				if (RightSonExists(i) && Right(i).CompareTo(ArrayVal(i)) > 0)
 				{
-					if (Left(i).CompareTo(Right(i)) < 0)
-					{
-						iContinue = Rndx(i);
-					}
-					else
-					{
-						iContinue = Lndx(i);
-					}
+					// Arrange to swap us with the larger of our two children
+					iContinue = Left(i).CompareTo(Right(i)) < 0 ? RightChildIndex(i) : LeftChildIndex(i);
 				}
-				else if (FLSonExists(i) && Left(i).CompareTo(Val(i)) > 0)
+				// Else if we have a left son and he is larger than us
+				else if (LeftSonExists(i) && Left(i).CompareTo(ArrayVal(i)) > 0)
 				{
-					iContinue = Lndx(i);
+					// Arrange to swap with him
+					iContinue = LeftChildIndex(i);
 				}
 
-				if (iContinue >= 0 && iContinue < _lstHeap.Count)
+				// If we found a node to swap with
+				if (iContinue >= 0 && iContinue < LstHeap.Count)
 				{
+					// Make the swap
 					Tracer.Trace(t.PqPercolates, "DownHeap: Swapping {0} (indx={1}) and {2} (indx={3})",
-						_lstHeap[i].ToString(),
+						LstHeap[i].ToString(),
 						i,
-						_lstHeap[iContinue],
+						LstHeap[iContinue],
 						iContinue);
 					Swap(i, iContinue);
 				}
+
+				// Continue on down the tree if we made a swap
 				i = iContinue;
 			}
 		}
 		#endregion
 
 		#region Debugging
-		protected string _strIndent = "";
+		protected string StrIndent = "";
 		[Conditional("DEBUG")]
 		virtual protected void TraceElement(int iPos, T val)
 		{
-			Tracer.Trace(t.PqTrees, "Pos " + iPos + ":" + _strIndent + val.ToString());
+			Tracer.Trace(t.PqTrees, "Pos " + iPos + ":" + StrIndent + val);
 		}
 
 		[Conditional("DEBUG")]
 		void Indent()
 		{
-			_strIndent = _strIndent + "\t";
+			StrIndent = StrIndent + "\t";
 		}
 
 		[Conditional("DEBUG")]
 		void Unindent()
 		{
-			if (_strIndent != String.Empty)
+			if (StrIndent != String.Empty)
 			{
-				_strIndent = _strIndent.Remove(_strIndent.Length - 1, 1);
+				StrIndent = StrIndent.Remove(StrIndent.Length - 1, 1);
 			}
 		}
 
@@ -228,7 +310,7 @@ namespace DAP.CompGeom
 				return;
 			}
 			Tracer.Trace(t.PqTrees, "<<< PQ TREE >>>");
-			if (_lstHeap.Count == 0)
+			if (LstHeap.Count == 0)
 			{
 				return;
 			}
@@ -239,16 +321,16 @@ namespace DAP.CompGeom
 		[Conditional("DEBUG")]
 		protected void PrintTree(int i)
 		{
-			TraceElement(i, _lstHeap[i]);
+			TraceElement(i, LstHeap[i]);
 			Indent();
 
-			if (FLSonExists(i))
+			if (LeftSonExists(i))
 			{
-				PrintTree(Lndx(i));
+				PrintTree(LeftChildIndex(i));
 			}
-			if (FRSonExists(i))
+			if (RightSonExists(i))
 			{
-				PrintTree(Rndx(i));
+				PrintTree(RightChildIndex(i));
 			}
 			Unindent();
 		}
@@ -257,7 +339,7 @@ namespace DAP.CompGeom
 		#region Validation
 		internal virtual bool FValidate()
 		{
-			if (_lstHeap.Count == 0)
+			if (LstHeap.Count == 0)
 			{
 				return true;
 			}
@@ -266,28 +348,28 @@ namespace DAP.CompGeom
 
 		bool FValidate(int iRoot)
 		{
-			T valRoot = _lstHeap[iRoot];
+			T valRoot = LstHeap[iRoot];
 
-			if (FLSonExists(iRoot))
+			if (LeftSonExists(iRoot))
 			{
 				if (valRoot.CompareTo(Left(iRoot)) < 0)
 				{
 					Tracer.Assert(t.PqValidate, false, "Child is > than parent");
 					return false;
 				}
-				if (!FValidate(Lndx(iRoot)))
+				if (!FValidate(LeftChildIndex(iRoot)))
 				{
 					return false;
 				}
 			}
-			if (FRSonExists(iRoot))
+			if (RightSonExists(iRoot))
 			{
 				if (valRoot.CompareTo(Right(iRoot)) < 0)
 				{
 					Tracer.Assert(t.PqValidate, false, "Child is > than parent");
 					return false;
 				}
-				if (!FValidate(Lndx(iRoot)))
+				if (!FValidate(LeftChildIndex(iRoot)))
 				{
 					return false;
 				}
@@ -299,7 +381,7 @@ namespace DAP.CompGeom
 		#region IEnumerable<T> Members
 		protected virtual IEnumerator<T> GetEnumerator()
 		{
-			return _lstHeap.GetEnumerator();
+			return LstHeap.GetEnumerator();
 		}
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
@@ -315,99 +397,6 @@ namespace DAP.CompGeom
 		#endregion
 	}
 
-	/// <summary>
-	/// In a priority queue which supports deletion, elements must keep track of their position
-	/// within the queue's heap list.  This interface supports that.
-	/// </summary>
-	public interface IPriorityQueueElement : IComparable
-	{
-		void SetIndex(int i);
-		int Index
-		{
-			get;
-			set;
-		}
-	}
-
-	public class PQWithDeletions<T> : PriorityQueue<T> where T : IPriorityQueueElement
-	{
-		#region Public overrides
-		public override T Pop()
-		{
-			T valRet;
-
-			valRet = base.Pop();
-
-			// When an element is removed from the heap, it's index must be reset.
-			valRet.Index = -1;
-			return valRet;
-		}
-
-		/// <summary>
-		/// Delete a value from the heap
-		/// </summary>
-		/// <param name="val">Value to remove</param>
-		public void Delete(T val)
-		{
-			int i = val.Index;
-
-			if (i >= 0)
-			{
-				val.Index = -1;
-				Tracer.Assert(t.Assertion, i < _lstHeap.Count, "Trying to remove an element beyond the end of the heap");
-				Tracer.Trace(t.PqDeletes, "Deleting {0} (pos {1})", val.ToString(), i);
-				Swap(i, _lstHeap.Count - 1);
-				_lstHeap.RemoveAt(_lstHeap.Count - 1);
-				if (i < _lstHeap.Count)
-				{
-					if (i != 0 && _lstHeap[i].CompareTo(Parent(i)) > 0)
-					{
-						UpHeap(i);
-					}
-					else
-					{
-						DownHeap(i);
-					}
-				}
-			}
-			PrintTree();
-			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
-		}
-		#endregion
-
-		#region Private overrides
-		internal override bool FValidate()
-		{
-			for (int iVal = 0; iVal < _lstHeap.Count; iVal++)
-			{
-				if (_lstHeap[iVal].Index != iVal)
-				{
-					Tracer.Assert(t.Assertion, false, "Indices not set correctly");
-					return false;
-				}
-			}
-
-			return base.FValidate();
-		}
-		protected override void TraceElement(int iPos, T val)
-		{
-			Tracer.Trace(t.PqTrees,
-				"Pos " + iPos + (val.Index < 0 ? "<DEL>" : "" + ":") + _strIndent + val.ToString());
-		}
-
-		/// <summary>
-		/// This override is the magic that makes the deletions work by keeping track of the index
-		/// a particular element is moved to.
-		/// </summary>
-		/// <param name="i"></param>
-		/// <param name="val"></param>
-		protected override void SetAt(int i, T val)
-		{
-			base.SetAt(i, val);
-			val.SetIndex(i);
-		}
-		#endregion
-	}
 
 	#region NUnit
 #if DEBUG || NUNIT
@@ -440,9 +429,9 @@ namespace DAP.CompGeom
 		}
 
 		[Test]
-		public void TestPQ()
+		public void TestPq()
 		{
-			PriorityQueue<int> pq = new PriorityQueue<int>();
+			var pq = new PriorityQueue<int>();
 
 			pq.Add(80);
 			Assert.AreEqual(80, pq.Peek());
@@ -473,7 +462,7 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestPQWithDeletions()
 		{
-			PQWithDeletions<PQWDElement> pq = new PQWithDeletions<PQWDElement>();
+			PriorityQueueWithDeletions<PQWDElement> priorityQueue = new PriorityQueueWithDeletions<PQWDElement>();
 
 			PQWDElement pq80 = new PQWDElement(80);
 			PQWDElement pq90 = new PQWDElement(90);
@@ -484,77 +473,77 @@ namespace DAP.CompGeom
 			PQWDElement pq50 = new PQWDElement(50);
 			PQWDElement pq35 = new PQWDElement(35);
 
-			pq.Add(pq40);
-			pq.Add(pq90);
-			pq.Add(pq20);
-			pq.Add(pq30);
-			pq.Add(pq35);
-			pq.Add(pq50);
-			pq.Add(pq85);
-			pq.Delete(pq30);
-			Assert.IsTrue(pq.FValidate());
-			Assert.AreEqual(6, pq.Count);
+			priorityQueue.Add(pq40);
+			priorityQueue.Add(pq90);
+			priorityQueue.Add(pq20);
+			priorityQueue.Add(pq30);
+			priorityQueue.Add(pq35);
+			priorityQueue.Add(pq50);
+			priorityQueue.Add(pq85);
+			priorityQueue.Delete(pq30);
+			Assert.IsTrue(priorityQueue.FValidate());
+			Assert.AreEqual(6, priorityQueue.Count);
 			int cEnums = 0;
-			foreach (IPriorityQueueElement pqe in pq)
+			foreach (IPriorityQueueElement pqe in priorityQueue)
 			{
 				cEnums++;
 			}
 			Assert.AreEqual(6, cEnums);
-			pq.Pop();
-			pq.Pop();
-			pq.Pop();
-			pq.Pop();
-			pq.Pop();
-			pq.Pop();
+			priorityQueue.Pop();
+			priorityQueue.Pop();
+			priorityQueue.Pop();
+			priorityQueue.Pop();
+			priorityQueue.Pop();
+			priorityQueue.Pop();
 
-			pq.Add(pq80);
+			priorityQueue.Add(pq80);
 			Assert.AreEqual(0, ((IPriorityQueueElement)pq80).Index);
-			pq.Delete(pq80);
+			priorityQueue.Delete(pq80);
 			pq80 = new PQWDElement(80);
 			Assert.AreEqual(-1, ((IPriorityQueueElement)pq80).Index);
 
-			pq.Add(pq80);
-			Assert.AreEqual(pq80, pq.Peek());
-			pq.Add(pq90);
-			Assert.AreEqual(2, pq.Count);
-			Assert.AreEqual(pq90, pq.Peek());
-			Assert.AreEqual(pq90, pq.Pop());
-			Assert.AreEqual(pq80, pq.Peek());
-			pq.Add(pq30);
-			pq.Add(pq90);
-			pq.Add(pq85);
-			pq.Add(pq20);
-			Assert.AreEqual(5, pq.Count);
-			Assert.AreEqual(pq90, pq.Pop());
-			Assert.AreEqual(pq85, pq.Pop());
-			Assert.AreEqual(3, pq.Count);
-			pq.Add(pq50);
-			pq.Add(pq35);
-			Assert.AreEqual(5, pq.Count);
-			Assert.AreEqual(pq80, pq.Pop());
-			Assert.AreEqual(pq50, pq.Pop());
-			Assert.AreEqual(pq35, pq.Pop());
-			Assert.AreEqual(pq30, pq.Pop());
-			Assert.AreEqual(pq20, pq.Pop());
-			Assert.AreEqual(0, pq.Count);
+			priorityQueue.Add(pq80);
+			Assert.AreEqual(pq80, priorityQueue.Peek());
+			priorityQueue.Add(pq90);
+			Assert.AreEqual(2, priorityQueue.Count);
+			Assert.AreEqual(pq90, priorityQueue.Peek());
+			Assert.AreEqual(pq90, priorityQueue.Pop());
+			Assert.AreEqual(pq80, priorityQueue.Peek());
+			priorityQueue.Add(pq30);
+			priorityQueue.Add(pq90);
+			priorityQueue.Add(pq85);
+			priorityQueue.Add(pq20);
+			Assert.AreEqual(5, priorityQueue.Count);
+			Assert.AreEqual(pq90, priorityQueue.Pop());
+			Assert.AreEqual(pq85, priorityQueue.Pop());
+			Assert.AreEqual(3, priorityQueue.Count);
+			priorityQueue.Add(pq50);
+			priorityQueue.Add(pq35);
+			Assert.AreEqual(5, priorityQueue.Count);
+			Assert.AreEqual(pq80, priorityQueue.Pop());
+			Assert.AreEqual(pq50, priorityQueue.Pop());
+			Assert.AreEqual(pq35, priorityQueue.Pop());
+			Assert.AreEqual(pq30, priorityQueue.Pop());
+			Assert.AreEqual(pq20, priorityQueue.Pop());
+			Assert.AreEqual(0, priorityQueue.Count);
 
-			pq.Add(pq35);
-			pq.Add(pq50);
-			pq.Add(pq20);
-			pq.Add(pq85);
-			pq.Add(pq30);
-			pq.Add(pq90);
-			pq.Add(pq80);
+			priorityQueue.Add(pq35);
+			priorityQueue.Add(pq50);
+			priorityQueue.Add(pq20);
+			priorityQueue.Add(pq85);
+			priorityQueue.Add(pq30);
+			priorityQueue.Add(pq90);
+			priorityQueue.Add(pq80);
 
-			pq.Delete(pq50);
-			pq.Delete(pq30);
-			Assert.AreEqual(5, pq.Count);
-			Assert.AreEqual(pq90, pq.Pop());
-			Assert.AreEqual(pq85, pq.Pop());
-			Assert.AreEqual(pq80, pq.Pop());
-			Assert.AreEqual(pq35, pq.Pop());
-			Assert.AreEqual(pq20, pq.Pop());
-			Assert.AreEqual(0, pq.Count);
+			priorityQueue.Delete(pq50);
+			priorityQueue.Delete(pq30);
+			Assert.AreEqual(5, priorityQueue.Count);
+			Assert.AreEqual(pq90, priorityQueue.Pop());
+			Assert.AreEqual(pq85, priorityQueue.Pop());
+			Assert.AreEqual(pq80, priorityQueue.Pop());
+			Assert.AreEqual(pq35, priorityQueue.Pop());
+			Assert.AreEqual(pq20, priorityQueue.Pop());
+			Assert.AreEqual(0, priorityQueue.Count);
 		}
 
 		class PQWDElement : IPriorityQueueElement
