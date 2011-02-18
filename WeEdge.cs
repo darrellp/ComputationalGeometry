@@ -247,13 +247,29 @@ namespace DAP.CompGeom
 		#region ToString
 		public override string ToString()
 		{
-			string strStart = VtxStart == null ? "Inf" : VtxStart.ToString();
-			string strEnd = VtxEnd == null ? "Inf" : VtxEnd.ToString();
+			var strStart = VtxStart == null ? "Inf" : VtxStart.ToString();
+			var strEnd = VtxEnd == null ? "Inf" : VtxEnd.ToString();
 			return strStart + " - " + strEnd;
 		}
 		#endregion
 
 		#region IComparable Members
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Virtual version of compare. </summary>
+		///
+		/// <remarks>
+		/// There's probably a better way to handle this with abstract classes or something but I'm not
+		/// sure right off the bat what it is and this works fine so I'm leaving well enough alone.
+		/// Darrellp, 2/18/2011.
+		/// </remarks>
+		///
+		/// <exception cref="Exception">	Thrown always. </exception>
+		///
+		/// <param name="edge">	The edge to compare. </param>
+		///
+		/// <returns>	Never returns. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		virtual public int CompareToVirtual(WeEdge edge)
 		{
@@ -267,14 +283,21 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Drawing
-		/// <summary>
-		/// Draw the edge onto a graphics object
-		/// </summary>
-		/// <param name="g">Graphis object to draw with</param>
-		/// <param name="pen">Pen to draw the edge with</param>
-		/// <param name="infiniteLineLength">Length long enough to guarantee we draw to the edge of the Graphics area</param>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Draw the edge onto a graphics object. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="g">					Graphics object to draw with. </param>
+		/// <param name="pen">					Pen to draw the edge with. </param>
+		/// <param name="infiniteLineLength">	Length long enough to guarantee we draw to the edge of
+		/// 									the Graphics area. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public void Draw(Graphics g, Pen pen, Single infiniteLineLength)
 		{
+			// Declare the two points we're going to draw a segment on
 			PointF pt1, pt2;
 
 			// If both vertices are at infinity, there's nothing to draw
@@ -283,6 +306,8 @@ namespace DAP.CompGeom
 				return;
 			}
 
+			// If one vertex is at infinity
+			//
 			// If one vertex is at infinity and the other isn't, replace the one at infinity with a "real point.
 			// That point needs to be off the edge of the graphics area so that the resulting line is clipped at
 			// the edge.  We can't use float.MaxValue because we're going to add to it and overflow so we really
@@ -291,27 +316,34 @@ namespace DAP.CompGeom
 			// normally be a good value to use for that parameter.
 			if (VtxEnd.FAtInfinity || VtxStart.FAtInfinity)
 			{
+				// Locals
 				WeVertex vtxFinite, vtxInfinite;
 
+				// If it's the end vertex
 				if (VtxEnd.FAtInfinity)
 				{
+					// Set finite to start and infinite to end
 					vtxFinite = VtxStart;
 					vtxInfinite = VtxEnd;
 				}
 				else
 				{
+					// Set finite to end and infinite to start
 					vtxFinite = VtxEnd;
 					vtxInfinite = VtxStart;
 				}
+				// pt1 is the finite vertex and pt2 is the infinite converted to a real point
 				pt1 = vtxFinite.Pt;
 				pt2 = vtxInfinite.ConvertToReal(vtxFinite.Pt, infiniteLineLength);
 			}
 			else
 			{
+				// Set pt1 and pt2 to start and end respectively
 				pt1 = VtxStart.Pt;
 				pt2 = VtxEnd.Pt;
 			}
 
+			// Draw the line
 			g.DrawLine(pen, pt1, pt2);
 		}
 		#endregion
