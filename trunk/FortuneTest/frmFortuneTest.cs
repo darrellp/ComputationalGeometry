@@ -191,7 +191,7 @@ namespace FortuneTest
 				Fortune frt = new Fortune(_lstPt);
 				frt.Voronoi();
 				WingedEdge we = frt.BuildWingedEdge();
-				_lstPoly = frt.PolyList;
+				_lstPoly = frt.Polygons;
 				pnlDraw.Invalidate();
 			}
 #endif
@@ -262,7 +262,7 @@ namespace FortuneTest
 		{
 			Fortune frt = new Fortune(_lstPt);
 			frt.Voronoi();
-			_lstPoly = frt.PolyList;
+			_lstPoly = frt.Polygons;
 			frt.BuildWingedEdge();
 			pnlDraw.Invalidate();
 		}

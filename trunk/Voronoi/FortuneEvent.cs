@@ -117,9 +117,9 @@ namespace DAP.CompGeom
 			CircleEvent cevtRet = null;
 
 			/// Circle events are created at the circumcenters of three sites - the sites for poly1/2/3.
-			if (Geometry.FFindCircumcenter(poly1.Pt, poly2.Pt, poly3.Pt, out ptCenter))
+			if (Geometry.FFindCircumcenter(poly1.VoronoiPoint, poly2.VoronoiPoint, poly3.VoronoiPoint, out ptCenter))
 			{
-				TPT radius = Geometry.Distance(poly1.Pt, ptCenter);
+				TPT radius = Geometry.Distance(poly1.VoronoiPoint, ptCenter);
 
 				ptCenter.Y -= radius;
 
@@ -178,7 +178,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Constructor
-		internal SiteEvent(FortunePoly poly) : base(poly.Pt)
+		internal SiteEvent(FortunePoly poly) : base(poly.VoronoiPoint)
 		{
 			_poly = poly;
 			Tracer.Trace(tv.InsertSite, "Inserting site: {0}", this.ToString());

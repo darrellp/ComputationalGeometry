@@ -186,8 +186,8 @@ namespace FortuneTest
 			// sstMain
 			// 
 			this.sstMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1,
-            this.sstlblGenIndex});
+			this.toolStripStatusLabel1,
+			this.sstlblGenIndex});
 			this.sstMain.Location = new System.Drawing.Point(0, 376);
 			this.sstMain.Name = "sstMain";
 			this.sstMain.Size = new System.Drawing.Size(528, 22);
