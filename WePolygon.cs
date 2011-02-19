@@ -5,7 +5,7 @@ namespace DAP.CompGeom
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	
 	/// Polygons in a WingedEdge structure.  Essentially a list of the edges comprising this polygon
-	/// in clockwise order.  The first edge is random and has no particular significance. 
+	/// in clockwise order.  Which edge is first has no particular significance. 
 	/// </summary>
 	///
 	/// <remarks>	Darrellp, 2/18/2011. </remarks>
