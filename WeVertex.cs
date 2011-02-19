@@ -75,7 +75,7 @@ namespace DAP.CompGeom
 			FAtInfinity = true;
 			if (fNormalize)
 			{
-				var norm = Geometry.Distance(new PointF(0, 0), ptDirection);
+				var norm = Geometry.Distance(new PT(0, 0), ptDirection);
 				Pt = new PT(Pt.X / norm, Pt.Y / norm);
 			}
 		}

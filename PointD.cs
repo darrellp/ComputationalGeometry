@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace DAP.CompGeom
 {
@@ -29,6 +30,11 @@ namespace DAP.CompGeom
 		{
 			X = x;
 			Y = y;
+		}
+
+		public PointF ToPointf()
+		{
+			return new PointF((Single) X, (Single) Y);
 		}
 	}
 }

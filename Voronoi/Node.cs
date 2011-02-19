@@ -1,6 +1,13 @@
 ﻿using System.Drawing;
 using NetTrace;
 using NUnit.Framework;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -166,7 +173,7 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestInsertDelete()
 			{
-				var poly = new FortunePoly(new PointF(0, 0), 0);
+				var poly = new FortunePoly(new PT(0, 0), 0);
 
 				Node ndRoot = new InternalNode(poly, poly);
 				Node ndLeft = new InternalNode(poly, poly);

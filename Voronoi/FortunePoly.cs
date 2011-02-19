@@ -1,6 +1,13 @@
 ﻿using System.Drawing;
 using NetTrace;
 using NUnit.Framework;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -36,7 +43,7 @@ namespace DAP.CompGeom
 		/// <value>	The point in the original set of data points. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PointF VoronoiPoint { get; set; }
+		public PT VoronoiPoint { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	A generic index to identify this polygon for debugging purposes.. </summary>
@@ -59,7 +66,7 @@ namespace DAP.CompGeom
 		/// <param name="index">	The index to identiry this polygon. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal FortunePoly(PointF pt, int index)
+		internal FortunePoly(PT pt, int index)
 		{
 			FZeroLengthEdge = false;
 			FAtInfinity = false;
@@ -206,15 +213,15 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestEdgeSort()
 			{
-				var poly1 = new FortunePoly(new PointF(0, 0), 0);
-				var poly2 = new FortunePoly(new PointF(0, 2), 1);
-				var poly3 = new FortunePoly(new PointF(2, 0), 2);
-				var poly4 = new FortunePoly(new PointF(0, -2), 3);
-				var poly5 = new FortunePoly(new PointF(-2, 0), 4);
-				var vtx1 = new FortuneVertex(new PointF(1, 1));
-				var vtx2 = new FortuneVertex(new PointF(1, -1));
-				var vtx3 = new FortuneVertex(new PointF(-1, -1));
-				var vtx4 = new FortuneVertex(new PointF(-1, 1));
+				var poly1 = new FortunePoly(new PT(0, 0), 0);
+				var poly2 = new FortunePoly(new PT(0, 2), 1);
+				var poly3 = new FortunePoly(new PT(2, 0), 2);
+				var poly4 = new FortunePoly(new PT(0, -2), 3);
+				var poly5 = new FortunePoly(new PT(-2, 0), 4);
+				var vtx1 = new FortuneVertex(new PT(1, 1));
+				var vtx2 = new FortuneVertex(new PT(1, -1));
+				var vtx3 = new FortuneVertex(new PT(-1, -1));
+				var vtx4 = new FortuneVertex(new PT(-1, 1));
 				FortuneVertex vtx5;
 				var edge1 = new FortuneEdge();
 				var edge2 = new FortuneEdge();
@@ -233,7 +240,7 @@ namespace DAP.CompGeom
 				edge4.VtxStart = vtx3;
 				edge4.VtxEnd = vtx4;
 
-				var polyTest = new FortunePoly(new PointF(0, 0), 0);
+				var polyTest = new FortunePoly(new PT(0, 0), 0);
 				polyTest.AddEdge(edge1);
 				polyTest.AddEdge(edge3);
 				polyTest.AddEdge(edge2);
@@ -245,10 +252,10 @@ namespace DAP.CompGeom
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
-				vtx1.Pt = new PointF(3, 4);
-				vtx2.Pt = new PointF(4, 3);
-				vtx3.Pt = new PointF(-1, -2);
-				vtx4.Pt = new PointF(-2, -1);
+				vtx1.Pt = new PT(3, 4);
+				vtx2.Pt = new PT(4, 3);
+				vtx3.Pt = new PT(-1, -2);
+				vtx4.Pt = new PT(-2, -1);
 				polyTest.EdgesCW.Clear();
 
 				polyTest.AddEdge(edge4);
@@ -262,11 +269,11 @@ namespace DAP.CompGeom
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
-				poly1.VoronoiPoint = new PointF(10, 10);
-				vtx1.Pt = new PointF(13, 14);
-				vtx2.Pt = new PointF(14, 13);
-				vtx3.Pt = new PointF(9, 8);
-				vtx4.Pt = new PointF(8, 9);
+				poly1.VoronoiPoint = new PT(10, 10);
+				vtx1.Pt = new PT(13, 14);
+				vtx2.Pt = new PT(14, 13);
+				vtx3.Pt = new PT(9, 8);
+				vtx4.Pt = new PT(8, 9);
 				polyTest.EdgesCW.Clear();
 
 				polyTest.AddEdge(edge1);
@@ -280,12 +287,12 @@ namespace DAP.CompGeom
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
 				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
 
-				poly1.VoronoiPoint = new PointF(0, 0);
-				vtx1 = FortuneVertex.InfiniteVertex(new PointF(1, 2), true);
-				vtx2.Pt = new PointF(8, -1);
-				vtx3.Pt = new PointF(0, -3);
-				vtx4.Pt = new PointF(-8, -1);
-				vtx5 = FortuneVertex.InfiniteVertex(new PointF(-1, 2), true);
+				poly1.VoronoiPoint = new PT(0, 0);
+				vtx1 = FortuneVertex.InfiniteVertex(new PT(1, 2), true);
+				vtx2.Pt = new PT(8, -1);
+				vtx3.Pt = new PT(0, -3);
+				vtx4.Pt = new PT(-8, -1);
+				vtx5 = FortuneVertex.InfiniteVertex(new PT(-1, 2), true);
 				edge1.VtxStart = vtx2;
 				edge1.VtxEnd = vtx1;
 				edge2.VtxStart = vtx2;

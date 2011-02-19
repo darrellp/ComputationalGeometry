@@ -167,7 +167,7 @@ namespace FortuneTest
 				{
 					foreach (FortuneEdge edge in poly.EdgesCW)
 					{
-						edge.Draw(e.Graphics, pen, infiniteLength);
+						edge.Draw(e.Graphics, pen, (float)infiniteLength);
 					}
 				}
 			}

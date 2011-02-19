@@ -1,5 +1,12 @@
 ﻿using System.Drawing;
 using NetTrace;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -61,7 +68,7 @@ namespace DAP.CompGeom
 		/// <value>	The polygon ordering test point. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal PointF PolyOrderingTestPoint
+		internal PT PolyOrderingTestPoint
 		{
 			get
 			{
@@ -75,7 +82,7 @@ namespace DAP.CompGeom
 				if (!VtxStart.FAtInfinity)
 				{
 					// Just take a point a little out from the start point
-					return new PointF(
+					return new PT(
 						VtxStart.Pt.X + VtxEnd.Pt.X,
 						VtxStart.Pt.Y + VtxEnd.Pt.Y);
 				}
