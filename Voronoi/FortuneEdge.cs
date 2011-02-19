@@ -140,6 +140,16 @@ namespace DAP.CompGeom
 			return -1;
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Returns the polygon on the other side of this edge. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="polyThis">	The polygon on "this" side. </param>
+		///
+		/// <returns>	The polygon on the "other" side. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal FortunePoly OtherPoly(FortunePoly polyThis)
 		{
 			return Poly1 == polyThis ? Poly2 : Poly1;
@@ -168,11 +178,14 @@ namespace DAP.CompGeom
 			out bool fEdge1ConnectsAtStartVtx,
 			out bool fEdge2ConnectsAtStartVtx)
 		{
+			// Locals
 			var fRet = false;
 
+			// Init out parameters to false
 			fEdge1ConnectsAtStartVtx = false;
 			fEdge2ConnectsAtStartVtx = false;
 
+			// RQS- Compare starting and ending vertices
 			if (ReferenceEquals(edge1.VtxStart, edge2.VtxStart))
 			{
 				fEdge1ConnectsAtStartVtx = true;
@@ -193,6 +206,9 @@ namespace DAP.CompGeom
 			{
 				fRet = true;
 			}
+			//-RQS
+
+			// Return the result
 			return fRet;
 		}
 		#endregion
