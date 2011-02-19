@@ -225,10 +225,11 @@ namespace DAP.CompGeom
 		{
 			// We should never have a start vertex at infinity
 			//
-			// FixInfiniteEdges, which creates the vertices at infinity, specifically makes sure that
+			// Fortune.ProcessRay(), which creates the vertices at infinity, specifically makes sure that
 			// this never happens (except with edges at infinity which are really placeholders for the
 			// winged edge structure and have no position at all.  They aren't processed here (and if they
-			// were, it would be a problem).
+			// were, it would be a problem).  While this is a touch Fortune specific, there's no reason not to
+			// insist on it in the general case.
 			Tracer.Assert(t.Assertion, !VtxStart.FAtInfinity, "Found non-infinite edge with start vertex at infinity");
 			
 			// If the end vtx is at infinity, convert it to a real point

@@ -676,59 +676,17 @@ namespace DAP.CompGeom
 					// Is this an infinite edge?
 					if (edge.VtxStart == null || edge.VtxEnd == null)
 					{
+						// Are both vertices infinite/null?
+						//
+						// Split doubly infinite edges into two singly infinite edges.  This only occurs in rare
+						// cases where there are only two generators or all the generators are collinear so that
+						// we end up with parallel infinite lines rather than infinite rays.  We can't handle
+						// true infinite lines in our winged edge data structure, so we turn the infinite lines into
+						// two rays pointing in opposite directions and originating at the midpoint of the two generators.
 						if (edge.VtxEnd == null && edge.VtxStart == null)
 						{
-							// If they're both null, we've got a double infinite edge
-							//
-							// Split doubly infinite edges into two singly infinite edges.  This only occurs in rare
-							// cases where there are only two generators or all the generators are collinear so that
-							// we end up with parallel infinite lines rather than infinite rays.  We can't handle
-							// true infinite lines in our winged edge data structure, so we turn the infinite lines into
-							// two rays pointing in opposite directions and originating at the midpoint of the two generators.
-
-							// Initialize
-							var pt1 = edge.Poly1.VoronoiPoint;
-							var pt2 = edge.Poly2.VoronoiPoint;
-							var dx = pt2.X - pt1.X;
-							var dy = pt2.Y - pt1.Y;
-							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
-
-							// Infinite vertices have directions in them rather than locations
-							var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
-							var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
-
-							// Create the new edge an link it in 
-							edge.VtxStart = new FortuneVertex(ptMid);
-							edge.VtxEnd = vtx1;
-							var edgeNew = new FortuneEdge {VtxStart = edge.VtxStart, VtxEnd = vtx2};
-							edgeNew.SetPolys(edge.Poly1, edge.Poly2);
-							edge.Poly1.AddEdge(edgeNew);
-							edge.Poly2.AddEdge(edgeNew);
-							edge.VtxStart.Add(edge);
-							edge.VtxStart.Add(edgeNew);
-							vtx1.Add(edge);
-							vtx2.Add(edgeNew);
-							edge.FSplit = edgeNew.FSplit = true;
-
-							// If the edge "leans right"
-							//
-							// We have to be very picky about how we set up the left and right
-							// polygons for our new rays.
-							if (dx == 0 || dx * dy > 0) // dy == 0 case needs to fall through...
-							{
-								// Set up left and right polygons one way
-								edge.PolyRight = edgeNew.PolyLeft = edge.Poly1;
-								edge.PolyLeft = edgeNew.PolyRight = edge.Poly2;
-							}
-							else
-							{
-								// Set left and right polygons the other way
-								edge.PolyLeft = edgeNew.PolyRight = edge.Poly1;
-								edge.PolyRight = edgeNew.PolyLeft = edge.Poly2;
-							}
-
-							// Diagnostics
-							Tracer.Trace(tv.FinalEdges, "Edge split into {0} and {1}", edge, edgeNew);
+							// Split the doubly infinite edge
+							SplitDoublyInfiniteEdge(edge);
 
 							// Can't continue or C# will complain
 							//
@@ -737,53 +695,125 @@ namespace DAP.CompGeom
 							// because there can be at most two doubly infinite edges per generator and
 							// if there's a second it will be handled by the generator on the other side
 							// of that edge.
+
 							break;
 						}
-						else
-						{
-							// Singly infinite edges get turned into rays with one point at infinity
-							if (edge.VtxStart == null)
-							{
-								// Swap if necessary to ensure that the infinite vertex is in the VtxEnd position
-								//
-								// This is what justifies the assertion in WeEdge.FLeftOf() (see the code).
-								edge.VtxStart = edge.VtxEnd;
-								edge.VtxEnd = null;
-							}
-
-							// Replace the null vertex with an infinite vertex
-							var pt1 = edge.Poly1.VoronoiPoint;
-							var pt2 = edge.Poly2.VoronoiPoint;
-							var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
-
-							// Point the ray in the proper direction
-							//
-							// We have to be careful to get this ray pointed in the proper orientation.  At
-							// this point we just have a vertex and points which are the original voronoi
-							// points which created these infinite polys.  That's enough to figure out the
-							// absolute direction the voronoi points but not enough to determine which "orientation"
-							// it points along.  To do this, we find the third polygon at the "base" of this ray
-							// and point the ray "away" from it.
-							var polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
-							var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.VoronoiPoint);
-							var dx = pt2.X - pt1.X;
-							var dy = pt2.Y - pt1.Y;
-							var ptProposedDirection = new PT(dy, -dx);
-							var ptInProposedDirection = new PT(ptMid.X + dy, ptMid.Y - dx);
-							var fProposedOnLeft = Geometry.FLeft(pt1, pt2, ptInProposedDirection);
-
-							if (fProposedOnLeft == fThirdOnLeft)
-							{
-								ptProposedDirection.X = -ptProposedDirection.X;
-								ptProposedDirection.Y = -ptProposedDirection.Y;
-							}
-							edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection, true);
-							edge.VtxEnd.Edges.Add(edge);
-						}
+						// Singly infinite edges get turned into rays with one point at infinity
+						ProcessRay(edge);
 					}
 				}
 			}
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Turn a null endpoint of the ray into an infinite vertex. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="edge">	Edge with the null vertex. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void ProcessRay(FortuneEdge edge)
+		{
+			// If it's the start vertex that's null
+			if (edge.VtxStart == null)
+			{
+				// Swap the vertices
+				//
+				// This is what justifies the assertion in WeEdge.FLeftOf() (see the code).
+				edge.VtxStart = edge.VtxEnd;
+				edge.VtxEnd = null;
+			}
+
+			// Replace the null vertex with an infinite vertex
+			var pt1 = edge.Poly1.VoronoiPoint;
+			var pt2 = edge.Poly2.VoronoiPoint;
+			var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
+
+			// Point the ray in the proper direction
+			//
+			// We have to be careful to get this ray pointed in the proper orientation.  At
+			// this point we just have a vertex and points which are the original voronoi
+			// points which created these infinite polys.  That's enough to figure out the
+			// absolute direction the voronoi points but not enough to determine which "orientation"
+			// it points along.  To do this, we find the third polygon at the "base" of this ray
+			// and point the ray "away" from it.
+			var polyThird = ((FortuneVertex)edge.VtxStart).PolyThird(edge);
+			var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.VoronoiPoint);
+			var dx = pt2.X - pt1.X;
+			var dy = pt2.Y - pt1.Y;
+			var ptProposedDirection = new PT(dy, -dx);
+			var ptInProposedDirection = new PT(ptMid.X + dy, ptMid.Y - dx);
+			var fProposedOnLeft = Geometry.FLeft(pt1, pt2, ptInProposedDirection);
+
+			// Do we need to reverse orientation?
+			if (fProposedOnLeft == fThirdOnLeft)
+			{
+				// Do it
+				ptProposedDirection.X = -ptProposedDirection.X;
+				ptProposedDirection.Y = -ptProposedDirection.Y;
+			}
+
+			// Create the new infinite vertex and add it to our edge
+			edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection, true);
+			edge.VtxEnd.Edges.Add(edge);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Splits a doubly infinite edge. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="edge">	Edge we need to split. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void SplitDoublyInfiniteEdge(FortuneEdge edge)
+		{
+			// Initialize
+			var pt1 = edge.Poly1.VoronoiPoint;
+			var pt2 = edge.Poly2.VoronoiPoint;
+			var dx = pt2.X - pt1.X;
+			var dy = pt2.Y - pt1.Y;
+			var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
+
+			// Infinite vertices have directions in them rather than locations
+			var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
+			var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
+
+			// Create the new edge an link it in 
+			edge.VtxStart = new FortuneVertex(ptMid);
+			edge.VtxEnd = vtx1;
+			var edgeNew = new FortuneEdge {VtxStart = edge.VtxStart, VtxEnd = vtx2};
+			edgeNew.SetPolys(edge.Poly1, edge.Poly2);
+			edge.Poly1.AddEdge(edgeNew);
+			edge.Poly2.AddEdge(edgeNew);
+			edge.VtxStart.Add(edge);
+			edge.VtxStart.Add(edgeNew);
+			vtx1.Add(edge);
+			vtx2.Add(edgeNew);
+			edge.FSplit = edgeNew.FSplit = true;
+
+			// If the edge "leans right"
+			//
+			// We have to be very picky about how we set up the left and right
+			// polygons for our new rays.
+			if (dx == 0 || dx * dy > 0) // dy == 0 case needs to fall through...
+			{
+				// Set up left and right polygons one way
+				edge.PolyRight = edgeNew.PolyLeft = edge.Poly1;
+				edge.PolyLeft = edgeNew.PolyRight = edge.Poly2;
+			}
+			else
+			{
+				// Set left and right polygons the other way
+				edge.PolyLeft = edgeNew.PolyRight = edge.Poly1;
+				edge.PolyRight = edgeNew.PolyLeft = edge.Poly2;
+			}
+
+			// Diagnostics
+			Tracer.Trace(tv.FinalEdges, "Edge split into {0} and {1}", edge, edgeNew);
+		}
+
 		#endregion
 
 		#region NUNIT
@@ -817,432 +847,5 @@ namespace DAP.CompGeom
 		#endregion
 	}
 
-	internal class EventQueue : PriorityQueueWithDeletions<FortuneEvent>
-	{
-		#region Private Variables
-
-		readonly List<CircleEvent> _lstcevt = new List<CircleEvent>();		// List of circle events so we can keep track of them
-		#endregion
-
-		#region Circle event special handling
-		internal void AddCircleEvent(CircleEvent cevt)
-		{
-			Add(cevt);
-			_lstcevt.Add(cevt);
-		}
-
-		internal IList<CircleEvent> CircleEvents
-		{
-			get
-			{
-				return _lstcevt;
-			}
-		}
-		#endregion
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>	Fortune polygon. </summary>
-	///
-	/// <remarks>	Darrellp, 2/18/2011. </remarks>
-	////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	public class FortunePoly : WePolygon
-	{
-		#region Private Variables
-
-		#endregion
-
-		#region Properties
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Indicates that this is the singleton polygon at infinity </summary>
-		///
-		/// <value>	true if at it's the polygon at infinity. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public bool FAtInfinity { get; set; }
-
-		public bool FZeroLengthEdge { get; set; }
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	The original point which caused this voronoi cell to exist. </summary>
-		///
-		/// <value>	The point in the original set of data points. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public PT VoronoiPoint { get; set; }
-
-		public int Index { get; set; }
-
-		#endregion
-
-		#region Constructor
-		internal FortunePoly(PT pt, int iGen)
-		{
-			FZeroLengthEdge = false;
-			FAtInfinity = false;
-			Index = iGen;
-			VoronoiPoint = pt;
-		}
-		#endregion
-
-		#region Edge operations
-		/// <summary>
-		/// Sort the edges in Clockwise order.  We do this partially by knowing that all the polygons
-		/// in a Voronoi diagram are convex.  That means we can sort edges by measuring their angle around
-		/// the generator for the polygon.  We have to pick the point to measure this angle carefully which
-		/// is what WEEdge.PolyOrderingTestPoint() does.  We also have to make a special case for the rare
-		/// doubly infinite lines (such as that created with only two generators).
-		/// </summary>
-		internal void SortEdges()
-		{
-			if (EdgesCW.Count == 2)
-			{
-				if (((FortuneEdge)EdgesCW[0]).FSplit)
-				{
-					if (Geometry.ICcw(
-						((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
-						((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint,
-						VoronoiPoint) < 0)
-					{
-						WeEdge edgeT = EdgesCW[0];
-						EdgesCW[0] = EdgesCW[1];
-						EdgesCW[1] = edgeT;
-					}
-				}
-				else
-				{
-					// We want the edges ordered around the single base point properly
-					if (Geometry.ICcw(EdgesCW[0].VtxStart.Pt,
-						((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
-						((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint) > 0)
-					{
-						WeEdge edgeT = EdgesCW[0];
-						EdgesCW[0] = EdgesCW[1];
-						EdgesCW[1] = edgeT;
-					}
-				}
-			}
-			else
-			{
-				EdgesCW.Sort();
-			}
-		}
-
-		/// <summary>
-		/// Remove an edge
-		/// </summary>
-		/// <remarks>
-		/// This really only makes much sense for zero length edges
-		/// </remarks>
-		/// <param name="edge">Edge to remove</param>
-		internal void DetachEdge(FortuneEdge edge)
-		{
-			// Let's remove the zero length edge.  We do this by removing it's end vertex, reassigning the proper
-			// vertex in each of the edges which formerly connected to that vertex and splicing those edges into the
-			// the proper spot for the edge list of our start vertex and finally removing it from the edge list of
-			// both polygons which it adjoins.
-			edge.ReassignVertexEdges();
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Sort out zero length edge issues. </summary>
-		///
-		/// <remarks>	
-		/// Zero length edges are a pain and have to be dealt with specially since they don't sort
-		/// properly using normal geometrical position nor can "sidedness" be determined solely from
-		/// their geometry (a zero length line has no "sides").  Instead, we have to look at the non-zero
-		/// length edges around them and determine this information by extrapolating from those edges
-		/// topological connection to this edge. 
-		/// </remarks>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		internal void HandleZeroLengthEdges()
-		{
-			// If no zero length edges
-			if (!FZeroLengthEdge)
-			{
-				// We're outta here
-				return;
-			}
-
-			// For every edge in the polygon
-			for (var i = 0; i < VertexCount; i++)
-			{
-				// Retrieve the edge
-				var edgeCheck = (FortuneEdge)EdgesCW[i];
-
-				// If it's zero length
-				if (edgeCheck.FZeroLength())
-				{
-					// Diagnostics
-					Tracer.Trace(tv.ZeroLengthEdges, "Fixing zero length edge {0} for poly {1}", edgeCheck, this);
-
-					// Remove the edge from both this polygon and the polygon "across" the zero length edge
-					DetachEdge(edgeCheck);
-					EdgesCW.Remove(edgeCheck);
-					edgeCheck.OtherPoly(this).EdgesCW.Remove(edgeCheck);
-
-					// We have to back up one because we deleted edge i
-					i--;
-				}
-			}
-		}
-		#endregion
-
-		#region NUnit
-#if NUNIT || DEBUG
-		[TestFixture]
-		public class TestFortunePoly
-		{
-			[Test]
-			public void TestEdgeSort()
-			{
-				var poly1 = new FortunePoly(new PT(0, 0), 0);
-				var poly2 = new FortunePoly(new PT(0, 2), 1);
-				var poly3 = new FortunePoly(new PT(2, 0), 2);
-				var poly4 = new FortunePoly(new PT(0, -2), 3);
-				var poly5 = new FortunePoly(new PT(-2, 0), 4);
-				var vtx1 = new FortuneVertex(new PT(1, 1));
-				var vtx2 = new FortuneVertex(new PT(1, -1));
-				var vtx3 = new FortuneVertex(new PT(-1, -1));
-				var vtx4 = new FortuneVertex(new PT(-1, 1));
-				FortuneVertex vtx5;
-				var edge1 = new FortuneEdge();
-				var edge2 = new FortuneEdge();
-				var edge3 = new FortuneEdge();
-				var edge4 = new FortuneEdge();
-				edge2.SetPolys(poly1, poly2);
-				edge3.SetPolys(poly1, poly3);
-				edge4.SetPolys(poly1, poly4);
-				edge1.SetPolys(poly1, poly5);
-				edge1.VtxStart = vtx4;
-				edge1.VtxEnd = vtx1;
-				edge2.VtxStart = vtx1;
-				edge2.VtxEnd = vtx2;
-				edge3.VtxStart = vtx2;
-				edge3.VtxEnd = vtx3;
-				edge4.VtxStart = vtx3;
-				edge4.VtxEnd = vtx4;
-
-				var polyTest = new FortunePoly(new PT(0, 0), 0);
-				polyTest.AddEdge(edge1);
-				polyTest.AddEdge(edge3);
-				polyTest.AddEdge(edge2);
-				polyTest.AddEdge(edge4);
-
-				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-
-				vtx1.Pt = new PT(3, 4);
-				vtx2.Pt = new PT(4, 3);
-				vtx3.Pt = new PT(-1, -2);
-				vtx4.Pt = new PT(-2, -1);
-				polyTest.EdgesCW.Clear();
-
-				polyTest.AddEdge(edge4);
-				polyTest.AddEdge(edge3);
-				polyTest.AddEdge(edge1);
-				polyTest.AddEdge(edge2);
-
-				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-
-				poly1.VoronoiPoint = new PT(10, 10);
-				vtx1.Pt = new PT(13, 14);
-				vtx2.Pt = new PT(14, 13);
-				vtx3.Pt = new PT(9, 8);
-				vtx4.Pt = new PT(8, 9);
-				polyTest.EdgesCW.Clear();
-
-				polyTest.AddEdge(edge1);
-				polyTest.AddEdge(edge3);
-				polyTest.AddEdge(edge2);
-				polyTest.AddEdge(edge4);
-
-				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-
-				poly1.VoronoiPoint = new PT(0, 0);
-				vtx1 = FortuneVertex.InfiniteVertex(new PT(1, 2), true);
-				vtx2.Pt = new PT(8, -1);
-				vtx3.Pt = new PT(0, -3);
-				vtx4.Pt = new PT(-8, -1);
-				vtx5 = FortuneVertex.InfiniteVertex(new PT(-1, 2), true);
-				edge1.VtxStart = vtx2;
-				edge1.VtxEnd = vtx1;
-				edge2.VtxStart = vtx2;
-				edge2.VtxEnd = vtx3;
-				edge3.VtxStart = vtx3;
-				edge3.VtxEnd = vtx4;
-				edge4.VtxStart = vtx4;
-				edge4.VtxEnd = vtx5;
-				polyTest.EdgesCW.Clear();
-
-				polyTest.AddEdge(edge3);
-				polyTest.AddEdge(edge1);
-				polyTest.AddEdge(edge2);
-				polyTest.AddEdge(edge4);
-
-				polyTest.SortEdges();
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-			}
-		}
-#endif
-		#endregion
-	}
-
-	public class FortuneVertex : WeVertex
-	{
-		#region Private variables
-		bool _fAlreadyOrdered;			// True after this vertex has had its edges ordered in post processing
-		bool _fAddedToWingedEdge;		// True if this vertex has already been added to the winged edge data structure
-		#endregion
-
-		#region Constructors
-		internal FortuneVertex(PT pt) : base(pt) { }
-		internal FortuneVertex() { }
-		#endregion
-
-		#region Polygons
-		/// <summary>
-		/// Finds the third polygon which created this vertex besides the two on each side of
-		/// the passed in edge
-		/// </summary>
-		/// <param name="edge">Edge in question</param>
-		/// <returns>The polygon "opposite" this edge</returns>
-		internal FortunePoly PolyThird(FortuneEdge edge)
-		{
-			int i1 = edge.Poly1.Index;
-			int i2 = edge.Poly2.Index;
-
-			foreach (FortuneEdge edgeDifferent in Edges)
-			{
-				if (edgeDifferent != edge)
-				{
-					var i1Diff = edgeDifferent.Poly1.Index;
-
-					if (i1Diff == i1 || i1Diff == i2)
-					{
-						return edgeDifferent.Poly2;
-					}
-					return edgeDifferent.Poly1;
-				}
-			}
-			Tracer.Assert(t.Assertion, false, "Couldn't find third generator");
-			return null;
-		}
-		#endregion
-
-		#region Winged Edge
-		internal void AddToWingedEdge(WingedEdge we)
-		{
-			if (!_fAddedToWingedEdge)
-			{
-				we.AddVertex(this);
-				_fAddedToWingedEdge = true;
-			}
-		}
-
-		#endregion
-
-		#region Edges
-		/// <summary>
-		/// Return the point at the other end of the given edge.  If the opposite point is
-		/// a point at infinity, a "real" point on that edge is created and returned.
-		/// </summary>
-		/// <param name="edge">Edge to traverse</param>
-		/// <returns>The point at the opposite end of the edge</returns>
-		private PT PtAtOtherEnd(FortuneEdge edge)
-		{
-			PT ptRet = VtxOtherEnd(edge).Pt;
-			if (edge.VtxEnd.FAtInfinity)
-			{
-				ptRet = new PT(Pt.X + ptRet.X, Pt.Y + ptRet.Y);
-			}
-			return ptRet;
-		}
-
-		/// <summary>
-		/// Reset the ordered flag so we get ordered in the next call to Order()
-		/// </summary>
-		internal void ResetOrderedFlag()
-		{
-			_fAlreadyOrdered = false;
-		}
-
-		/// <summary>
-		/// Delegate to compare edges around this vertex
-		/// </summary>
-		/// <param name="e1"></param>
-		/// <param name="e2"></param>
-		/// <returns></returns>
-		int CompareEdges(WeEdge e1, WeEdge e2)
-		{
-			var fe1 = (FortuneEdge)e1;
-			var fe2 = (FortuneEdge)e2;
-			return Geometry.ICompareCw(Pt, fe1.PolyOrderingTestPoint, fe2.PolyOrderingTestPoint);
-		}
-
-
-		/// <summary>
-		/// Order the three edges around this vertex
-		/// </summary>
-		internal void Order()
-		{
-			if (_fAlreadyOrdered || FAtInfinity)
-			{
-				return;
-			}
-
-			if (CtEdges == 3)
-			{
-				// Quick fix for the vastly more common case
-				var pt0 = PtAtOtherEnd(Edges[0] as FortuneEdge);
-				var pt1 = PtAtOtherEnd(Edges[1] as FortuneEdge);
-				var pt2 = PtAtOtherEnd(Edges[2] as FortuneEdge);
-
-				if (Geometry.ICcw(pt0, pt1, pt2) > 0)
-				{
-					var edge0 = Edges[0];
-					Edges[0] = Edges[1];
-					Edges[1] = edge0;
-				}
-				_fAlreadyOrdered = true;
-			}
-			else
-			{
-				Edges.Sort(CompareEdges); 
-			}
-		}
-		#endregion
-
-		#region Infinite Vertices
-		/// <summary>
-		/// Produce a vertex at infinity
-		/// </summary>
-		/// <param name="ptDirection">Direction for the vertex</param>
-		/// <param name="fNormalize">If true we normalize, else not</param>
-		/// <returns>The vertex at infinity</returns>
-		internal static FortuneVertex InfiniteVertex(PT ptDirection, bool fNormalize)
-		{
-			var vtx = new FortuneVertex(ptDirection);
-			vtx.SetInfinite(ptDirection, fNormalize);
-			return vtx;
-		}
-		#endregion
-	}
 }

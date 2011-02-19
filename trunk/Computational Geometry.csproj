@@ -72,9 +72,12 @@
     <Compile Include="PriorityQueueWithDeletions.cs" />
     <Compile Include="Set.cs" />
     <Compile Include="Voronoi\Beachline.cs" />
+    <Compile Include="Voronoi\EventQueue.cs" />
     <Compile Include="Voronoi\Fortune.cs" />
     <Compile Include="Voronoi\FortuneEdge.cs" />
     <Compile Include="Voronoi\FortuneEvent.cs" />
+    <Compile Include="Voronoi\FortunePoly.cs" />
+    <Compile Include="Voronoi\FortuneVertex.cs" />
     <Compile Include="WeEdge.cs" />
     <Compile Include="WePolygon.cs" />
     <Compile Include="WeVertex.cs" />

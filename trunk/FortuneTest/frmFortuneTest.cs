@@ -159,7 +159,10 @@ namespace FortuneTest
 
 				e.Graphics.Transform = _mtxFromWorld;
 
-				TPT infiniteLength = 2 * (TPT)Math.Max(pnlDraw.Height, pnlDraw.Width);
+				// We can't just use the width/height of the drawing surface - that would work if
+				// one of the vertices was guaranteed to be on the drawing surface but that's
+				// not necessarily the case.
+				TPT infiniteLength = (TPT)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
 				foreach (FortunePoly poly in _lstPoly)
 				{
 					foreach (FortuneEdge edge in poly.EdgesCW)
