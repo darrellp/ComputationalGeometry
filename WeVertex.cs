@@ -2,6 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -46,7 +53,7 @@ namespace DAP.CompGeom
 		/// <param name="pt">	The point the vertex is located at. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public WeVertex(PointF pt)
+		public WeVertex(PT pt)
 		{
 			Pt = pt;
 		}
@@ -63,13 +70,13 @@ namespace DAP.CompGeom
 		/// <param name="fNormalize">	true to normalize. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected void SetInfinite(PointF ptDirection, bool fNormalize)
+		protected void SetInfinite(PT ptDirection, bool fNormalize)
 		{
 			FAtInfinity = true;
 			if (fNormalize)
 			{
 				var norm = Geometry.Distance(new PointF(0, 0), ptDirection);
-				Pt = new PointF(Pt.X / norm, Pt.Y / norm);
+				Pt = new PT(Pt.X / norm, Pt.Y / norm);
 			}
 		}
 
@@ -89,9 +96,9 @@ namespace DAP.CompGeom
 		/// <returns>	A point on the ray different than the starting point. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PointF ConvertToReal(PointF ptStart, Single rayLength)
+		public PT ConvertToReal(PT ptStart, Single rayLength)
 		{
-			return new PointF(
+			return new PT(
 				Pt.X * rayLength + ptStart.X,
 				Pt.Y * rayLength + ptStart.Y);
 		}
@@ -162,7 +169,7 @@ namespace DAP.CompGeom
 		/// <value>	The point. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PointF Pt { get; set; }
+		public PT Pt { get; set; }
 		#endregion
 
 		#region Modifiers

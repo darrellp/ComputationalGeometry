@@ -1,5 +1,12 @@
 ﻿using System.Drawing;
 using NetTrace;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -17,7 +24,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Constructors
-		internal FortuneVertex(PointF pt) : base(pt) { }
+		internal FortuneVertex(PT pt) : base(pt) { }
 		internal FortuneVertex() { }
 		#endregion
 
@@ -93,7 +100,7 @@ namespace DAP.CompGeom
 		/// <returns>	The point at the opposite end of the edge. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private PointF PtAtOtherEnd(FortuneEdge edge)
+		private PT PtAtOtherEnd(FortuneEdge edge)
 		{
 			// Get the vertex at the other end
 			var ptRet = VtxOtherEnd(edge).Pt;
@@ -102,7 +109,7 @@ namespace DAP.CompGeom
 			if (edge.VtxEnd.FAtInfinity)
 			{
 				// Produce a "real" point
-				ptRet = new PointF(Pt.X + ptRet.X, Pt.Y + ptRet.Y);
+				ptRet = new PT(Pt.X + ptRet.X, Pt.Y + ptRet.Y);
 			}
 
 			// Return the result
@@ -194,7 +201,7 @@ namespace DAP.CompGeom
 		/// <returns>	The vertex at infinity. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal static FortuneVertex InfiniteVertex(PointF ptDirection, bool fNormalize)
+		internal static FortuneVertex InfiniteVertex(PT ptDirection, bool fNormalize)
 		{
 			var vtx = new FortuneVertex(ptDirection);
 			vtx.SetInfinite(ptDirection, fNormalize);
