@@ -9,7 +9,6 @@ using TPT = System.Single;
 
 using System.Collections.Generic;
 using System.Collections;
-using System;
 using NUnit.Framework;
 using NetTrace;
 
@@ -55,13 +54,6 @@ namespace DAP.CompGeom
 
 	public class Fortune
 	{
-		#region Private Variables
-		Beachline _bchl = new Beachline();						// The beachline which is the primary data structure
-																// kept as we sweep downward throught the points
-		EventQueue _qevEvents = new EventQueue();				// Priority queue for events which occur during the sweep
-		readonly List<FortunePoly> _lstPolys = new List<FortunePoly>();	// The list of Polygons which are the output of the algorithm
-		#endregion
-
 		#region Constructor
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +66,9 @@ namespace DAP.CompGeom
 
 		public Fortune(IEnumerable points)
 		{
+			Bchl = new Beachline();
+			QevEvents = new EventQueue();
+			Polygons = new List<FortunePoly>();
 			// For every point
 			foreach (PT pt in points)
 			{
@@ -98,11 +93,11 @@ namespace DAP.CompGeom
 		FortunePoly InsertPoly(PT pt)
 		{
 			Tracer.Trace(tv.GeneratorList, "Generator {0}: ({1}, {2})",
-				_lstPolys.Count, pt.X, pt.Y);
+				Polygons.Count, pt.X, pt.Y);
 
 			// The count is being passed in only as a unique identifier for this point.
-			var poly = new FortunePoly(pt, _lstPolys.Count);
-			_lstPolys.Add(poly);
+			var poly = new FortunePoly(pt, Polygons.Count);
+			Polygons.Add(poly);
 			return poly;
 		}
 		#endregion
@@ -114,38 +109,24 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		public List<FortunePoly> Polygons { get; private set; }
 
-		public List<FortunePoly> Polygons
-		{
-			get
-			{
-				return _lstPolys;
-			}
-		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or sets the event queue. </summary>
+		///
+		/// <value>	The event queue. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal EventQueue QevEvents
-		{
-			get
-			{
-				return _qevEvents;
-			}
-			set
-			{
-				_qevEvents = value;
-			}
-		}
+		internal EventQueue QevEvents { get; set; }
 
-		internal Beachline Bchl
-		{
-			get
-			{
-				return _bchl;
-			}
-			set
-			{
-				_bchl = value;
-			}
-		}
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	The beachline which is the primary data structure kept as we sweep 
+		/// downward through the points </summary>
+		///
+		/// <value>	The bchl. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		internal Beachline Bchl { get; set; }
+
 		#endregion
 
 		#region Public methods
@@ -170,7 +151,7 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
+		/// <summary>
 		/// Return the Winged edge structure for the voronoi diagram.  This is a complicated procedure
 		/// with a lot of details to be taken care of as follows.
 		/// 
@@ -181,6 +162,12 @@ namespace DAP.CompGeom
 		/// Zero length edges are eliminated and their "endpoints" are consolidated.
 		/// 
 		/// The polygon at infinity and all the edges at infinity must be added
+		/// 
+		/// If the callers only want a list of undifferentiated polygons, they can call Voronoi and
+		/// get such a list.  This is fine for drawing and other things, but doesn't give any kind of
+		/// relationship between elements in diagram.  If that is desired, this routine can be called
+		/// to get a much richer Winged Edge data structure for the diagram.  It is a relatively expensive
+		/// thing to compute which is why it's made separate from the raw voronoi diagram calculations.
 		/// 
 		/// NOTE ON THE POLYGON AT INFINITY In the WingedEdge structure each polygon has a list of edges
 		/// with another polygon on the other side of each edge.  This poses a bit of a difficulty for
@@ -213,7 +200,7 @@ namespace DAP.CompGeom
 			var we = new WingedEdge();
 
 			// for all polygons in the voronoi diagram
-			foreach (var poly in _lstPolys)
+			foreach (var poly in Polygons)
 			{
 				// Process the polygon's edges
 				ProcessPolygonEdges(poly, we, ref polyInfinityStart, ref iLeadingInfiniteEdgeCw);
@@ -552,28 +539,42 @@ namespace DAP.CompGeom
 			return edgeAtInfinity;
 		}
 
-		/// <summary>
-		/// Insert the edge at infinity into the edge list for the vertices at infinty
-		/// </summary>
-		/// <param name="edge">Edge at infinity being added</param>
-		/// <param name="leadingVtxCw">Vertex on the left of infinite poly as we look out</param>
-		/// <param name="trailingVtxCw">Vertex on the right</param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Insert the edge at infinity into the edge list for the vertices at infinity. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">				Edge at infinity being added. </param>
+		/// <param name="leadingVtxCw">		Vertex on the left of infinite poly as we look out. </param>
+		/// <param name="trailingVtxCw">	Vertex on the right. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private static void AddEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex leadingVtxCw, FortuneVertex trailingVtxCw)
 		{
+			// if we've only got one edge at infinity
 			if (leadingVtxCw.Edges.Count == 1)
 			{
+				// Add this one as a placeholder
+				//
 				// This will be overwritten later but we have to insert here so that we can insert ourselves at
-				// index 2...
+				// index 2.  This is just a placeholder.
 				leadingVtxCw.Edges.Add(edge);
 			}
+			// Add this edge into it's proper position
 			leadingVtxCw.Edges.Add(edge);
+
+			// If we have three edges
 			if (trailingVtxCw.Edges.Count == 3)
 			{
+				// Overwrite the placeholder we placed in another call
+				//
 				// Here is where the overwriting referred to above occurs
+				// This will happen on a later call - not on the current one
 				trailingVtxCw.Edges[1] = edge;
 			}
 			else
 			{
+				// Otherwise just add us in to the trailing vertex's list of edges
 				trailingVtxCw.Edges.Add(edge);
 			}
 		}
@@ -588,32 +589,44 @@ namespace DAP.CompGeom
 			// Create an impossible fictional "previous event"
 			FortuneEvent evtPrev = new CircleEvent(new PT(TPT.MaxValue, TPT.MaxValue), 0);
 
+			// While there are events in the queue
 			while (QevEvents.Count > 0)
 			{
+				// Get the next event
+				//
 				// Events are pulled off in top to bottom, left to right, site event before
 				// circle event order.  This ensures that events/sites at identical locations
 				// will be pulled off one after the other which allows us to cull them.
-				FortuneEvent evt = QevEvents.Pop();
+				var evt = QevEvents.Pop();
 
-				// Check for identically placed events
+				// If we've got a pair of identically placed events
 				if (Geometry.FCloseEnough(evt.Pt, evtPrev.Pt))
 				{
-					Type tpPrev = evtPrev.GetType();
-					Type tpCur = evt.GetType();
+					// Locals
+					var tpPrev = evtPrev.GetType();
+					var tpCur = evt.GetType();
 
+					// If the previous event was a site event
 					if (tpPrev == typeof(SiteEvent))
 					{
+						// And the current one is also
 						if (tpCur == typeof(SiteEvent))
 						{
 							// Skip identical site events.
+							//
+							// This handles cases where the same point is in the input data two or more times.
 							continue;
 						}
 					}
+					// Else if it's a circle event
 					else if (tpCur == typeof(CircleEvent))
 					{
+						// Locals
 						var cevt = evt as CircleEvent;
 						var cevtPrev = evtPrev as CircleEvent;
 
+						// If we have idneically placed circle events
+						//
 						// Identically placed circle events still have to be processed but we handle the
 						// case specially.  The implication of identically placed circle events is that
 						// we had four or more cocircular points which implies that the polygons
@@ -622,6 +635,7 @@ namespace DAP.CompGeom
 						// polygons which meet at that common point. These will be removed later in postprocessing.
 						if (Geometry.FCloseEnough(cevt.VoronoiVertex, cevtPrev.VoronoiVertex))
 						{
+							// We're going to create a zero length edge.
 							cevt.FZeroLength = true;
 						}
 					}
@@ -660,7 +674,7 @@ namespace DAP.CompGeom
 		private void FixInfiniteEdges()
 		{
 			// For each of our polygons
-			foreach(FortunePoly poly in _lstPolys)
+			foreach(FortunePoly poly in Polygons)
 			{
 				// Loop through the edges of the poly searching for infinite ones
 				//
@@ -834,7 +848,7 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestGeneratorAdds()
 			{
-				Assert.AreEqual(3, Example()._lstPolys.Count);
+				Assert.AreEqual(3, Example().Polygons.Count);
 			}
 
 			[Test]
