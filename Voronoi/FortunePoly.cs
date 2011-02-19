@@ -92,11 +92,20 @@ namespace DAP.CompGeom
 				// If they are split
 				if (((FortuneEdge)EdgesCW[0]).FSplit)
 				{
+					// If they need reordering
+					//
+					// I don't think this is really necessary.  It makes sense to order more than 2
+					// edges because they really have an "order" which will be maintained no matter which
+					// polygon they're ordered by (though the starting edge may change).  With two oppositely
+					// directed rays as in this case, there is no such "order" independent of the polygon that
+					// does the ordering.  I'm leaving it in but I don't think it's necessary.
+					// TODO: Check on this!
 					if (Geometry.ICcw(
 						((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
 						((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint,
 						VoronoiPoint) < 0)
 					{
+						// Reorder them
 						var edgeT = EdgesCW[0];
 						EdgesCW[0] = EdgesCW[1];
 						EdgesCW[1] = edgeT;
@@ -104,12 +113,15 @@ namespace DAP.CompGeom
 				}
 				else
 				{
-					// We want the edges ordered around the single base point properly
+					// I think this represents an infinite polygon with only two edges.
+
+					// If not ordered around the single base point properly
 					if (Geometry.ICcw(EdgesCW[0].VtxStart.Pt,
 					                  ((FortuneEdge)EdgesCW[0]).PolyOrderingTestPoint,
 					                  ((FortuneEdge)EdgesCW[1]).PolyOrderingTestPoint) > 0)
 					{
-						WeEdge edgeT = EdgesCW[0];
+						// Swap the edges
+						var edgeT = EdgesCW[0];
 						EdgesCW[0] = EdgesCW[1];
 						EdgesCW[1] = edgeT;
 					}
@@ -117,6 +129,7 @@ namespace DAP.CompGeom
 			}
 			else
 			{
+				// More than 3 vertices just get a standard CLR sort
 				EdgesCW.Sort();
 			}
 		}
