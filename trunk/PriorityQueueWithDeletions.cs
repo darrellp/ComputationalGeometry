@@ -18,6 +18,15 @@ namespace DAP.CompGeom
 	public class PriorityQueueWithDeletions<T> : PriorityQueue<T> where T : IPriorityQueueElement
 	{
 		#region Public overrides
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Removes and returns the largest object. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <returns>	The previous largest object. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public override T Pop()
 		{
 			var valRet = base.Pop();

@@ -2,9 +2,9 @@
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
-using System.Linq;
 using PT = System.Drawing.PointF;
 #endif
+using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
 

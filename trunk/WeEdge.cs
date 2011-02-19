@@ -1,6 +1,13 @@
 ﻿using System;
 using System.Drawing;
 using NetTrace;
+#if DOUBLEPRECISION
+using PT = DAP.CompGeom.PointD;
+using TPT = System.Double;
+#else
+using PT = System.Drawing.PointF;
+using TPT = System.Single;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -221,7 +228,7 @@ namespace DAP.CompGeom
 		/// <returns>	true if it succeeds, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public bool FLeftOf(PointF pt)
+		public bool FLeftOf(PT pt)
 		{
 			// We should never have a start vertex at infinity
 			//
@@ -233,8 +240,8 @@ namespace DAP.CompGeom
 			Tracer.Assert(t.Assertion, !VtxStart.FAtInfinity, "Found non-infinite edge with start vertex at infinity");
 			
 			// If the end vtx is at infinity, convert it to a real point
-			PointF pt1 = VtxStart.Pt;
-			PointF pt2 = VtxEnd.FAtInfinity ? VtxEnd.ConvertToReal(pt1, 10) : VtxEnd.Pt;
+			var pt1 = VtxStart.Pt;
+			var pt2 = VtxEnd.FAtInfinity ? VtxEnd.ConvertToReal(pt1, 10) : VtxEnd.Pt;
 
 			// Do the geometry on pt1 and pt2
 			return Geometry.FLeft(pt1, pt2, pt);
@@ -295,7 +302,7 @@ namespace DAP.CompGeom
 		public void Draw(Graphics g, Pen pen, Single infiniteLineLength)
 		{
 			// Declare the two points we're going to draw a segment on
-			PointF pt1, pt2;
+			PT pt1, pt2;
 
 			// If both vertices are at infinity, there's nothing to draw
 			if (VtxStart.FAtInfinity && VtxEnd.FAtInfinity)
@@ -341,7 +348,13 @@ namespace DAP.CompGeom
 			}
 
 			// Draw a line from pt1 to pt2
+			// TODO: make a type converter for PointD to PointF and get rid of the #if here
+#if DOUBLEPRECISION
+			g.DrawLine(pen, pt1.ToPointf(), pt2.ToPointf());
+#else
 			g.DrawLine(pen, pt1, pt2);
+#endif
+
 		}
 		#endregion
 	}
