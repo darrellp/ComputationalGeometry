@@ -22,12 +22,20 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Polygons
-		/// <summary>
-		/// Finds the third polygon which created this vertex besides the two on each side of
-		/// the passed in edge
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Finds the third polygon which created this vertex besides the two on each side of the passed
+		/// in edge. 
 		/// </summary>
-		/// <param name="edge">Edge in question</param>
-		/// <returns>The polygon "opposite" this edge</returns>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">	Edge in question. </param>
+		///
+		/// <returns>	The polygon "opposite" this edge. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal FortunePoly PolyThird(FortuneEdge edge)
 		{
 			// Get the indices for the two polys on each side of our passed in edge
@@ -53,6 +61,7 @@ namespace DAP.CompGeom
 					return edgeDifferent.Poly1;
 				}
 			}
+			// Diagnostics
 			Tracer.Assert(t.Assertion, false, "Couldn't find third generator");
 			return null;
 		}
@@ -67,87 +76,124 @@ namespace DAP.CompGeom
 				_fAddedToWingedEdge = true;
 			}
 		}
-
 		#endregion
 
 		#region Edges
-		/// <summary>
-		/// Return the point at the other end of the given edge.  If the opposite point is
-		/// a point at infinity, a "real" point on that edge is created and returned.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Return the point at the other end of the given edge.  If the opposite point is a point at
+		/// infinity, a "real" point on that edge is created and returned. 
 		/// </summary>
-		/// <param name="edge">Edge to traverse</param>
-		/// <returns>The point at the opposite end of the edge</returns>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">	Edge to traverse. </param>
+		///
+		/// <returns>	The point at the opposite end of the edge. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private PointF PtAtOtherEnd(FortuneEdge edge)
 		{
-			PointF ptRet = VtxOtherEnd(edge).Pt;
+			// Get the vertex at the other end
+			var ptRet = VtxOtherEnd(edge).Pt;
+
+			// If it's at infinity
 			if (edge.VtxEnd.FAtInfinity)
 			{
+				// Produce a "real" point
 				ptRet = new PointF(Pt.X + ptRet.X, Pt.Y + ptRet.Y);
 			}
+
+			// Return the result
 			return ptRet;
 		}
 
-		/// <summary>
-		/// Reset the ordered flag so we get ordered in the next call to Order()
-		/// </summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Reset the ordered flag so we get ordered in the next call to Order() </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void ResetOrderedFlag()
 		{
 			_fAlreadyOrdered = false;
 		}
 
-		/// <summary>
-		/// Delegate to compare edges around this vertex
-		/// </summary>
-		/// <param name="e1"></param>
-		/// <param name="e2"></param>
-		/// <returns></returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Compare edges clockwise around this vertex. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="e1">	The first WeEdge. </param>
+		/// <param name="e2">	The second WeEdge. </param>
+		///
+		/// <returns>	+1 if they are CW around the generator, -1 if they're CCW, 0 if neither. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		int CompareEdges(WeEdge e1, WeEdge e2)
 		{
+			// Compare edges for clockwise order
 			var fe1 = (FortuneEdge)e1;
 			var fe2 = (FortuneEdge)e2;
 			return Geometry.ICompareCw(Pt, fe1.PolyOrderingTestPoint, fe2.PolyOrderingTestPoint);
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Order the three edges around this vertex. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		/// <summary>
-		/// Order the three edges around this vertex
-		/// </summary>
 		internal void Order()
 		{
+			// If this vertex has already been ordered or is a vertex at infinity
 			if (_fAlreadyOrdered || FAtInfinity)
 			{
 				return;
 			}
 
+			// If we have the usual case of 3 edges
 			if (CtEdges == 3)
 			{
-				// Quick fix for the vastly more common case
+				// Get the points at the other end of each of the 3 edges
 				var pt0 = PtAtOtherEnd(Edges[0] as FortuneEdge);
 				var pt1 = PtAtOtherEnd(Edges[1] as FortuneEdge);
 				var pt2 = PtAtOtherEnd(Edges[2] as FortuneEdge);
 
+				// If ordered incorrectly
 				if (Geometry.ICcw(pt0, pt1, pt2) > 0)
 				{
+					// Swap the first two
 					var edge0 = Edges[0];
 					Edges[0] = Edges[1];
 					Edges[1] = edge0;
 				}
+
+				// Mark ourselves as ordered
 				_fAlreadyOrdered = true;
 			}
 			else
 			{
+				// Do the more complicated sort
 				Edges.Sort(CompareEdges); 
 			}
 		}
 		#endregion
 
 		#region Infinite Vertices
-		/// <summary>
-		/// Produce a vertex at infinity
-		/// </summary>
-		/// <param name="ptDirection">Direction for the vertex</param>
-		/// <param name="fNormalize">If true we normalize, else not</param>
-		/// <returns>The vertex at infinity</returns>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Produce a vertex at infinity. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="ptDirection">	Direction for the vertex. </param>
+		/// <param name="fNormalize">	If true we normalize, else not. </param>
+		///
+		/// <returns>	The vertex at infinity. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal static FortuneVertex InfiniteVertex(PointF ptDirection, bool fNormalize)
 		{
 			var vtx = new FortuneVertex(ptDirection);
