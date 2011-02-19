@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Drawing;
 using NetTrace;
 
 namespace DAP.CompGeom
@@ -52,25 +51,41 @@ namespace DAP.CompGeom
 			}
 		}
 
-		/// <summary>
-		/// Return a point suitable for testing angle around the generator so that we can order
-		/// the edges of polygons in postprocessing.  This is used in the CompareToVirtual() to
-		/// effect that ordering.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Return a point suitable for testing angle around the generator so that we can order the edges
+		/// of polygons in postprocessing.  This is used in the CompareToVirtual() to effect that
+		/// ordering. 
 		/// </summary>
+		///
+		/// <value>	The polygon ordering test point. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal PointF PolyOrderingTestPoint
 		{
 			get
 			{
+				// Finite line segments just take the midpoint
 				if (!VtxEnd.FAtInfinity)
 				{
 					return Geometry.MidPoint(VtxStart.Pt, VtxEnd.Pt);
 				}
+
+				// If it's a ray
 				if (!VtxStart.FAtInfinity)
 				{
+					// Just take a point a little out from the start point
 					return new PointF(
 						VtxStart.Pt.X + VtxEnd.Pt.X,
 						VtxStart.Pt.Y + VtxEnd.Pt.Y);
 				}
+
+				// Take care of an edge at infinity
+				// Bug?
+				// If we're an edge at infinity we take the midpoint of
+				// the base of the two rays that point out to us.  This seems like
+				// a potential problem.  It seems like the points out on those two
+				// rays could potentially extend beyond this midpoint.
 				return Geometry.MidPoint(
 					EdgeCCWSuccessor.VtxStart.Pt,
 					EdgeCWPredecessor.VtxStart.Pt);
@@ -95,22 +110,32 @@ namespace DAP.CompGeom
 			return !VtxEnd.FAtInfinity && Geometry.FCloseEnough(VtxStart.Pt, VtxEnd.Pt);
 		}
 
-		/// <summary>
-		/// Find the index of this edge in an adjacent vertex
-		/// </summary>
-		/// <param name="fStartVertex">If true, search start vertex, else search end vertex</param>
-		/// <returns>Index in the vertice's edge list of this edge</returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Find the index of this edge in an adjacent vertex. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="fStartVertex">	If true, search start vertex, else search end vertex. </param>
+		///
+		/// <returns>	Index in the vertice's edge list of this edge. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal int EdgeIndex(bool fStartVertex)
 		{
+			// Get the vertex we're supposed to search
 			var vtx = (FortuneVertex)(fStartVertex ? VtxStart : VtxEnd);
 
-			for (int iEdge = 0; iEdge < vtx.Edges.Count; iEdge++)
+			// Go through all the edges for that vertex
+			for (var iEdge = 0; iEdge < vtx.Edges.Count; iEdge++)
 			{
+				// When we locate this edge
 				if (vtx.Edges[iEdge] == this)
 				{
+					// Return the index
 					return iEdge;
 				}
 			}
+			// We should never make it to here
 			Tracer.Assert(t.Assertion, false, "Edge isn't in it's adjoining edge list");
 			return -1;
 		}
@@ -120,21 +145,30 @@ namespace DAP.CompGeom
 			return Poly1 == polyThis ? Poly2 : Poly1;
 		}
 
-		/// <summary>
-		/// Determine whether two edges connect at a common vertex and if so, how they connect
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Determine whether two edges connect at a common vertex and if so, how they connect. 
 		/// </summary>
-		/// <param name="edge1">First edge</param>
-		/// <param name="edge2">Second edge</param>
-		/// <param name="fEdge1ConnectsAtStartVtx">True if edge1 connects to edge2 at its start vertex, else false</param>
-		/// <param name="fEdge2ConnectsAtStartVtx">True if edge2 connects to edge1 at its start vertex, else false</param>
-		/// <returns>true if the edges connect</returns>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge1">					First edge. </param>
+		/// <param name="edge2">					Second edge. </param>
+		/// <param name="fEdge1ConnectsAtStartVtx">	[out] True if edge1 connects to edge2 at its start
+		/// 										vertex, else false. </param>
+		/// <param name="fEdge2ConnectsAtStartVtx">	[out] True if edge2 connects to edge1 at its start
+		/// 										vertex, else false. </param>
+		///
+		/// <returns>	true if the edges connect. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		static internal bool FConnectsTo(
 			FortuneEdge edge1,
 			FortuneEdge edge2,
 			out bool fEdge1ConnectsAtStartVtx,
 			out bool fEdge2ConnectsAtStartVtx)
 		{
-			bool fRet = false;
+			var fRet = false;
 
 			fEdge1ConnectsAtStartVtx = false;
 			fEdge2ConnectsAtStartVtx = false;
@@ -164,47 +198,74 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Modification
-		/// <summary>
-		/// Relabel all the end vertices of this edge to point to it's start vertex
-		/// </summary>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Relabel all the end vertices of this edge to point to it's start vertex. </summary>
+		/// 
+		/// <remarks>
+		/// This is done only for zero length edges when they're deleted.  The edges emanating from the
+		/// end vertex of the zero length edge are moved to the start vertex (which is in the same location
+		/// as the end vertex).  Since these will not be ordered with the edges already there we set them to
+		/// unordered.
+		/// 	
+		/// Darrellp, 2/19/2011.
+		/// </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private void RelabelEndVerticesToStart()
 		{
+			// For each edge emanating at the end vertex
 			foreach (FortuneEdge edgeCur in VtxEnd.Edges)
 			{
+				// If it's not the zero length edge
 				if (edgeCur != this)
 				{
+					// If it connects with it's Start vertex
 					if (edgeCur.VtxStart == VtxEnd)
 					{
+						// reassign its start vertex
 						edgeCur.VtxStart = VtxStart;
 					}
 					else
 					{
+						// reassign its end vertex
 						edgeCur.VtxEnd = VtxStart;
 					}
 				}
 			}
+			
+			// Reset the ordering flag on the start vertex
 			((FortuneVertex)VtxStart).ResetOrderedFlag();
 		}
 
-		/// <summary>
-		/// Splice all the end vertices of this edge into the edge list of it's start vertex
-		/// </summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Splice all the end vertices of this edge into the edge list of it's start vertex. </summary>
+		///
+		/// <remarks>	We do this when removing zero length edges. Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private void SpliceEndEdgesIntoStart()
 		{
-			int iEnd = EdgeIndex(false);
-			int iStart = EdgeIndex(true);
-			IList<WeEdge> lstSpliceInto = VtxStart.Edges;
-			IList<WeEdge> lstSpliceFrom = VtxEnd.Edges;
-			// Now add all our end vertices to the start vertex's edge list.  We add them in reverse
-			// order starting from the edge before this one so that they end up in proper order in
-			// the target list
-			for (int i = (iEnd + lstSpliceFrom.Count - 1) % lstSpliceFrom.Count; i != iEnd; i = (i + lstSpliceFrom.Count - 1) % lstSpliceFrom.Count)
+			// Initialize locals
+			var iEnd = EdgeIndex(false);
+			var iStart = EdgeIndex(true);
+			var lstSpliceInto = VtxStart.Edges;
+			var lstSpliceFrom = VtxEnd.Edges;
+
+			// Now add all our end vertices to the start vertex's edge list.
+			// 
+			// We add them in reverse order starting from the edge before
+			// this one so that they end up in proper order in the target list
+			for (var i = (iEnd + lstSpliceFrom.Count - 1) % lstSpliceFrom.Count; i != iEnd; i = (i + lstSpliceFrom.Count - 1) % lstSpliceFrom.Count)
 			{
+				// Put them into the start list
 				lstSpliceInto.Insert(iStart, lstSpliceFrom[i]);
 			}
 
+			// Diagnostics
 			Tracer.Indent();
-			// Take care of CW Predecessor
+
+			// RQS- Take care of CW Predecessor
 			if (EdgeCWPredecessor.VtxStart == VtxEnd)
 			{
 				EdgeCWPredecessor.EdgeCCWSuccessor = EdgeCCWSuccessor;
@@ -215,8 +276,9 @@ namespace DAP.CompGeom
 				EdgeCWPredecessor.EdgeCCWPredecessor = EdgeCCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
 			}
+			//-RQS
 
-			// and CCW Predecessor
+			// RQS- and CCW Predecessor
 			if (EdgeCCWPredecessor.VtxStart == VtxEnd)
 			{
 				EdgeCCWPredecessor.EdgeCWSuccessor = EdgeCWSuccessor;
@@ -227,8 +289,9 @@ namespace DAP.CompGeom
 				EdgeCCWPredecessor.EdgeCWPredecessor = EdgeCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
 			}
+			//-RQS
 
-			// and CW Successor
+			// RQS- and CW Successor
 			if (EdgeCWSuccessor.VtxStart == VtxStart)
 			{
 				EdgeCWSuccessor.EdgeCCWSuccessor = EdgeCCWPredecessor;
@@ -239,8 +302,9 @@ namespace DAP.CompGeom
 				EdgeCWSuccessor.EdgeCCWPredecessor = EdgeCCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
 			}
+			//-RQS
 
-			// and CCW Successor
+			// RQS- and CCW Successor
 			if (EdgeCCWSuccessor.VtxStart == VtxStart)
 			{
 				EdgeCCWSuccessor.EdgeCWSuccessor = EdgeCWPredecessor;
@@ -251,104 +315,152 @@ namespace DAP.CompGeom
 				EdgeCCWSuccessor.EdgeCWPredecessor = EdgeCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
 			}
+			//-RQS
 
-			Tracer.Unindent();
-			// Remove us from the start vertex's list - our index has been bumped by all the edges
+			// Remove us from the start vertex's list
+			//
+			// Our index has been bumped by all the edges
 			// we inserted which is just all the ones from the end vertex minus 1 for ourself.
+			Tracer.Unindent();
 			lstSpliceInto.RemoveAt(iStart + lstSpliceFrom.Count - 1);
 		}
 
-		/// <summary>
-		/// Move all the edges on the end vertex to the start
-		/// </summary>
-		/// <remarks>
-		/// This is done in preparation for removing a zero length edge.  Since the edge is zero length
-		/// we can assume that all the end edges fit in the "wedge" occupied by this edge in the
-		/// start vertices list of edges.  That is, we can assume that we can just splice the end
-		/// edges into the start vertex's list of edges without having to resort based on angle
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Move all the edges on the end vertex to the start. </summary>
+		///
+		/// <remarks>	
+		/// This is done to removing a zero length edge.  Since the edge is zero length
+		/// we can assume that all the end edges fit in the "wedge" occupied by this edge in the start
+		/// vertices list of edges.  That is, we can assume that we can just splice the end edges into
+		/// the start vertex's list of edges without having to resort based on angle. 
 		/// </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void ReassignVertexEdges()
 		{
 			// Make all the end edges join to our start vertex rather than our end vertex
 			RelabelEndVerticesToStart();
+
 			// Put the end edges into our start vertex's list of edges
 			SpliceEndEdgesIntoStart();
 		}
 
-		/// <summary>
-		/// Add a vertex in the proper place according to _fStartVertexSet
-		/// </summary>
-		/// <param name="vtx">Vertex to add</param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Add a vertex in the proper place according to _fStartVertexSet. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="vtx">	Vertex to add. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void AddVertex(FortuneVertex vtx)
 		{
+			// If we've already set the start vertex
 			if (_fStartVertexSet)
 			{
+				// This is the end vertex
 				VtxEnd = vtx;
 			}
 			else
 			{
+				// Make this the start vertex and set the start vertex flag
 				_fStartVertexSet = true;
 				VtxStart = vtx;
 			}
 		}
 
-		/// <summary>
-		/// Get the next edge in both the cw and ccw directions from this edge at the given vertex
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Get the next edge in both the cw and ccw directions from this edge at the given vertex. 
 		/// </summary>
-		/// <param name="vtx">vertex to use</param>
-		/// <param name="edgeCW">returned cw edge</param>
-		/// <param name="edgeCCW">returned ccw edge</param>
+		///
+		/// <remarks>	
+		/// This routine is called before they've been set up as winged edges so we have to search them
+		/// out ourselves.  The edges have been ordered in CW order, however.
+		/// 
+		/// Darrellp, 2/19/2011. 
+		/// </remarks>
+		///
+		/// <param name="vtx">		vertex to use. </param>
+		/// <param name="edgeCW">	[out] returned cw edge. </param>
+		/// <param name="edgeCCW">	[out] returned ccw edge. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		void GetSuccessorEdgesFromVertex(
 			WeVertex vtx,
 			out WeEdge edgeCW,
 			out WeEdge edgeCCW)
 		{
-			// This is the case if there are no zero length edges
+			// Are we free of zero length edges?
 			if (vtx.Edges.Count == 3)
 			{
+				// Do the extremely simple, extremely common 3 valent case
 				GetSuccessorEdgesFrom3ValentVertex(vtx, out edgeCW, out edgeCCW);
 			}
 			else
 			{
+				// Locals
 				int iEdge;
 				int cEdges;
 
+				// If we're looking at our start vertex
 				if (vtx == VtxStart)
 				{
+					// Find our place in the list of edges for start vertex
 					iEdge = EdgeIndex(true);
 					cEdges = VtxStart.CtEdges;
 				}
 				else
 				{
+					// Find our place in the list of edges for end vertex
 					iEdge = EdgeIndex(false);
 					cEdges = VtxEnd.CtEdges;
 				}
+
+				// Get our immediate neighbors on the edge list
 				edgeCW = vtx.Edges[(iEdge + 1) % cEdges];
 				edgeCCW = vtx.Edges[(iEdge + cEdges - 1) % cEdges];
 			}
 		}
 
-		/// <summary>
-		/// Get the next edge in both the cw and ccw directions from this edge at the given 3 valent vertex
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Get the next edge in both the cw and ccw directions from this edge at the given 3 valent
+		/// vertex. 
 		/// </summary>
-		/// <param name="vtx">vertex to use</param>
-		/// <param name="edgeCW">returned cw edge</param>
-		/// <param name="edgeCCW">returned ccw edge</param>
+		///
+		/// <remarks>
+		/// This is the simplest and most common case.  It's called before the winged edge stuff is set up
+		/// so we have to search manually.  The edges have been sorted in clockwise order however.
+		/// 
+		/// Darrellp, 2/19/2011.
+		/// </remarks>
+		///
+		/// <param name="vtx">		vertex to use. </param>
+		/// <param name="edgeCW">	[out] returned cw edge. </param>
+		/// <param name="edgeCCW">	[out] returned ccw edge. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		void GetSuccessorEdgesFrom3ValentVertex(
 			WeVertex vtx,
 			out WeEdge edgeCW,
 			out WeEdge edgeCCW)
 		{
+			// Locals
 			int iEdge;
-
 			Tracer.Assert(t.Assertion, vtx.Edges.Count == 3, "Vertex without valency of 3");
+
+			// Figure out which of the edges is ours
 			for (iEdge = 0; iEdge < 3; iEdge++)
 			{
+				// If the current edge is us
 				if (ReferenceEquals(vtx.Edges[iEdge], this))
 				{
 					break;
 				}
 			}
+
+			// The next two edges, in order, are the onew we're looking for
 			edgeCW = vtx.Edges[(iEdge + 1) % 3] as FortuneEdge;
 			edgeCCW = vtx.Edges[(iEdge + 2) % 3] as FortuneEdge;
 		}
@@ -366,6 +478,7 @@ namespace DAP.CompGeom
 
 		internal void SetOrderedPoly(FortunePoly poly)
 		{
+			// If the polygon's generator is to our left
 			if (FLeftOf(poly.VoronoiPoint))
 			{
 				PolyLeft = poly;
@@ -387,18 +500,19 @@ namespace DAP.CompGeom
 
 		internal void SetSuccessorEdges()
 		{
+			// Locals
 			WeEdge edgeCW, edgeCCW;
 
+			// If this is the degenerate case of a fully infinite line
+			//
+			// With exactly collinear points in the voronoi diagram we would
+			// normally have a fully infinite line(s).  This is the only situation
+			// where this arises and we handle it by turning it into two
+			// rays pointing in opposite directions.  If we're one of those
+			// edges, then both our predecessor and our successor are the
+			// other edge.
 			if (VtxStart.Edges.Count == 2)
 			{
-				// Handle degenerate case of a fully infinite line
-				//
-				// With exactly two points in the voronoi diagram we would
-				// normally have a fully infinite line.  This is the only situation
-				// where this arises and we handle it by turning it into two
-				// rays pointing in opposite directions.  If we're one of those
-				// edges, then both our predecessor and our successor are the
-				// other edge.
 
 				// If we're Edges[0]
 				if (ReferenceEquals(this, VtxStart.Edges[0]))
@@ -420,19 +534,24 @@ namespace DAP.CompGeom
 			// postprocessing
 			((FortuneVertex)VtxStart).Order();
 
+			// Get our predecessor edges
 			GetSuccessorEdgesFromVertex(
 				VtxStart,
 				out edgeCW,
 				out edgeCCW);
-
 			EdgeCWPredecessor = edgeCW;
 			EdgeCCWPredecessor = edgeCCW;
 
+			// If the end vertex is not at infinity, set up successor edges
+			//
 			// If one end is an infinite ray then it's successors will be set up when we add the polygon
 			// at infinity on.
 			if (!VtxEnd.FAtInfinity)
 			{
+				// Order our end vertices
 				((FortuneVertex)VtxEnd).Order();
+
+				// Get our successor edges
 				GetSuccessorEdgesFromVertex(
 					VtxEnd,
 					out edgeCW,
@@ -472,14 +591,22 @@ namespace DAP.CompGeom
 			}
 		}
 
-		/// <summary>
-		/// Set up the polygons which surround this edge.  During the sweepline processing we don't necessarily
-		/// know where the final vertex for an edge will be before we know the polygons on each side of the
-		/// edge so we can't actually determine which side of the edge the polygons will lie on.  Consequently, we
-		/// have to just keep them handy until we finally get our second point.
-		/// </summary>
-		/// <param name="poly1">First poly</param>
-		/// <param name="poly2">Second poly</param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Set up the polygons which surround this edge. </summary>
+		///
+		/// <remarks>	
+		/// During the sweepline processing we don't necessarily know where the final vertex for an edge
+		/// will be before we know the polygons on each side of the edge so we can't actually determine
+		/// which side of the edge the polygons will lie on.  Consequently, we have to just keep them
+		/// handy until we finally get our second point.
+		/// 
+		/// Darrellp, 2/19/2011. 
+		/// </remarks>
+		///
+		/// <param name="poly1">	First poly. </param>
+		/// <param name="poly2">	Second poly. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void SetPolys(FortunePoly poly1, FortunePoly poly2)
 		{
 			_arPoly[0] = poly1;
@@ -488,43 +615,66 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region IComparable Members
-		/// <summary>
-		/// Find the common polygon between two edges.  An assertion will be raised if there is no
-		/// common polygon.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Find the common polygon between two edges.  An assertion will be raised if there is no common
+		/// polygon. 
 		/// </summary>
-		/// <param name="edge">Edge to find a common poly with</param>
-		/// <returns>The common polygon</returns>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">	Edge to find a common poly with. </param>
+		///
+		/// <returns>	The common polygon. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private FortunePoly PolyCommon(FortuneEdge edge)
 		{
+			// If my Poly1 is the same as one of the edge's polys
 			if (ReferenceEquals(Poly1, edge.Poly1) || ReferenceEquals(Poly1, edge.Poly2))
 			{
+				// Return poly1
 				return Poly1;
 			}
+
+			// Otherwise, return Poly2
 			Tracer.Assert(t.Assertion,
 			              ReferenceEquals(Poly2, edge.Poly1) || ReferenceEquals(Poly2, edge.Poly2),
 			              "Calling GenCommon on two edges with no common generator");
 			return Poly2;
 		}
 
-		/// <summary>
-		/// Compare two edges based on their cw order around a common generator.  It is an error to compare edges
-		/// which do not have a common generator so this is only a "partial" comparer which is probably strictly
-		/// verboten according to C# rules, but we have to do it in order to use the framework Sort routine to sort
-		/// edges around a generator.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Compare two edges based on their cw order around a common generator.  It is an error to
+		/// compare edges which do not have a common generator so this is only a "partial" comparer which
+		/// is probably strictly verboten according to C# rules, but we have to do it in order to use the
+		/// framework Sort routine to sort edges around a generator. 
 		/// </summary>
-		/// <param name="edgeIn">Edge to compare</param>
-		/// <returns>Comparison output</returns>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edgeIn">	Edge to compare. </param>
+		///
+		/// <returns>	Comparison output. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public override int CompareToVirtual(WeEdge edgeIn)
 		{
+			// Get our fortune edge
 			var edge = edgeIn as FortuneEdge;
 
+			// Complain if it's not a fortune edge
 			Tracer.Assert(t.Assertion, edge != null, "Non-fortuneEdge passed to fortuneEdge compare");
 
+			// If they're identical
 			if (ReferenceEquals(edgeIn, this))
 			{
 				return 0;
 			}
 
+			// Return the "clockwisedness" of the generator and points on the two edges.
 			return Geometry.ICompareCw(PolyCommon(edge).VoronoiPoint, PolyOrderingTestPoint, edge.PolyOrderingTestPoint);
 		}
 		#endregion

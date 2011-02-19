@@ -78,6 +78,9 @@
     <Compile Include="Voronoi\FortuneEvent.cs" />
     <Compile Include="Voronoi\FortunePoly.cs" />
     <Compile Include="Voronoi\FortuneVertex.cs" />
+    <Compile Include="Voronoi\InternalNode.cs" />
+    <Compile Include="Voronoi\LeafNode.cs" />
+    <Compile Include="Voronoi\Node.cs" />
     <Compile Include="WeEdge.cs" />
     <Compile Include="WePolygon.cs" />
     <Compile Include="WeVertex.cs" />

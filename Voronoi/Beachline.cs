@@ -7,9 +7,7 @@ using TPT = System.Single;
 #endif
 
 using System;
-using System.Text;
 using System.Diagnostics;
-using NUnit.Framework;
 using NetTrace;
 
 namespace DAP.CompGeom
@@ -110,7 +108,7 @@ namespace DAP.CompGeom
 
 				// Search the tree recursively on the side of the break point that xSite is on
 				Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
-				ndRet = LfnSearchNode(edgeXPos < xSite ? nd.NdRight : nd.NdLeft, xSite, yScanLine);
+				ndRet = LfnSearchNode(edgeXPos < xSite ? nd.RightChild : nd.LeftChild, xSite, yScanLine);
 			}
 
 			// Return the node we located
@@ -174,6 +172,8 @@ namespace DAP.CompGeom
 			var innFarSiblingEdge = lfnNearSibling.InnFindSiblingEdge(fLeftChildEliminated);
 
 			// Get the edges being developed on each side of us
+			//
+			// The meeting of these edges is what causes the creation of our vertex in the voronoi diagram
 			var edgeNearSibling = innParent.Edge;
 			var edgeFarSibling = innFarSiblingEdge.Edge;
 
@@ -231,25 +231,37 @@ namespace DAP.CompGeom
 			// Also add it to our beachline sibling
 			innFarSiblingEdge.Edge = edge;
 
+			// Fix up the siblings and the edges/polygons they border
+			//
 			// The inner node which used to represent one of the incoming edges now takes on responsibility
 			// for the newly created edge so it no longer borders the polygon represented by the eliminated
 			// leaf node, but rather borders the polygon represented by its sibling on the other side.
 			// Also, that polygon receives a new edge.
+
+			// If we eliminated the left child from a parent
 			if (fLeftChildEliminated)
 			{
+				// Reset the data on the inner node representing our far sibling
 				innFarSiblingEdge.PolyRight = lfnNearSibling.Poly;
 				innFarSiblingEdge.PolyLeft.AddEdge(edge);
+
+				// If this event represented a zero length edge
 				if (cevt.FZeroLength)
 				{
+					// Keep track of it in the fortune polygon
 					innFarSiblingEdge.PolyLeft.FZeroLengthEdge = true;
 				}
 			}
 			else
 			{
+				// Reset the data on the inner node representing our far sibling
 				innFarSiblingEdge.PolyLeft = lfnNearSibling.Poly;
 				innFarSiblingEdge.PolyRight.AddEdge(edge);
+
+				// If this event represented a zero length edge
 				if (cevt.FZeroLength)
 				{
+					// Keep track of it in the fortune polygon
 					innFarSiblingEdge.PolyRight.FZeroLengthEdge = true;
 				}
 			}
@@ -292,64 +304,85 @@ namespace DAP.CompGeom
 				return;
 			}
 
-			// We remove both the leafnode and it's parent.  It's immediate sibling
-			// is moved up to the grandparent.  This changes the height balance on the
-			// grandparent since it loses a level.
+			// Remove the leaf node and its parent
+			//
+			// We remove both the leafnode and it's parent (it's parent represents the edge
+			// that just terminated in our new fortune vertex, hence it's need to be removed
+			// also).  It's immediate sibling
+			// is moved up to be a child of the grandparent.  This changes the height
+			// balance on the grandparent since it loses a level.
 			var innParent = lfn.NdParent;
 			var innGrandparent = innParent.NdParent;
 			var fIsParentLeftChild = innParent.IsLeftChild;
 			innParent.SnipFromParent();
 
-			// Insert us on the proper side of our grandparent
+			// Insert our sibling in place of our parent
+
+			// Was our parent on the left side of their parent?
 			if (fIsParentLeftChild)
 			{
-				innGrandparent.NdLeft = lfn.ImmediateSibling;
+				// Move us in on the left side
+				innGrandparent.LeftChild = lfn.ImmediateSibling;
 				innGrandparent.DecDht();
 			}
 			else
 			{
-				innGrandparent.NdRight = lfn.ImmediateSibling;
+				// Move us in on the right side
+				innGrandparent.RightChild = lfn.ImmediateSibling;
 				innGrandparent.IncDht();
 			}
 
+			// Link our former siblings together
+			//
 			// Now that we're being removed, our former siblings become direct siblings so link them together
 			// in the adjacent leaf chain
 			lfn.LinkSiblingsTogether();
 		}
 
-		/// <summary>
-		/// One of our incoming edges is zero length so note it properly in the polygons
-		/// </summary>
-		/// <remarks>
-		/// This happens when cocircular generators cause more than one circle event at the same location.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	One of our incoming edges is zero length so note it properly in the polygons. </summary>
+		///
+		/// <remarks>	
+		/// This happens when cocircular generators cause more than one circle event at the same
+		/// location. 
 		/// </remarks>
-		/// <param name="edgeNearSibling">Immediate sibling</param>
-		/// <param name="edgeFarSibling">Far sibling</param>
+		///
+		/// <param name="edgeNearSibling">	Immediate sibling. </param>
+		/// <param name="edgeFarSibling">	Far sibling. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private static void SetZeroLengthFlagOnPolys(FortuneEdge edgeNearSibling, FortuneEdge edgeFarSibling)
 		{
+			// If it's the edge between us and our near sibling that's zero length
 			if (edgeNearSibling.VtxEnd != null && edgeNearSibling.FZeroLength())
 			{
+				// Both polys on each side of the far edge need to be marked as having a zero length edge
 				edgeNearSibling.Poly1.FZeroLengthEdge =
 					edgeNearSibling.Poly2.FZeroLengthEdge = true;
 			}
 			else
 			{
+				// Both polys on each side of the near edge need to be marked as having a zero length edge
 				edgeFarSibling.Poly1.FZeroLengthEdge =
 					edgeFarSibling.Poly2.FZeroLengthEdge = true;
 			}
 		}
 
-		/// <summary>
-		/// Delete any circle events associated with the leaf node.
-		/// </summary>
-		/// <remarks>
-		/// Circle events are composed of three adjacent leaf nodes so the ones	associated with us include
-		/// the one directly on us and the ones on our left and right siblings.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Delete any circle events associated with the leaf node. </summary>
+		///
+		/// <remarks>	
+		/// Circle events are composed of three adjacent leaf nodes so the ones	associated with us
+		/// include the one directly on us and the ones on our left and right siblings. 
 		/// </remarks>
-		/// <param name="lfnEliminated">Leaf node being eliminated</param>
-		/// <param name="evq">Event queue</param>
+		///
+		/// <param name="lfnEliminated">	Leaf node being eliminated. </param>
+		/// <param name="evq">				Event queue. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		private static void RemoveAssociatedCircleEvents(LeafNode lfnEliminated, EventQueue evq)
 		{
+			// Delete circle events which involve us and our siblings
 			Tracer.Trace(tv.CircleDeletions, "Deleting Circle events associated with the leaf node...");
 			Tracer.Indent();
 			lfnEliminated.DeleteAssociatedCircleEvent(evq);
@@ -358,47 +391,63 @@ namespace DAP.CompGeom
 			Tracer.Unindent();
 		}
 
-		/// <summary>
-		/// Catch special circle events and disallow them
-		/// </summary>
-		/// <remarks>
-		/// In the book it says to add a circle event if it isn't already in the queue.  That seems
-		/// a bit wasteful to me - search the whole queue every time you add a circle event?  There
-		/// has to be a better way.  This routine is the alternative.  Just a few checks on the
-		/// circle parameters ensures that they'll only enter the queue once.  Much better than a searh
-		/// of the queue.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Catch special circle events and disallow them. </summary>
+		///
+		/// <remarks>	
+		/// In the book it says to add a circle event if it isn't already in the queue.  That seems a bit
+		/// wasteful to me - search the whole queue every time you add a circle event?  There has to be a
+		/// better way.  This routine is the alternative.  Just a few checks on the circle parameters
+		/// ensures that they'll only enter the queue once.  Much better than a searh of the queue. It's essentially
+		/// an extension of the counter clockwise generic routine which deals with collinear points as though
+		/// they were points on an infinitely large circle.
 		/// </remarks>
-		/// <param name="pt1">First point for proposed circle event</param>
-		/// <param name="pt2">Second point for proposed circle event</param>
-		/// <param name="pt3">Third point for proposed circle event</param>
-		/// <returns>Acceptable if less than or equal to zero, else rejected</returns>
+		///
+		/// <param name="pt1">	First point for proposed circle event. </param>
+		/// <param name="pt2">	Second point for proposed circle event. </param>
+		/// <param name="pt3">	Third point for proposed circle event. </param>
+		///
+		/// <returns>	Acceptable if less than or equal to zero, else rejected. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal static int ICcwVoronoi(PT pt1, PT pt2, PT pt3)
 		{
-			int iSign = Geometry.ICcw(pt1, pt2, pt3);
+			// Do the geometry to see if they're clockwise
+			var iSign = Geometry.ICcw(pt1, pt2, pt3);
+
+			// If they're not collilnear
 			if (iSign != 0)
 			{
+				// Return their orientation
 				return iSign;
 			}
-			TPT dx1 = pt2.X - pt1.X;
-			TPT dx2 = pt3.X - pt1.X;
-			TPT dy1 = pt2.Y - pt1.Y;
-			TPT dy2 = pt3.Y - pt1.Y;
+
+			// RQS- Treat the Collinear points as though they are on an infinite circle
+			var dx1 = pt2.X - pt1.X;
+			var dx2 = pt3.X - pt1.X;
+			var dy1 = pt2.Y - pt1.Y;
+			var dy2 = pt3.Y - pt1.Y;
 			if ((dx1 * dx2 < 0) || (dy1 * dy2 < 0))
 				return -1;
 			if ((dx1 * dx1 + dy1 * dy1) < (dx2 * dx2 + dy2 * dy2))
 				return +1;
+			// -RQS
+
 			return 0;
 		}
 
-		/// <summary>
-		/// Create a circle event from a triple of leaf nodes
-		/// </summary>
-		/// <param name="lfnLeft">Leaf node representing the leftmost parabola</param>
-		/// <param name="lfnCenter">Leaf node representing the center parabola</param>
-		/// <param name="lfnRight">Leaf node representing the rightmost parabola</param>
-		/// <param name="yScanLine">Where the scan line is located</param>
-		/// <param name="evq">Event queue</param>
-		void CreateCircleEventFromTriple(
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Create a circle event from a triple of leaf nodes. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="lfnLeft">		Leaf node representing the leftmost parabola. </param>
+		/// <param name="lfnCenter">	Leaf node representing the center parabola. </param>
+		/// <param name="lfnRight">		Leaf node representing the rightmost parabola. </param>
+		/// <param name="yScanLine">	Where the scan line is located. </param>
+		/// <param name="evq">			Event queue. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		static void CreateCircleEventFromTriple(
 			LeafNode lfnLeft,
 			LeafNode lfnCenter,
 			LeafNode lfnRight,
@@ -408,66 +457,85 @@ namespace DAP.CompGeom
 			// This happens if we're the farthest right or left parabola...
 			if (lfnLeft == null || lfnRight == null || lfnCenter == null)
 			{
+				// No circle events associated with non-existent parabolas
+
 				return;
 			}
 
+			// Diagnostics
 			Tracer.Trace(tv.CCreate, "Considering creation of cevt: {0}-{1}-{2}...",
 				lfnLeft.Poly.Index, lfnCenter.Poly.Index, lfnRight.Poly.Index);
 
 			// We need at least three points
 			if (lfnRight == lfnCenter || lfnRight == lfnLeft || lfnCenter == lfnLeft)
 			{
+				// If two of the points are identical then we don't have three points
 				Tracer.Trace(tv.CCreate, "Rejected circle event because it involves fewer than three generators");
+
 				return;
 			}
 
 			// Make sure we don't insert the same circle eventin twice
 			if (ICcwVoronoi(lfnLeft.Poly.VoronoiPoint, lfnCenter.Poly.VoronoiPoint, lfnRight.Poly.VoronoiPoint) > 0)
 			{
+				// Don't create an event if we've already put it in before
 				Tracer.Trace(tv.CCreate, "Rejected circle event because it is not properly clockwise");
+
 				return;
 			}
 
 			// Create the circle event
-			CircleEvent cevt = FortuneEvent.CreateCircleEvent(lfnLeft.Poly, lfnCenter.Poly, lfnRight.Poly, yScanLine);
+			var cevt = FortuneEvent.CreateCircleEvent(lfnLeft.Poly, lfnCenter.Poly, lfnRight.Poly, yScanLine);
+
+			// If we got a valid circle event
 			if (cevt != null)
 			{
+				// Diagnostics
 				Tracer.Trace(tv.CCreate, "Creating circle for gens {0}, {1} and {2} to fire at ({3}, {4})",
 					lfnLeft.Poly.Index,
 					lfnCenter.Poly.Index,
 					lfnRight.Poly.Index,
 					cevt.Pt.X,
 					cevt.Pt.Y);
+
 				// Indicate which leaf node gets snuffed when this event is handled
 				cevt.LfnEliminated = lfnCenter;
+
+				// Add it to the event queue
 				evq.AddCircleEvent(cevt);
+
+				// Let the center node know this event will bring about its ominous demise
 				lfnCenter.SetCircleEvent(cevt);
 			}
 		}
 		#endregion
 
 		#region Insertion
-		/// <summary>
-		/// Handle the top N nodes located on a single horizontal line
-		/// </summary>
-		/// <remarks>
-		/// Note that this only handles the corner case where the top N nodes are on the same horizontal
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Handle the top N nodes located on a single horizontal line. </summary>
+		///
+		/// <remarks>	
+		/// This only handles the corner case where the top N nodes are on the same horizontal
 		/// line.  In that case the parabolas from previous points are vertically straight up and only
-		/// project to a single point on the x axis so that the beachline is a series of points rather than
-		/// a series of parabolas.  When that is the case we can't "intersect" new points with parabolas
-		/// that span the x axis.  After the scanline passes that initial set of topmost points, there
-		/// will always be a parabola which projects to the entire x axis so no need for this special
-		/// handling.
-		/// Normally, we produce two new parabolas at a site event like this - the new parabola for the
-		/// site itself and the new parabola produced when we split the parabola above us.  In this case
-		/// there is no parabola above us so we only produce one new parabola - the one inserted by the site.
+		/// project to a single point on the x axis so that the beachline is a series of points rather
+		/// than a series of parabolas.  When that is the case we can't "intersect" new points with
+		/// parabolas that span the x axis.  After the scanline passes that initial set of topmost points,
+		/// there will always be a parabola which projects to the entire x axis so no need for this
+		/// special handling. Normally, we produce two new parabolas at a site event like this - the new
+		/// parabola for the site itself and the new parabola produced when we split the parabola above
+		/// us.  In this case there is no parabola above us so we only produce one new parabola - the one
+		/// inserted by the site. 
 		/// </remarks>
-		/// <param name="lfn">LeafNode of the (degenerate) parabola nearest us</param>
-		/// <param name="lfnNewParabola">LeafNode we're inserting</param>
-		/// <param name="innParent">Parent of lfn</param>
-		/// <param name="innSubRoot">Root of the tree</param>
-		/// <param name="fLeftChild">Left child of innParent</param>
-		private void NdInsertAtSameY(
+		///
+		/// <param name="lfn">				LeafNode of the (degenerate) parabola nearest us. </param>
+		/// <param name="lfnNewParabola">	LeafNode we're inserting. </param>
+		/// <param name="innParent">		Parent of lfn. </param>
+		/// <param name="innSubRoot">		Root of the tree. </param>
+		/// <param name="fLeftChild">		Left child of innParent. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void NdInsertAtSameY(
 			LeafNode lfn,
 			LeafNode lfnNewParabola,
 			InternalNode innParent,
@@ -475,8 +543,8 @@ namespace DAP.CompGeom
 			bool fLeftChild)
 		{
 			LeafNode lfnLeft, lfnRight;
-			LeafNode lfnAdjacentParabolaLeft = lfn.LeftAdjacentLeaf;
-			LeafNode lfnAdjacentParabolaRight = lfn.RightAdjacentLeaf;
+			var lfnAdjacentParabolaLeft = lfn.LeftAdjacentLeaf;
+			var lfnAdjacentParabolaRight = lfn.RightAdjacentLeaf;
 
 			if (lfnNewParabola.Poly.VoronoiPoint.X < lfn.Poly.VoronoiPoint.X)
 			{
@@ -485,18 +553,19 @@ namespace DAP.CompGeom
 			}
 			else
 			{
-				// I don't think this case ever occurs in practice since we pull events off with higher
-				// x coordinates before events with lower x coordinates
+				//! Note: I don't think this case ever occurs in practice since we pull events off with higher
+				//! x coordinates before events with lower x coordinates
 				lfnLeft = lfn;
 				lfnRight = lfnNewParabola;
 			}
 			innSubRoot.PolyLeft = lfnLeft.Poly;
 			innSubRoot.PolyRight = lfnRight.Poly;
 
-			innSubRoot.NdLeft = lfnLeft;
-			innSubRoot.NdRight = lfnRight;
+			innSubRoot.LeftChild = lfnLeft;
+			innSubRoot.RightChild = lfnRight;
+
 			FortuneEdge edge = new FortuneEdge();
-			innSubRoot.AddEdge(edge);
+			innSubRoot.SetEdge(edge);
 			innSubRoot.AddEdgeToPolygons(edge);
 			lfnLeft.LeftAdjacentLeaf = lfnAdjacentParabolaLeft;
 			lfnLeft.RightAdjacentLeaf = lfnRight;
@@ -537,13 +606,13 @@ namespace DAP.CompGeom
 			FortuneEdge edge = new FortuneEdge();
 
 			// This is all fairly straightforward insertion of a node into a binary tree.
-			innSubRoot.NdRight = lfn;
-			innSubRoot.NdLeft = innSubRootLeftChild;
-			innSubRoot.AddEdge(edge);
+			innSubRoot.RightChild = lfn;
+			innSubRoot.LeftChild = innSubRootLeftChild;
+			innSubRoot.SetEdge(edge);
 			innSubRoot.AddEdgeToPolygons(edge);
-			innSubRootLeftChild.NdLeft = lfnLeftHalf;
-			innSubRootLeftChild.NdRight = lfnNewParabola;
-			innSubRootLeftChild.AddEdge(edge);
+			innSubRootLeftChild.LeftChild = lfnLeftHalf;
+			innSubRootLeftChild.RightChild = lfnNewParabola;
+			innSubRootLeftChild.SetEdge(edge);
 
 			lfnNewParabola.LeftAdjacentLeaf = lfnLeftHalf;
 			lfnNewParabola.RightAdjacentLeaf = lfn;
@@ -578,11 +647,11 @@ namespace DAP.CompGeom
 				lfn.SnipFromParent();
 				if (fLeftChild)
 				{
-					innParent.NdLeft = innSubRoot;
+					innParent.LeftChild = innSubRoot;
 				}
 				else
 				{
-					innParent.NdRight = innSubRoot;
+					innParent.RightChild = innSubRoot;
 				}
 			}
 
@@ -696,7 +765,7 @@ namespace DAP.CompGeom
 
 			while (!nd.IsLeaf)
 			{
-				nd = nd.NdLeft;
+				nd = nd.LeftChild;
 			}
 			return nd as LeafNode;
 		}
@@ -728,429 +797,4 @@ namespace DAP.CompGeom
 		}
 		#endregion
 	}
-
-	#region Node classes
-	abstract internal class Node
-	{
-		#region Private Variables
-		Node _ndLeft = null;					// Left child
-		Node _ndRight = null;					// Right child
-		InternalNode _ndParent = null;			// Parent
-		#endregion
-
-		#region Trace Tree
-#if DEBUG || NETTRACE
-		internal void TraceTree(string str, tv TraceEnumElement)
-		{
-			Tracer.Trace(tv.Trees, str);
-			TraceTreeWithIndent(TraceEnumElement, 0);
-		}
-
-		abstract internal void TraceTreeWithIndent(tv TraceEnumElement, int cIndent);
-#endif
-		#endregion
-
-		#region Properties
-		internal Node ImmediateSibling
-		{
-			get
-			{
-				return IsLeftChild ? NdParent.NdRight : NdParent.NdLeft;
-			}
-		}
-
-		internal bool IsLeftChild
-		{
-			get
-			{
-				return this == NdParent.NdLeft;
-			}
-		}
-
-		internal bool IsLeaf
-		{
-			get
-			{
-				return NdLeft == null;
-			}
-		}
-
-		internal InternalNode NdParent
-		{
-			get
-			{
-				return _ndParent;
-			}
-			set
-			{
-				_ndParent = value;
-			}
-		}
-
-		internal Node NdLeft
-		{
-			get
-			{
-				return _ndLeft;
-			}
-			set
-			{
-				_ndLeft = value;
-				_ndLeft.NdParent = (InternalNode)this;
-			}
-		}
-
-		internal Node NdRight
-		{
-			get
-			{
-				return _ndRight;
-			}
-			set
-			{
-				_ndRight = value;
-				_ndRight.NdParent = (InternalNode)this;
-			}
-		}
-		#endregion
-
-		#region Modification
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Remove pointers to parent and mark the node as an orphan. </summary>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		internal void SnipFromParent()
-		{
-			// If it's the left child of its parent
-			if (IsLeftChild)
-			{
-				// Null the parent's left child pointer
-				// Can't use NdLeft property here since it will try to set the parent of the incoming null node.
-				NdParent._ndLeft = null;
-			}
-			else
-			{
-				// Null the parent's right child pointer
-				NdParent._ndRight = null;
-			}
-			// Null our own parent pointer
-			NdParent = null;
-		}
-		#endregion
-
-		#region NUnit
-#if NUNIT || DEBUG
-		[TestFixture]
-		public class TestNode
-		{
-			[Test]
-			public void TestInsertDelete()
-			{
-				FortunePoly poly = new FortunePoly(new PT(0, 0), 0);
-
-				Node ndRoot = new InternalNode(poly, poly);
-				Node ndLeft = new InternalNode(poly, poly);
-				Node ndRight = new InternalNode(poly, poly);
-				Node ndLL = new LeafNode(poly);
-				Node ndLR = new LeafNode(poly);
-				Node ndRL = new LeafNode(poly);
-				Node ndRR = new LeafNode(poly);
-
-				ndRoot.NdLeft = ndLeft;
-				ndRoot.NdRight = ndRight;
-				ndRight.NdLeft = ndRL;
-				ndRight.NdRight = ndRR;
-				ndLeft.NdLeft = ndLL;
-				ndLeft.NdRight = ndLR;
-
-				Assert.IsTrue(ndLeft.NdParent == ndRoot);
-				Assert.IsTrue(ndRL.NdParent == ndRight);
-				Assert.IsTrue(ndLL.IsLeaf);
-				Assert.IsFalse(ndRoot.IsLeaf);
-				Assert.IsTrue(ndLeft.IsLeftChild);
-				Assert.IsFalse(ndRight.IsLeftChild);
-
-				ndLeft.SnipFromParent();
-				Assert.IsNull(ndLeft.NdParent);
-				Assert.IsNull(ndRoot.NdLeft);
-			}
-		}
-#endif
-		#endregion
-	}
-
-	internal class InternalNode : Node
-	{
-		#region Properties
-
-		// Winged edge that this internal node represents
-		internal FortuneEdge Edge { get; set; }
-
-		// Height of left subtree minus height of right for balancing
-		internal int DHtLeftMinusRight { get; set; }
-
-		// Winged edge polygon on one side of us
-		internal FortunePoly PolyRight { get; set; }
-
-		// Winged edge polgon on the other
-		internal FortunePoly PolyLeft { get; set; }
-
-		#endregion
-
-		#region overrides
-#if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
-		{
-			var sbIndent = new StringBuilder();
-
-			// *SURELY* there is a better way to repeat a single character into a string, but I can't
-			// seem to locate it for the life of me.
-
-			for (int iIndent = 0; iIndent < cIndent; iIndent++)
-			{
-				sbIndent.Append("|  ");
-			}
-
-			Tracer.Trace(traceEnumElement, sbIndent.ToString() + ToString());
-
-			NdLeft.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
-			NdRight.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
-		}
-#endif
-		#endregion
-
-		#region Manipulation
-		//!+ TODO: Implement height balanced tree
-		// Right now we don't bother trying to keep the beachline tree balanced in any way.
-		internal void IncDht()
-		{
-			DHtLeftMinusRight++;
-		}
-
-		internal void DecDht()
-		{
-			DHtLeftMinusRight--;
-		}
-		#endregion
-
-		#region Information
-		internal TPT CurrentEdgeXPos(TPT yScanLine)
-		{
-			return Geometry.ParabolicCut(PolyRight.VoronoiPoint, PolyLeft.VoronoiPoint, yScanLine);
-		}
-		#endregion
-
-		#region Edge handling
-		internal void AddEdge(FortuneEdge edge)
-		{
-			Edge = edge;
-		}
-
-		internal void AddEdgeToPolygons(FortuneEdge edge)
-		{
-			PolyLeft.AddEdge(edge);
-			PolyRight.AddEdge(edge);
-		}
-		#endregion
-
-		#region Constructor
-		internal InternalNode(FortunePoly polyLeft, FortunePoly polyRight)
-		{
-			DHtLeftMinusRight = 0;
-			PolyLeft = polyLeft;
-			PolyRight = polyRight;
-		}
-		#endregion
-
-		#region ToString
-		public override string ToString()
-		{
-			return string.Format("InternNode: Gens = {0}, {1}", PolyLeft.Index, PolyRight.Index);
-		}
-		#endregion
-
-		#region NUnit
-#if DEBUG || NUNIT
-		[TestFixture]
-		public class TestInternalNode
-		{
-			[Test]
-			public void TestParabolicCut()
-			{
-				FortunePoly poly1 = new FortunePoly(new PT(0, 0), 0);
-				FortunePoly poly2 = new FortunePoly(new PT(8, 4), 1);
-
-				InternalNode inn = new InternalNode(poly1, poly2);
-				InternalNode innReverse = new InternalNode(poly2, poly1);
-
-				Assert.AreEqual(-7, inn.CurrentEdgeXPos(-1));
-				Assert.AreEqual(3, innReverse.CurrentEdgeXPos(-1));
-			}
-		}
-#endif
-		#endregion
-	}
-
-	internal class LeafNode : Node
-	{
-		#region Private Variables
-		FortunePoly _poly;						// Polygon being created by this node
-		CircleEvent _cevt;						// Circle event which will snuff this parabola out
-		LeafNode _ndLeftLeaf = null;			// Node for the parabola to our left
-		LeafNode _ndRightLeaf = null;			// Node for the parabola to our right
-		#endregion
-
-		#region Properties
-		internal FortunePoly Poly
-		{
-			get { return _poly; }
-			set { _poly = value; }
-		}
-
-		internal LeafNode RightAdjacentLeaf
-		{
-			get { return _ndRightLeaf; }
-			set { _ndRightLeaf = value; }
-		}
-
-		internal LeafNode LeftAdjacentLeaf
-		{
-			get { return _ndLeftLeaf; }
-			set { _ndLeftLeaf = value; }
-		}
-		#endregion
-
-		#region Constructor
-		internal LeafNode(FortunePoly poly)
-		{
-			_poly = poly;
-		}
-		#endregion
-
-		#region ToString
-		public override string ToString()
-		{
-			return string.Format("LeafNode: Gen = {0}", Poly.Index);
-		}
-		#endregion
-
-		#region overrides
-#if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv TraceEnumElement, int cIndent)
-		{
-			StringBuilder sbIndent = new StringBuilder();
-
-			// *SURELY* there is a better way to repeat a single character into a string, but I can't
-			// seem to locate it for the life of me.
-
-			for (int iIndent = 0; iIndent < cIndent; iIndent++)
-			{
-				sbIndent.Append("|  ");
-			}
-
-			Tracer.Trace(TraceEnumElement, sbIndent.ToString() + ToString());
-		}
-#endif
-		#endregion
-
-		#region Queries
-		/// <summary>
-		/// Figure out where the breakpoint to our right is
-		/// </summary>
-		/// <param name="yScanLine">Where the scan line resides currently</param>
-		/// <returns>The X coordinate of the right breakpoint</returns>
-		internal TPT RightBreak(TPT yScanLine)
-		{
-			// If we're the leaf furthest to the right...
-			if (RightAdjacentLeaf == null)
-			{
-				return TPT.MaxValue;
-			}
-			else
-			{
-				// Calculate where we intersect the parabola to our right
-				return Geometry.ParabolicCut(RightAdjacentLeaf.Poly.VoronoiPoint, Poly.VoronoiPoint, yScanLine);
-			}
-		}
-
-		/// <summary>
-		/// Figure out where the breakpoint to our left is
-		/// </summary>
-		/// <param name="yScanLine">Where the scan line resides currently</param>
-		/// <returns>The X coordinate of the left breakpoint</returns>
-		internal TPT LeftBreak(TPT yScanLine)
-		{
-			// If we're the leaf furthest to the left...
-			if (LeftAdjacentLeaf == null)
-			{
-				return TPT.MinValue;
-			}
-			else
-			{
-				// Calculate where we intersect the parabola to our left
-				return Geometry.ParabolicCut(Poly.VoronoiPoint, LeftAdjacentLeaf.Poly.VoronoiPoint, yScanLine);
-			}
-		}
-		#endregion
-
-		#region Modification
-		/// <summary>
-		/// Remove the circle event which snuffs this node's parabola
-		/// </summary>
-		/// <param name="evq">Event queue</param>
-		internal void DeleteAssociatedCircleEvent(EventQueue evq)
-		{
-			if (_cevt != null)
-			{
-				Tracer.Trace(tv.CircleDeletions, "Deleting {0}", _cevt.ToString());
-				evq.Delete(_cevt);
-				_cevt = null;
-			}
-		}
-
-		/// <summary>
-		/// Set the circle event which snuff's this node's parabola
-		/// </summary>
-		/// <param name="cevt"></param>
-		internal void SetCircleEvent(CircleEvent cevt)
-		{
-			_cevt = cevt;
-		}
-
-		/// <summary>
-		/// Locate the inner node which represents the edge on a selected side
-		/// </summary>
-		/// <param name="fLeftSibling">Which side to locate</param>
-		/// <returns>The inner node for the breakpoint</returns>
-		internal InternalNode InnFindSiblingEdge(bool fLeftSibling)
-		{
-			InternalNode innCur = NdParent;
-			FortunePoly polyOfSibling = fLeftSibling ? LeftAdjacentLeaf.Poly : RightAdjacentLeaf.Poly;
-
-			while ((fLeftSibling ? innCur.PolyLeft : innCur.PolyRight) != polyOfSibling)
-			{
-				innCur = innCur.NdParent;
-			}
-
-			return innCur;
-		}
-
-		/// <summary>
-		/// Link my sibling nodes together as siblings
-		/// </summary>
-		internal void LinkSiblingsTogether()
-		{
-			if (LeftAdjacentLeaf != null)
-			{
-				LeftAdjacentLeaf.RightAdjacentLeaf = RightAdjacentLeaf;
-			}
-			if (RightAdjacentLeaf != null)
-			{
-				RightAdjacentLeaf.LeftAdjacentLeaf = LeftAdjacentLeaf;
-			}
-		}
-		#endregion
-	}
-	#endregion
 }
