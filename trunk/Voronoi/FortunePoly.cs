@@ -71,21 +71,25 @@ namespace DAP.CompGeom
 		#region Edge operations
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// Sort the edges in Clockwise order.  We do this partially by knowing that all the polygons in
-		/// a Voronoi diagram are convex.  That means we can sort edges by measuring their angle around
-		/// the generator for the polygon.  We have to pick the point to measure this angle carefully
-		/// which is what WEEdge.PolyOrderingTestPoint() does.  We also have to make a special case for
-		/// the rare doubly infinite lines (such as that created with only two generators). 
-		/// </summary>
+		/// <summary>	Sort the edges in Clockwise order. </summary>
 		///
-		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		/// <remarks>	
+		/// We do this partially by knowing that all the polygons in a Voronoi diagram are convex.  That
+		/// means we can sort edges by measuring their angle around the generator for the polygon.  We
+		/// have to pick the point to measure this angle carefully which is what
+		/// WEEdge.PolyOrderingTestPoint() does.  We also have to make a special case for the rare doubly
+		/// infinite lines (such as that created with only two generators).
+		/// 
+		/// Darrellp, 2/18/2011. 
+		/// </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		internal void SortEdges()
 		{
+			// If there are only two edges
 			if (EdgesCW.Count == 2)
 			{
+				// If they are split
 				if (((FortuneEdge)EdgesCW[0]).FSplit)
 				{
 					if (Geometry.ICcw(
@@ -117,16 +121,19 @@ namespace DAP.CompGeom
 			}
 		}
 
-		/// <summary>
-		/// Remove an edge
-		/// </summary>
-		/// <remarks>
-		/// This really only makes much sense for zero length edges
-		/// </remarks>
-		/// <param name="edge">Edge to remove</param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Remove an edge. </summary>
+		///
+		/// <remarks>	This really only makes much sense for zero length edges. </remarks>
+		///
+		/// <param name="edge">	Edge to remove. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void DetachEdge(FortuneEdge edge)
 		{
-			// Let's remove the zero length edge.  We do this by removing it's end vertex, reassigning the proper
+			// Remove the zero length edge
+			//
+			// We do this by removing it's end vertex, reassigning the proper
 			// vertex in each of the edges which formerly connected to that vertex and splicing those edges into the
 			// the proper spot for the edge list of our start vertex and finally removing it from the edge list of
 			// both polygons which it adjoins.
