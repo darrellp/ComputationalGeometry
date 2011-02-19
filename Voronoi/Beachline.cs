@@ -7,7 +7,6 @@ using TPT = System.Single;
 #endif
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using NUnit.Framework;
@@ -15,38 +14,50 @@ using NetTrace;
 
 namespace DAP.CompGeom
 {
-	/// <summary>
-	/// The beachline is the union of all the parabolas formed from all sites.  This is actually maintained as
-	/// a tree as suggested in the book by de Berg, et al.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	
+	/// The beachline is the union of all the parabolas formed from all sites.  This is actually
+	/// maintained as a height balanced tree as suggested in the book by de Berg, et al. 
 	/// </summary>
+	///
+	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	internal class Beachline
 	{
-		#region Private variables
-		Node _ndRoot = null;					// Root of the tree
+		#region Constructor
+
+		public Beachline()
+		{
+			NdRoot = null;
+		}
+
 		#endregion
 
 		#region Properties
-		internal Node NdRoot
-		{
-			get
-			{
-				return _ndRoot;
-			}
-			set
-			{
-				_ndRoot = value;
-			}
-		}
+
+		internal Node NdRoot { get; set; }
+
 		#endregion
 
 		#region Search
-		/// <summary>
-		/// Find the leaf node representing the parabola on the beachline which lays at a specified X coordinate.  Does
-		/// a binary search on the parabolas to locate the parabola in question.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Find the leaf node representing the parabola on the beachline which lays at a specified X
+		/// coordinate.  Does a binary search on the parabolas to locate the parabola in question. 
 		/// </summary>
-		/// <param name="xSite">The X coordinate in question</param>
-		/// <param name="yScanLine">Position of the scan line</param>
-		/// <returns>The leaf </returns>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <exception cref="InvalidOperationException">	Thrown when there is no root node. </exception>
+		///
+		/// <param name="xSite">		The X coordinate to search for. </param>
+		/// <param name="yScanLine">	Height of the scan line. </param>
+		///
+		/// <returns>	The leaf node for the parabola over xSite. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		LeafNode LfnSearch(TPT xSite, TPT yScanLine)
 		{
 			if (NdRoot == null)
@@ -57,115 +68,139 @@ namespace DAP.CompGeom
 			return LfnSearchNode(NdRoot, xSite, yScanLine);
 		}
 
-		/// <summary>
-		/// Do a binary search down the tree looking for the leaf node which covers the
-		/// passed in X coordinate
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Do a binary search down the tree looking for the leaf node which covers the passed in X
+		/// coordinate. 
 		/// </summary>
-		/// <param name="nd">Node to start search at</param>
-		/// <param name="xSite">X coordinate</param>
-		/// <param name="yScanLine">Where the scan line is at now</param>
-		/// <returns>Leaf node for parabola covering xSite</returns>
-		private LeafNode LfnSearchNode(Node nd, TPT xSite, TPT yScanLine)
-		{
-			LeafNode ndRet = null;
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="nd">			Node to start search at. </param>
+		/// <param name="xSite">		X coordinate. </param>
+		/// <param name="yScanLine">	Where the scan line is at now. </param>
+		///
+		/// <returns>	Leaf node for parabola covering xSite. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		private static LeafNode LfnSearchNode(Node nd, TPT xSite, TPT yScanLine)
+		{
+			// Initialize
+			LeafNode ndRet;
 			Tracer.Trace(tv.Search, "Searching for x={0} with yScan={1} at {2}", xSite, yScanLine, nd.ToString());
 
+			// If it's a leaf node, we've arrived
 			// TODO: This really doesn't need to be recursive...
 			if (nd.IsLeaf)
 			{
-
+				// The leaf node is our return
 				ndRet = nd as LeafNode;
 			}
 			else
 			{
-				InternalNode ndInt = nd as InternalNode;
-				// Determine the break point on the beach line 
-				TPT EdgeXPos = ndInt.CurrentEdgeXPos(yScanLine);
+				// It's an internal node
+				// Internal nodes represent developing edges as the sweep line sweeps downward.  They've got pointers to the
+				// polygons on each side of that line.  The place those two polygons meet is the place where two parabolas with
+				// foci at the voronoi input points and directrix at the current sweep line meet.  This is pure geometry and is
+				// determined in CurrentEdgeXPos below.
 
-				Tracer.Trace(tv.Search, "Current edge X pos = {0}", EdgeXPos);
-				if (EdgeXPos < xSite)
-				{
-					ndRet = LfnSearchNode(nd.NdRight, xSite, yScanLine);
-				}
-				else
-				{
-					ndRet = LfnSearchNode(nd.NdLeft, xSite, yScanLine);
-				}
+				// Determine the break point on the beach line 
+				var ndInt = nd as InternalNode;
+				var edgeXPos = ndInt.CurrentEdgeXPos(yScanLine);
+
+				// Search the tree recursively on the side of the break point that xSite is on
+				Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
+				ndRet = LfnSearchNode(edgeXPos < xSite ? nd.NdRight : nd.NdLeft, xSite, yScanLine);
 			}
+
+			// Return the node we located
 			Tracer.Trace(tv.Search, "Located node at {0}", ndRet.ToString());
 			return ndRet;
 		}
 		#endregion
 
 		#region Deletion
-		/// <summary>
-		/// Remove a parabola node from the beachline since it's being squeezed out and insert a vertex into
-		/// the voronoi diagram.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Remove a parabola node from the beachline since it's being squeezed out and insert a vertex
+		/// into the voronoi diagram. 
 		/// </summary>
-		/// <remarks>
-		/// This happens when a circle event occurs.  It's a rather delicate operation.
-		/// From the point of view of the voronoi diagram, we have two edges from above coming together
-		/// into the newly created vertex and a new edge created which descends below it.  This is really
-		/// where the meat of actually creating the voronoi diagram occurs.  One of the important details
-		/// which seems to be left totally out of the book is the importance of keeping accurate left and
-		/// right sibling pointers on the leaf nodes.  Since each leaf node represents a parabola in the
-		/// beachline, these pointers represent the set of parabolas from the left to the right of the
-		/// beachline.  In a case like this where a parabola is being squeezed out, it's left and right
-		/// siblings will not butt up against each other forming a new edge and we need to be able to
-		/// locate both these nodes in order to make everything come out right.
+		///
+		/// <remarks>	
+		/// This happens when a circle event occurs.  It's a rather delicate operation. From the point of
+		/// view of the voronoi diagram, we have two edges from above coming together into the newly
+		/// created vertex and a new edge created which descends below it.  This is really where the meat
+		/// of actually creating the voronoi diagram occurs.  One of the important details which seems to
+		/// be left totally out of the book is the importance of keeping accurate left and right sibling
+		/// pointers on the leaf nodes.  Since each leaf node represents a parabola in the beachline,
+		/// these pointers represent the set of parabolas from the left to the right of the beachline.
+		/// In a case like this where a parabola is being squeezed out, it's left and right siblings will
+		/// not butt up against each other forming a new edge and we need to be able to locate both these
+		/// nodes in order to make everything come out right.
+		/// 
+		/// This is very persnickety code.
 		/// </remarks>
-		/// <param name="cevt">Circle event which caused this</param>
-		/// <param name="lfnEliminated">Leaf node for the parabola being eliminated</param>
-		/// <param name="voronoiVertex">The new vertex to be inserted into the voronoi diagram</param>
-		/// <param name="evq">Event queue</param>
+		///
+		/// <param name="cevt">				Circle event which caused this. </param>
+		/// <param name="lfnEliminated">	Leaf node for the parabola being eliminated. </param>
+		/// <param name="voronoiVertex">	The new vertex to be inserted into the voronoi diagram. </param>
+		/// <param name="evq">				Event queue. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void RemoveNodeAndInsertVertex(CircleEvent cevt, LeafNode lfnEliminated, PT voronoiVertex, EventQueue evq)
 		{
+			// Initialize
 			Tracer.Assert(t.Assertion, NdRoot != null, "Trying to delete from a null tree");
-			TPT yScanLine = cevt.Pt.Y;
-
+			var yScanLine = cevt.Pt.Y;
 			Tracer.Trace(tv.NDelete, "Deleting node {0}", lfnEliminated.Poly.Index);
 
-			// Are we the left or right child of our parent?
-			bool fLeftChildEliminated = lfnEliminated.IsLeftChild;
-			InternalNode innParent = lfnEliminated.NdParent;
+			// Determine whether we're the left or right child of our parent
+			var fLeftChildEliminated = lfnEliminated.IsLeftChild;
+			var innParent = lfnEliminated.NdParent;
 
-			// The immediate sibling of the leaf node to be removed
-			LeafNode lfnNearSibling = fLeftChildEliminated ? lfnEliminated.RightAdjacentLeaf : lfnEliminated.LeftAdjacentLeaf;
-			// The next node to the left
-			LeafNode lfnLeft = lfnEliminated.LeftAdjacentLeaf;
-			// The next node to the right
-			LeafNode lfnRight = lfnEliminated.RightAdjacentLeaf;
+			// Retrieve sibling nodes
+			var lfnLeft = lfnEliminated.LeftAdjacentLeaf;
+			var lfnRight = lfnEliminated.RightAdjacentLeaf;
+			var lfnNearSibling = fLeftChildEliminated ? lfnRight : lfnLeft;
 
-			// Any circle events which involve the eliminated node must be removed from the queue
+			// Remove from the queue any circle events which involve the eliminated node
 			RemoveAssociatedCircleEvents(lfnEliminated, evq);
 
-			// Now we can actually remove the leaf from the tree and rearrange the nodes around it
-			// appropriately
+			// remove the leaf from the tree and rearrange the nodes around it
 			RemoveLeaf(lfnEliminated);
 
 			// Locate the internal node which represents the breakpoint opposite our near sibling
-			InternalNode innFarSiblingEdge = lfnNearSibling.InnFindSiblingEdge(fLeftChildEliminated);
+			var innFarSiblingEdge = lfnNearSibling.InnFindSiblingEdge(fLeftChildEliminated);
 
-			// Edge being developed on our near sibling's side
-			FortuneEdge edgeNearSibling = innParent.Edge;
-			// Edge being developed on our far sibling's side
-			FortuneEdge edgeFarSibling = innFarSiblingEdge.Edge;
+			// Get the edges being developed on each side of us
+			var edgeNearSibling = innParent.Edge;
+			var edgeFarSibling = innFarSiblingEdge.Edge;
 
-			// The new vertex we're inserting into the diagram
-			FortuneVertex vertex = new FortuneVertex();
-			vertex.Pt = voronoiVertex;
+			// Create a new fortune vertex to insert into the diagram
+			var vertex = new FortuneVertex {Pt = voronoiVertex};
+
 			// Give both edges from above their brand new vertex - hooray!
 			edgeFarSibling.AddVertex(vertex);
 			edgeNearSibling.AddVertex(vertex);
 
-			// Some of our incoming edges are zero length due to cocircular points, so note it in the polys which border them 
+			// Is this a zero length edge?
+			//
+			// Some of our incoming edges are zero length due to cocircular points,
+			// so keep track of it in the polys which border them. This will be used
+			// later in Fortune.BuildWingedEdge() to determine when to try and remove
+			// zero length edges.
 			if (cevt.FZeroLength)
 			{
+				// Mark the poly as having a zero length edge.
+				//
+				// We can't eliminate it here because most of our winged edge machinery
+				// needs to assume three edges entering every vertex.  We'll take care of
+				// it later in post-processing.  This flag is the signal to do that.
 				SetZeroLengthFlagOnPolys(edgeNearSibling, edgeFarSibling);
 			}
 
-			// Add edges to the vertex in proper clockwise direction 
+			// RQS- Add edges to the vertex in proper clockwise direction 
 			if (fLeftChildEliminated)
 			{
 				vertex.Add(edgeFarSibling);
@@ -176,17 +211,24 @@ namespace DAP.CompGeom
 				vertex.Add(edgeNearSibling);
 				vertex.Add(edgeFarSibling);
 			}
+			// -RQS
 
 			// Create the new edge which emerges below this vertex
-			FortuneEdge edge = new FortuneEdge();
+			var edge = new FortuneEdge();
 			edge.AddVertex(vertex);
 			vertex.Add(edge);
 
+			// Add the edge to our siblings
+			//
 			// Since lfnEliminated is being removed, it's siblings now butt against each other forming
-			// the new edge so note that edge on the internal node and add it to the poly for the
+			// the new edge so save that edge on the internal node and add it to the poly for the
 			// generator represented by the near sibling.  This means that polygon edges get added in
 			// a fairly random order.  They'll be sorted in postprocessing.
+
+			// Add it to our winged edge polygon
 			lfnNearSibling.Poly.AddEdge(edge);
+
+			// Also add it to our beachline sibling
 			innFarSiblingEdge.Edge = edge;
 
 			// The inner node which used to represent one of the incoming edges now takes on responsibility
@@ -214,6 +256,8 @@ namespace DAP.CompGeom
 			// Set the polygons which border the new edge
 			edge.SetPolys(innFarSiblingEdge.PolyRight, innFarSiblingEdge.PolyLeft);
 
+			// Create new circle events for our siblings
+			//
 			// Now that we're squeezed out, our former left and right siblings become immediate siblings
 			// so we need to set new circle events to represent when they get squeezed out by their
 			// newly acquired siblings
@@ -221,35 +265,21 @@ namespace DAP.CompGeom
 			CreateCircleEventFromTriple(lfnLeft, lfnRight, lfnRight.RightAdjacentLeaf, yScanLine, evq);
 		}
 
-		/// <summary>
-		/// Locate the inner node which represents the breakpoint to a specified side
-		/// </summary>
-		/// <param name="fLeftSibling">True to look for our left breakpoint, else look for the right</param>
-		/// <param name="innStart">Inner node to start with</param>
-		/// <param name="lfnSibling">LeafNode for the parabola we're looking for</param>
-		/// <returns>The node representing the desired breakpoint</returns>
-		private static InternalNode InnFindSiblingEdge(bool fLeftSibling, InternalNode innStart, LeafNode lfnSibling)
-		{
-			InternalNode innCur = innStart;
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Remove a leaf node. </summary>
+		///
+		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		///
+		/// <param name="lfn">	node to remove. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			while ((fLeftSibling ? innCur.PolyLeft : innCur.PolyRight) != lfnSibling.Poly)
-			{
-				innCur = innCur.NdParent;
-			}
-
-			return innCur;
-		}
-
-		/// <summary>
-		/// Remove a leaf node
-		/// </summary>
-		/// <param name="lfn">node to remove</param>
 		private void RemoveLeaf(LeafNode lfn)
 		{
 			// If we're the root, then tree go bye bye...
 			if (lfn == NdRoot)
 			{
 				NdRoot = null;
+
 				return;
 			}
 
@@ -258,15 +288,16 @@ namespace DAP.CompGeom
 			if (lfn.NdParent == NdRoot)
 			{
 				NdRoot = lfn.ImmediateSibling;
+
 				return;
 			}
 
 			// We remove both the leafnode and it's parent.  It's immediate sibling
 			// is moved up to the grandparent.  This changes the height balance on the
 			// grandparent since it loses a level.
-			InternalNode innParent = lfn.NdParent;
-			InternalNode innGrandparent = innParent.NdParent;
-			bool fIsParentLeftChild = innParent.IsLeftChild;
+			var innParent = lfn.NdParent;
+			var innGrandparent = innParent.NdParent;
+			var fIsParentLeftChild = innParent.IsLeftChild;
 			innParent.SnipFromParent();
 
 			// Insert us on the proper side of our grandparent
@@ -784,20 +815,26 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Modification
-		/// <summary>
-		/// Remove pointers to parent and mark the node as an orphan
-		/// </summary>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Remove pointers to parent and mark the node as an orphan. </summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void SnipFromParent()
 		{
+			// If it's the left child of its parent
 			if (IsLeftChild)
 			{
+				// Null the parent's left child pointer
 				// Can't use NdLeft property here since it will try to set the parent of the incoming null node.
 				NdParent._ndLeft = null;
 			}
 			else
 			{
+				// Null the parent's right child pointer
 				NdParent._ndRight = null;
 			}
+			// Null our own parent pointer
 			NdParent = null;
 		}
 		#endregion
@@ -845,62 +882,27 @@ namespace DAP.CompGeom
 
 	internal class InternalNode : Node
 	{
-		#region Private Variables
-		FortuneEdge _edge;						// Winged edge that this internal node represents
-		int _dHtLeftMinusRight = 0;				// Height of left subtree minus height of right for balancing
-		FortunePoly _polyLeft;					// Winged edge polygon on one side of us
-		FortunePoly _polyRight;					// Winged edge polgon on the other
-		#endregion
-
 		#region Properties
-		internal FortuneEdge Edge
-		{
-			get
-			{
-				return _edge;
-			}
-			set
-			{
-				_edge = value;
-			}
-		}
 
-		internal int DHtLeftMinusRight
-		{
-			get { return _dHtLeftMinusRight; }
-			set { _dHtLeftMinusRight = value; }
-		}
+		// Winged edge that this internal node represents
+		internal FortuneEdge Edge { get; set; }
 
-		internal FortunePoly PolyRight
-		{
-			get
-			{
-				return _polyRight;
-			}
-			set
-			{
-				_polyRight = value;
-			}
-		}
+		// Height of left subtree minus height of right for balancing
+		internal int DHtLeftMinusRight { get; set; }
 
-		internal FortunePoly PolyLeft
-		{
-			get
-			{
-				return _polyLeft;
-			}
-			set
-			{
-				_polyLeft = value;
-			}
-		}
+		// Winged edge polygon on one side of us
+		internal FortunePoly PolyRight { get; set; }
+
+		// Winged edge polgon on the other
+		internal FortunePoly PolyLeft { get; set; }
+
 		#endregion
 
 		#region overrides
 #if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv TraceEnumElement, int cIndent)
+		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
 		{
-			StringBuilder sbIndent = new StringBuilder();
+			var sbIndent = new StringBuilder();
 
 			// *SURELY* there is a better way to repeat a single character into a string, but I can't
 			// seem to locate it for the life of me.
@@ -910,23 +912,25 @@ namespace DAP.CompGeom
 				sbIndent.Append("|  ");
 			}
 
-			Tracer.Trace(TraceEnumElement, sbIndent.ToString() + ToString());
+			Tracer.Trace(traceEnumElement, sbIndent.ToString() + ToString());
 
-			NdLeft.TraceTreeWithIndent(TraceEnumElement, cIndent + 1);
-			NdRight.TraceTreeWithIndent(TraceEnumElement, cIndent + 1);
+			NdLeft.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
+			NdRight.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
 		}
 #endif
 		#endregion
 
 		#region Manipulation
+		//!+ TODO: Implement height balanced tree
+		// Right now we don't bother trying to keep the beachline tree balanced in any way.
 		internal void IncDht()
 		{
-			_dHtLeftMinusRight++;
+			DHtLeftMinusRight++;
 		}
 
 		internal void DecDht()
 		{
-			_dHtLeftMinusRight--;
+			DHtLeftMinusRight--;
 		}
 		#endregion
 
@@ -940,7 +944,7 @@ namespace DAP.CompGeom
 		#region Edge handling
 		internal void AddEdge(FortuneEdge edge)
 		{
-			_edge = edge;
+			Edge = edge;
 		}
 
 		internal void AddEdgeToPolygons(FortuneEdge edge)
@@ -953,8 +957,9 @@ namespace DAP.CompGeom
 		#region Constructor
 		internal InternalNode(FortunePoly polyLeft, FortunePoly polyRight)
 		{
-			_polyLeft = polyLeft;
-			_polyRight = polyRight;
+			DHtLeftMinusRight = 0;
+			PolyLeft = polyLeft;
+			PolyRight = polyRight;
 		}
 		#endregion
 
