@@ -340,7 +340,7 @@ namespace DAP.CompGeom
 				pt2 = VtxEnd.Pt;
 			}
 
-			// Draw the line
+			// Draw a line from pt1 to pt2
 			g.DrawLine(pen, pt1, pt2);
 		}
 		#endregion
