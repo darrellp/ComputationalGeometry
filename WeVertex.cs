@@ -53,12 +53,22 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Infinite Vertices
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Make this a vertex at infinity. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="ptDirection">	The point direction. </param>
+		/// <param name="fNormalize">	true to normalize. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected void SetInfinite(PointF ptDirection, bool fNormalize)
 		{
 			FAtInfinity = true;
 			if (fNormalize)
 			{
-				Single norm = Geometry.Distance(new PointF(0, 0), ptDirection);
+				var norm = Geometry.Distance(new PointF(0, 0), ptDirection);
 				Pt = new PointF(Pt.X / norm, Pt.Y / norm);
 			}
 		}
@@ -76,7 +86,7 @@ namespace DAP.CompGeom
 		/// <param name="ptStart">				The starting point of the ray. </param>
 		/// <param name="rayLength">			Length along the ray from the starting point to our produced point. </param>
 		///
-		/// <returns>	. </returns>
+		/// <returns>	A point on the ray different than the starting point. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		public PointF ConvertToReal(PointF ptStart, Single rayLength)
@@ -156,11 +166,18 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Modifiers
-		/// <summary>
-		/// Edges are assumed to be added in a Clockwise direction.  The first edge is random
-		/// and has no particular significance.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Edges are assumed to be added in a Clockwise direction.  The first edge is random and has no
+		/// particular significance. 
 		/// </summary>
-		/// <param name="edge">Next clockwise edge to add</param>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">	Next clockwise edge to add. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public virtual void Add(WeEdge edge)
 		{
 			_lstCWEdges.Add(edge);
@@ -205,10 +222,16 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Internal Classes
-		/// <summary>
-		/// WingedEdge doesn't directly give the polygons which contain this vertex so
-		/// we give an enumerator for that.
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// WingedEdge doesn't directly give the polygons which contain this vertex so we give an
+		/// enumerator for that. 
 		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		class PolyEnumerator : IEnumerator<WePolygon>
 		{
 			#region Private Variables
@@ -274,9 +297,12 @@ namespace DAP.CompGeom
 			#endregion
 		}
 
-		/// <summary>
-		/// The enumerable for PolyEnumerator
-		/// </summary>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	The enumerable for PolyEnumerator. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		class PolyEnumerable : IEnumerable<WePolygon>
 		{
 			#region Private Variables
