@@ -669,14 +669,15 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// Compare two edges based on their cw order around a common generator.  It is an error to
-		/// compare edges which do not have a common generator so this is only a "partial" comparer which
-		/// is probably strictly verboten according to C# rules, but we have to do it in order to use the
-		/// framework Sort routine to sort edges around a generator. 
-		/// </summary>
+		/// <summary>	Compare two edges based on their cw order around a common generator. </summary>
 		///
-		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		/// <remarks>	
+		/// It is an error to compare edges which do not have a common generator so this is only a
+		/// "partial" comparer which is probably strictly verboten according to C# rules, but we have to
+		/// do it in order to use the framework Sort routine to sort edges around a generator. 	
+		/// 
+		/// Darrellp, 2/19/2011. 
+		/// </remarks>
 		///
 		/// <param name="edgeIn">	Edge to compare. </param>
 		///

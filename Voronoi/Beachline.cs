@@ -25,6 +25,12 @@ namespace DAP.CompGeom
 	{
 		#region Constructor
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Default constructor. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public Beachline()
 		{
 			NdRoot = null;
@@ -34,7 +40,13 @@ namespace DAP.CompGeom
 
 		#region Properties
 
-		internal Node NdRoot { get; set; }
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or the root node of the beachline tree. </summary>
+		///
+		/// <value>	The root node of the beachline tree. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		internal Node NdRoot { get; private set; }
 
 		#endregion
 
@@ -530,7 +542,7 @@ namespace DAP.CompGeom
 		///
 		/// <param name="lfn">				LeafNode of the (degenerate) parabola nearest us. </param>
 		/// <param name="lfnNewParabola">	LeafNode we're inserting. </param>
-		/// <param name="innParent">		Parent of lfn. </param>
+		/// <param name="innParent">		Parent of lfnOld. </param>
 		/// <param name="innSubRoot">		Root of the tree. </param>
 		/// <param name="fLeftChild">		Left child of innParent. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -542,6 +554,7 @@ namespace DAP.CompGeom
 			InternalNode innSubRoot,
 			bool fLeftChild)
 		{
+			// Locals
 			LeafNode lfnLeft, lfnRight;
 			var lfnAdjacentParabolaLeft = lfn.LeftAdjacentLeaf;
 			var lfnAdjacentParabolaRight = lfn.RightAdjacentLeaf;
@@ -586,58 +599,68 @@ namespace DAP.CompGeom
 			edge.SetPolys(innSubRoot.PolyRight, innSubRoot.PolyLeft);
 		}
 
-		/// <summary>
-		/// Insert a new parabola into the beachline when the beachline spans the X axis
-		/// </summary>
-		/// <remarks>
-		/// This is the normal case.  We insert our new parabola and split the parabola above
-		/// our site in two.
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Insert a new parabola into the beachline when the beachline spans the X axis. </summary>
+		///
+		/// <remarks>	
+		/// This is the normal case.  We insert our new parabola and split the parabola above our site in
+		/// two. This means one new leaf node is created for leftmost of the two nodes in the split (the
+		/// old lfn is recycled to become the right node of the split).  Also a new internal node to
+		/// parent all this. 
 		/// </remarks>
-		/// <param name="lfn">Parabola above the new site</param>
-		/// <param name="lfnNewParabola">parabola for the new site</param>
-		/// <param name="innSubRoot">Parent node of both lfn and lfnNewParabola represneting the
-		/// breakpoint between them</param>
-		private static void InsertAtDifferentY(LeafNode lfn, LeafNode lfnNewParabola, InternalNode innSubRoot)
+		///
+		/// <param name="lfnOld">			Parabola above the new site. </param>
+		/// <param name="lfnNewParabola">	parabola for the new site. </param>
+		/// <param name="innSubRoot">		Parent node of both lfnOld and lfnNewParabola represneting
+		/// 								the breakpoint between them. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		private static void InsertAtDifferentY(LeafNode lfnOld, LeafNode lfnNewParabola, InternalNode innSubRoot)
 		{
 			// The old lfn will become the new right half of the split but we need a new leaf node
 			// for the left half of the split...
-			LeafNode lfnLeftHalf = new LeafNode(lfn.Poly);
-			InternalNode innSubRootLeftChild = new InternalNode(lfn.Poly, lfnNewParabola.Poly);
-			FortuneEdge edge = new FortuneEdge();
+			var lfnLeftHalf = new LeafNode(lfnOld.Poly);
+			var innSubRootLeftChild = new InternalNode(lfnOld.Poly, lfnNewParabola.Poly);
+			var edge = new FortuneEdge();
 
-			// This is all fairly straightforward insertion of a node into a binary tree.
-			innSubRoot.RightChild = lfn;
+			// This is all fairly straightforward (albeit dense) insertion of a node into a binary tree.
+			innSubRoot.RightChild = lfnOld;
 			innSubRoot.LeftChild = innSubRootLeftChild;
 			innSubRoot.SetEdge(edge);
 			innSubRoot.AddEdgeToPolygons(edge);
 			innSubRootLeftChild.LeftChild = lfnLeftHalf;
 			innSubRootLeftChild.RightChild = lfnNewParabola;
 			innSubRootLeftChild.SetEdge(edge);
-
 			lfnNewParabola.LeftAdjacentLeaf = lfnLeftHalf;
-			lfnNewParabola.RightAdjacentLeaf = lfn;
-			lfnLeftHalf.LeftAdjacentLeaf = lfn.LeftAdjacentLeaf;
+			lfnNewParabola.RightAdjacentLeaf = lfnOld;
+			lfnLeftHalf.LeftAdjacentLeaf = lfnOld.LeftAdjacentLeaf;
 			lfnLeftHalf.RightAdjacentLeaf = lfnNewParabola;
-			if (lfn.LeftAdjacentLeaf != null)
+
+			if (lfnOld.LeftAdjacentLeaf != null)
 			{
-				lfn.LeftAdjacentLeaf.RightAdjacentLeaf = lfnLeftHalf;
+				lfnOld.LeftAdjacentLeaf.RightAdjacentLeaf = lfnLeftHalf;
 			}
-			lfn.LeftAdjacentLeaf = lfnNewParabola;
+			lfnOld.LeftAdjacentLeaf = lfnNewParabola;
 			edge.SetPolys(innSubRoot.PolyRight, innSubRoot.PolyLeft);
 		}
 
-		/// <summary>
-		/// Insert a new LeafNode into the tree
-		/// </summary>
-		/// <param name="lfn">Place to put the new leaf node</param>
-		/// <param name="evt">The event to insert</param>
-		/// <returns></returns>
-		InternalNode NdCreateInsertionSubtree(LeafNode lfn, SiteEvent evt)
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Insert a new LeafNode into the tree. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="lfn">	Place to put the new leaf node. </param>
+		/// <param name="evt">	The event to insert. </param>
+		///
+		/// <returns>	. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		static InternalNode NdCreateInsertionSubtree(LeafNode lfn, SiteEvent evt)
 		{
-			InternalNode innParent = lfn.NdParent;
-			LeafNode lfnNewParabola = new LeafNode(evt.Poly);
-			InternalNode innSubRoot = new InternalNode(evt.Poly, lfn.Poly);
-			bool fLeftChild = true;
+			// Initialize locals
+			var innParent = lfn.NdParent;
+			var lfnNewParabola = new LeafNode(evt.Poly);
+			var innSubRoot = new InternalNode(evt.Poly, lfn.Poly);
+			var fLeftChild = true;
 
 			// If this isn't on the root node, shuffle things around a bit
 			if (innParent != null)
@@ -695,60 +718,72 @@ namespace DAP.CompGeom
 			}
 		}
 
-		/// <summary>
-		/// Insert a new polygon arising from a site event
-		/// </summary>
-		/// <param name="evt">Site event causing the new polygon</param>
-		/// <param name="evq">Event queue</param>
-		/// <returns>The polygon inserted</returns>
-		internal FortunePoly PolyInsertNode(SiteEvent evt, EventQueue evq)
-		{
-			FortunePoly polyRet = null;
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Insert a new polygon arising from a site event. </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="evt">	Site event causing the new polygon. </param>
+		/// <param name="evq">	Event queue. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		internal void PolyInsertNode(SiteEvent evt, EventQueue evq)
+		{
+			// If there's no tree yet
 			if (NdRoot == null)
 			{
+				// Create a leaf node and make it the tree root
 				NdRoot = new LeafNode(evt.Poly);
+
+				return;
 			}
-			else
+
+			// Get the parabola above this site and the parabolas to its left and right
+			var lfn = LfnSearch(evt.Pt.X, evt.Pt.Y);
+			var lfnLeft = lfn.LeftAdjacentLeaf;
+			var lfnRight = lfn.RightAdjacentLeaf;
+
+			// Remove the circle event associated with the parabola we intersect
+			//
+			// We are inserting ourselves into this parabola which means it's old circle event is defunct
+			// so toss it.
+			Tracer.Trace(tv.CircleDeletions, "Deleting circle for intersected parabolic arc...");
+			Tracer.Indent();
+			lfn.DeleteAssociatedCircleEvent(evq);
+			Tracer.Unindent();
+
+			// Create a new subtree to hold the new leaf node
+			var innSubRoot = NdCreateInsertionSubtree(lfn, evt);
+
+			// If the root node is a leaf
+			if (NdRoot.IsLeaf)
 			{
-				// Get the parabola above this site and the parabolas to its left and right
-				LeafNode lfn = LfnSearch(evt.Pt.X, evt.Pt.Y);
-				LeafNode lfnLeft = lfn.LeftAdjacentLeaf;
-				LeafNode lfnRight = lfn.RightAdjacentLeaf;
-
-				// We are inserting ourselves into this parabola which means it's old circle event is defunct
-				// so toss it.
-				polyRet = lfn.Poly;
-				Tracer.Trace(tv.CircleDeletions, "Deleting circle for intersected parabolic arc...");
-				Tracer.Indent();
-				lfn.DeleteAssociatedCircleEvent(evq);
-				Tracer.Unindent();
-
-				// Create a new subtree to hold the new leaf node
-				InternalNode innSubRoot = NdCreateInsertionSubtree(lfn, evt);
-				if (NdRoot.IsLeaf)
-				{
-					NdRoot = innSubRoot;
-				}
-
-				//Rebalance(innSubRoot);
-
-				// Remove any circle events that this generator is inside since it will be closer to the center
-				// of the circle than any of the three points which lie on the circle
-				for (int icevt = 0; icevt < evq.CircleEvents.Count; icevt++)
-				{
-					if (evq.CircleEvents[icevt].Contains(evt.Pt))
-					{
-						Tracer.Trace(tv.CircleDeletions, "Removing {0} (contains ({1}, {2}))",
-							evq.CircleEvents[icevt].ToString(), evt.Pt.X, evt.Pt.Y);
-						evq.CircleEvents.RemoveAt(icevt);
-					}
-				}
-
-				// Create any circle events which this site causes
-				CreateCircleEventsFromSiteEvent(lfnLeft, lfnRight, evt.Pt.Y, evq);
+				// Replace it with the new inner node we just created
+				NdRoot = innSubRoot;
 			}
-			return polyRet;
+
+			// TODO: Rebalancing the tree
+			//Rebalance(innSubRoot);
+
+			// For every circle event
+			//
+			// Remove any circle events that this generator is inside since it will be closer to the center
+			// of the circle than any of the three points which lie on the circle
+			// TODO: Is there a good way to optimize this?
+			for (var icevt = 0; icevt < evq.CircleEvents.Count; icevt++)
+			{
+				// If the circle event contains the site event
+				if (evq.CircleEvents[icevt].Contains(evt.Pt))
+				{
+					// Delete the circle event
+					Tracer.Trace(tv.CircleDeletions, "Removing {0} (contains ({1}, {2}))",
+					             evq.CircleEvents[icevt].ToString(), evt.Pt.X, evt.Pt.Y);
+					evq.CircleEvents.RemoveAt(icevt);
+				}
+			}
+
+			// Create any circle events which this site causes
+			CreateCircleEventsFromSiteEvent(lfnLeft, lfnRight, evt.Pt.Y, evq);
 		}
 
 		// TODO: Implement rebalancing

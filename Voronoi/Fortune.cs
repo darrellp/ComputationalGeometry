@@ -1,8 +1,12 @@
 #define NEW
 #if DOUBLEPRECISION
+using System;
+using System.Diagnostics;
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
+using System;
+using System.Diagnostics;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
@@ -18,21 +22,21 @@ namespace DAP.CompGeom
 	/// <summary>	Fortune implements the Fortune algorithm for Voronoi diagrams. </summary>
 	///
 	/// <remarks>	
-	/// When run initially, Fortune.Voronoi() returns a list of polytons that make up the diagram.
+	/// <para>When run initially, Fortune.Voronoi() returns a list of polytons that make up the diagram.
 	/// These can be transformed into a fully blown winged edge data structure if desired.  It's
 	/// input is simply a list of points to calculate the diagram for.  It is based on the
 	/// description of the algorithm given in "Computational Geometry - Algorithms and Applications"
 	/// by M. de Berg et al. with a LOT of details filled in.  Some differences between the book's
-	/// solution and mine:
+	/// solution and mine:</para>
 	/// 
-	/// The book suggests a doubly connected edge list.  I prefer a winged edge data structure.
+	/// <para>The book suggests a doubly connected edge list.  I prefer a winged edge data structure.
 	/// Internally I use a structure which is a primitive winged edge structure which contains
 	/// polygons, edges and vertices but not much of the redundancy available in a fully fleshed out
 	/// winged edge, but optionally allow for a conversion to a fully fleshed out winged edge data
 	/// structure.  This conversion is a bit expensive and may not be necessary (for instance, it
-	/// suffices to merely draw the diagram) so is made optional.
+	/// suffices if you want to merely draw the diagram) so is made optional.</para>
 	/// 
-	/// Another big difference between this algorithm and the one there is the handling of polygons
+	/// <para>Another big difference between this algorithm and the one there is the handling of polygons
 	/// which extend to infinity.  These don't necessarily fit into winged edge which requires a
 	/// cycle of edges on each polygon and another polygon on the opposite site of each edge.  The
 	/// book suggests surrounding the diagram with a rectangle to solve this problem.  Outside of the
@@ -44,11 +48,11 @@ namespace DAP.CompGeom
 	/// introduction of these "at infinity" elements which are natural extensions of the diagram
 	/// rather than the ugly introduced rectangle suggested in the book.  They also allow easy
 	/// reference to these extended polygons.  For instance, to enumerate them, just step off all the
-	/// polygons which "surround" the polygon at infinity.
+	/// polygons which "surround" the polygon at infinity.</para>
 	/// 
-	/// I take care of a lot of bookkeeping details and border cases not mentioned in the book - zero
+	/// <para>I take care of a lot of bookkeeping details and border cases not mentioned in the book - zero
 	/// length edges, collinear points, degenerate solutions with wholly infinite lines and many other
-	/// minor to major points not specifically covered in the book. 
+	/// minor to major points not specifically covered in the book. </para>
 	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +65,8 @@ namespace DAP.CompGeom
 		///
 		/// <remarks>	Darrellp, 2/17/2011. </remarks>
 		///
-		/// <param name="points">	Points whose Voronoi diagram will be calculated. </param>
+		/// <param name="points">	Points whose Voronoi diagram will be calculated. If the library is
+		/// 						built for double precision, these should be PointD, else PointF. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		public Fortune(IEnumerable points)
@@ -151,41 +156,47 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>
+		/// <summary>Return the Winged edge structure for the voronoi diagram.</summary>
+		/// <remarks>
 		/// Return the Winged edge structure for the voronoi diagram.  This is a complicated procedure
-		/// with a lot of details to be taken care of as follows.
-		/// 
+		/// with a lot of details to be taken care of as follows:
+		/// <list type="bullet">
+		/// <item>
 		/// Every polygon has to have its edges sorted in clockwise order.
-		/// 
+		/// </item>
+		/// <item>
 		/// Set all the successor edges to each edge and the list of edges to each vertex.
-		/// 
+		/// </item>
+		/// <item>
 		/// Zero length edges are eliminated and their "endpoints" are consolidated.
-		/// 
+		/// </item>
+		/// <item>
 		/// The polygon at infinity and all the edges at infinity must be added
+		/// </item>
+		/// </list>
 		/// 
-		/// If the callers only want a list of undifferentiated polygons, they can call Voronoi and
+		/// <para>If the callers only want a list of undifferentiated polygons, they can call Voronoi and
 		/// get such a list.  This is fine for drawing and other things, but doesn't give any kind of
 		/// relationship between elements in diagram.  If that is desired, this routine can be called
 		/// to get a much richer Winged Edge data structure for the diagram.  It is a relatively expensive
-		/// thing to compute which is why it's made separate from the raw voronoi diagram calculations.
+		/// thing to compute which is why it's made separate from the raw voronoi diagram calculations.</para>
 		/// 
-		/// NOTE ON THE POLYGON AT INFINITY In the WingedEdge structure each polygon has a list of edges
+		/// <para>NOTE ON THE POLYGON AT INFINITY: In the WingedEdge structure each polygon has a list of edges
 		/// with another polygon on the other side of each edge.  This poses a bit of a difficulty for
 		/// the polygons in a Voronoi diagram whose edges are rays to infinity.  We'll call these
 		/// "infinite polygons" for convenience.  The solution we use in our WingedEdge data structure is
 		/// to produce a single "polygon at infinity" (not to be confused with the infinite polygons
 		/// previously mentioned) and a series of edges at infinity which "separate" the infinite
 		/// polygons from the polygon at infinity.  These edges have to be ordered in the same order as
-		/// the infinite polygons around the border.  All of this is done in AddEdgeAtInfinity().
+		/// the infinite polygons around the border.  All of this is done in AddEdgeAtInfinity().</para>
 		/// 
-		/// In order to set up the polygon at infinity we have to start with an infinite polygon and
+		/// <para>In order to set up the polygon at infinity we have to start with an infinite polygon and
 		/// then work our way around the exterior of the diagram, moving from one infinite polygon to
 		/// another and adding them to the list of polygons "adjacent" to the polygon at infinity.  We
 		/// keep track of the first infinite polygon we find to use it as the starting polygon in that
-		/// process.
-		/// </summary>
-		///
-		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		/// process.</para>
+		/// 
+		/// Darrellp, 2/17/2011. </remarks>
 		///
 		/// <returns>	The winged edge structure for the diagram. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -516,7 +527,7 @@ namespace DAP.CompGeom
 			}
 			
 			// Hook up our edge at infinity to our vertices at infinity
-			AddEdgeAtInfinityToVerticesAtInfinity(
+			HookEdgeAtInfinityToVerticesAtInfinity(
 				edgeAtInfinity,
 				edgeAtInfinity.VtxStart as FortuneVertex,
 				edgeAtInfinity.VtxEnd as FortuneVertex);
@@ -549,7 +560,7 @@ namespace DAP.CompGeom
 		/// <param name="trailingVtxCw">	Vertex on the right. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private static void AddEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex leadingVtxCw, FortuneVertex trailingVtxCw)
+		private static void HookEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex leadingVtxCw, FortuneVertex trailingVtxCw)
 		{
 			// if we've only got one edge at infinity
 			if (leadingVtxCw.Edges.Count == 1)
@@ -658,15 +669,16 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// In the course of processing, edges are created initially with null endpoints.  The endpoints
+		/// <summary> Set up points at infinity </summary>
+		/// <remarks>
+		/// <para>In the course of processing, edges are created initially with null endpoints.  The endpoints
 		/// are filled in during the course of the Fortune algorithm.  When we finish processing, any null
 		/// endpoints represent "points at infinity" where the edge is a ray or (rarely) an infinitely
 		/// extended line.  We have to go through and fix up any of these loose ends to turn them into
-		/// points at infinity.
+		/// points at infinity.</para>
 		/// 
-		/// This is a lot of really tedious, detail oriented, nitpicky code.  I'd avoid it if I were you.
-		/// </summary>
+		/// <para>This is a lot of really tedious, detail oriented, nitpicky code.  I'd avoid it if I were you.</para>
+		/// </remarks>
 		///
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -831,10 +843,10 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region NUNIT
-#if NUNIT || DEBUG
 		[TestFixture]
 		public class TestVoronoi
 		{
+#if NUNIT || DEBUG
 			static Fortune Example()
 			{
 				var pts = new[] {
@@ -856,8 +868,26 @@ namespace DAP.CompGeom
 			{
 				Example().ProcessEvents();
 			}
-		}
 #endif
+
+			[Test]
+			public void TestPerf()
+			{
+				Random rnd = new Random();
+				List<PT> pts = new List<PT>();
+				for (int i = 0; i < 10000; i++)
+
+				{
+					pts.Add(new PT((TPT)rnd.NextDouble(), (TPT)rnd.NextDouble()));
+				}
+				Fortune f = new Fortune(pts);
+				Stopwatch sw = Stopwatch.StartNew();
+				f.Voronoi();
+				sw.Stop();
+ 
+				Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
+			}
+		}
 		#endregion
 	}
 

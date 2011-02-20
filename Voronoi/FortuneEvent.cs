@@ -208,9 +208,8 @@ namespace DAP.CompGeom
 #endif
 			Tracer.Indent();
 
-			// Insert the new parabola into the beachline and return the parabola the new one intersects
-			FortunePoly polyIntersected =
-				fortune.Bchl.PolyInsertNode(this, fortune.QevEvents);
+			// Insert the new parabola into the beachline
+			fortune.Bchl.PolyInsertNode(this, fortune.QevEvents);
 			Tracer.Unindent();
 #if NETTRACE || DEBUG
 			if (Tracer.FTracing(tv.Trees))
