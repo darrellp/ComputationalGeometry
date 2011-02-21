@@ -228,6 +228,7 @@ namespace DAP.CompGeom
 	{
 		#region Private Variables
 		TPT _radius = 0;						// Radius of the circle
+		private TPT _radiusSq = 0;
 		LeafNode _lfnEliminated = null;			// The leafnode which will be eliminated by this circle event
 		bool _fZeroLength = false;				// True if this represents a zero length edge
 		#endregion
@@ -260,6 +261,7 @@ namespace DAP.CompGeom
 		internal CircleEvent(PT pt, TPT radius) : base(pt)
 		{
 			_radius = radius;
+			_radiusSq = radius*radius;
 		}
 		#endregion
 
@@ -315,7 +317,7 @@ namespace DAP.CompGeom
 		/// <returns>True if its contained in the circle, else false</returns>
 		internal bool Contains(PT pt)
 		{
-			return Geometry.Distance(pt, Pt) <= _radius;
+			return Geometry.DistanceSq(pt, Pt) <= _radiusSq);
 		}
 		#endregion
 	}
