@@ -1,14 +1,12 @@
-﻿using System;
-#if DOUBLEPRECISION
+﻿#if DEBUG || NUNIT
 using System.Text;
 using NetTrace;
 using NUnit.Framework;
+#endif
+#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
-using System.Text;
-using NetTrace;
-using NUnit.Framework;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif

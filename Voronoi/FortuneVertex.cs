@@ -1,8 +1,6 @@
-﻿using System.Drawing;
-using NetTrace;
+﻿using NetTrace;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
 #else
 using PT = System.Drawing.PointF;
 using TPT = System.Single;

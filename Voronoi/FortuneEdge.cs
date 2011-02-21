@@ -39,25 +39,6 @@ namespace DAP.CompGeom
 		public bool FSplit { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets a value indicating whether at this is an edge at infinity. </summary>
-		/// 
-		/// <remarks>
-		/// Edges at infinity are essentially placeholders in the winged edge data structure which separate
-		/// the polygon at infinity from the infinite polygons.  They've got two infinite vertices at each end.
-		/// </remarks>
-		///
-		/// <value>	true if at infinity, false if not. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public bool FAtInfinity
-		{
-			get
-			{
-				return VtxStart.FAtInfinity;
-			}
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// Return a point suitable for testing angle around the generator so that we can order the edges
 		/// of polygons in postprocessing.  This is used in the CompareToVirtual() to effect that
@@ -87,11 +68,6 @@ namespace DAP.CompGeom
 				}
 
 				// Take care of an edge at infinity
-				// Bug?
-				// If we're an edge at infinity we take the midpoint of
-				// the base of the two rays that point out to us.  This seems like
-				// a potential problem.  It seems like the points out on those two
-				// rays could potentially extend beyond this midpoint.
 				return Geometry.MidPoint(
 					EdgeCCWSuccessor.VtxStart.Pt,
 					EdgeCWPredecessor.VtxStart.Pt);
@@ -116,11 +92,16 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Queries
-		/// <summary>
-		/// Is this edge zero length?  Infinite rays are never zero length.
-		/// </summary>
-		/// <returns></returns>
-		public bool FZeroLength()
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Is this edge zero length?  Infinite rays are never zero length. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <returns>	true if the edge is zero length. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		internal bool FZeroLength()
 		{
 			return !VtxEnd.FAtInfinity && Geometry.FCloseEnough(VtxStart.Pt, VtxEnd.Pt);
 		}
@@ -509,7 +490,6 @@ namespace DAP.CompGeom
 
 		internal void SetOrderedPoly(FortunePoly poly)
 		{
-			// If the polygon's generator is to our left
 			if (FLeftOf(poly.VoronoiPoint))
 			{
 				PolyLeft = poly;
@@ -691,8 +671,7 @@ namespace DAP.CompGeom
 		///
 		/// <returns>	Comparison output. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public override int CompareToVirtual(WeEdge edgeIn)
+		internal override int CompareToVirtual(WeEdge edgeIn)
 		{
 			// Get our fortune edge
 			var edge = edgeIn as FortuneEdge;
