@@ -774,7 +774,8 @@ namespace DAP.CompGeom
 			// Remove any circle events that this generator is inside since it will be closer to the center
 			// of the circle than any of the three points which lie on the circle
 			// TODO: Is there a good way to optimize this?
-			for (var icevt = 0; icevt < evq.CircleEvents.Count; icevt++)
+			int cevt = evq.CircleEvents.Count;
+			for (var icevt = 0; icevt < cevt; icevt++)
 			{
 				// If the circle event contains the site event
 				if (evq.CircleEvents[icevt].Contains(evt.Pt))
