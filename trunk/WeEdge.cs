@@ -348,12 +348,7 @@ namespace DAP.CompGeom
 			}
 
 			// Draw a line from pt1 to pt2
-			// TODO: make a type converter for PointD to PointF and get rid of the #if here
-#if DOUBLEPRECISION
-			g.DrawLine(pen, pt1.ToPointf(), pt2.ToPointf());
-#else
 			g.DrawLine(pen, pt1, pt2);
-#endif
 
 		}
 		#endregion
