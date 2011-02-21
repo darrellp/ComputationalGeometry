@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
@@ -13,20 +12,21 @@ using TPT = System.Single;
 namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>	
-	/// The vertex in a WingedEdge data structure.  In order to accommodate edges that extend off the
-	/// edge of the picture, we allow for two types of vertices - normal vertices and vertices at
-	/// infinity.  Vertices at infinity really represent "directions" rather than true points and are
-	/// normally associated with another (non-infinite) vertex in an edge. For a point at infinity,
-	/// the coordinates don't represent the true coordinates of the "point" but rather represent a
-	/// normal vertex in the proper direction.  The ability to represent these points at infinity as
-	/// psuedo-points is crucial to making the WingedEdge structure work out since many of the edges
-	/// in that structure will be between a point in the B-rep and a ray to infinity from that point.
-	/// The standard WingedEdge structure makes no accommodations for such things, but we have to in
-	/// the Voronoi diagram. 
-	/// </summary>
+	/// <summary>	The vertex in a WingedEdge data structure. </summary>
 	///
-	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	/// <remarks>	
+	/// In order to accommodate edges that extend off the edge of the picture, we allow for two types
+	/// of vertices - normal vertices and vertices at infinity.  Vertices at infinity really
+	/// represent "directions" rather than true points and are normally associated with another (non-
+	/// infinite) vertex in an edge. For a point at infinity, the coordinates don't represent the
+	/// true coordinates of the "point" but rather represent a normal vertex in the proper direction.
+	/// The ability to represent these points at infinity as psuedo-points is crucial to making the
+	/// WingedEdge structure work out since many of the edges in that structure will be between a
+	/// point in the B-rep and a ray to infinity from that point. The standard WingedEdge structure
+	/// makes no accommodations for such things, but we have to in the Voronoi diagram.
+	/// 
+	/// Darrellp, 2/18/2011. 
+	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public class WeVertex
@@ -93,7 +93,7 @@ namespace DAP.CompGeom
 		/// <value>	The point. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PT Pt { get; set; }
+		public PT Pt { get; internal set; }
 		#endregion
 
 		#region Constructor
@@ -169,8 +169,7 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:
-		/// System.Object" />. 
+		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/21/2011. </remarks>

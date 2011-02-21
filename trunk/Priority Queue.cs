@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using NUnit.Framework;
 using NetTrace;
+#if DEBUG || NUNIT
+using NUnit.Framework;
+#endif
 
 namespace DAP.CompGeom
 {

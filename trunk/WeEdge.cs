@@ -83,6 +83,34 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		public WeEdge EdgeCCWPredecessor { get; set; }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets a value indicating whether this is an edge at infinity. </summary>
+		///
+		/// <value>	true if the edge is at infinity, false if not. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public bool FAtInfinity
+		{
+			get
+			{
+				return VtxEnd.FAtInfinity && VtxStart.FAtInfinity;
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets a value indicating whether this edge is a ray. </summary>
+		///
+		/// <value>	true if it's a ray, false if not. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public bool FRay
+		{
+			get
+			{
+				return !VtxStart.FAtInfinity && VtxEnd.FAtInfinity;
+			}
+		}
 		#endregion
 
 		#region Validation
@@ -252,8 +280,7 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:
-		/// System.Object" />. 
+		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/21/2011. </remarks>
@@ -288,8 +315,7 @@ namespace DAP.CompGeom
 		///
 		/// <returns>	Never returns. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		virtual public int CompareToVirtual(WeEdge edge)
+		internal virtual int CompareToVirtual(WeEdge edge)
 		{
 			throw new Exception("The method or operation is not implemented.");
 		}

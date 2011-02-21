@@ -4,11 +4,15 @@ namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	
-	/// Polygons in a WingedEdge structure.  Essentially a list of the edges comprising this polygon
-	/// in clockwise order.  Which edge is first has no particular significance. 
+	/// Polygons in a WingedEdge structure.
 	/// </summary>
 	///
-	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	/// <remarks>	
+	/// Essentially a list of the edges comprising this polygon
+	/// in clockwise order.  Which edge is first has no particular significance. 	/// 
+	/// 
+	/// Darrellp, 2/18/2011. 
+	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public class WePolygon
