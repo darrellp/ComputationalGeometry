@@ -20,11 +20,24 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Circle event special handling
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Adds a circle event. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="cevt">	The event to add. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal void AddCircleEvent(CircleEvent cevt)
 		{
-			// We have to keep special track of circle events
+			// Add to the priority queue
 			Add(cevt);
+
+			// We also have to add them to our linked list of circle events
 			CircleEvents.AddFirst(cevt);
+
+			// Keeping track of their LinkedListNode allows us to delete them efficiently later
 			cevt.LinkedListNode = CircleEvents.First;
 		}
 
