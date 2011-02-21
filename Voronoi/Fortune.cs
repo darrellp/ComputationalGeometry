@@ -1,12 +1,10 @@
 #define NEW
-#if DOUBLEPRECISION
 using System;
 using System.Diagnostics;
+#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
-using System;
-using System.Diagnostics;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
@@ -69,7 +67,7 @@ namespace DAP.CompGeom
 		/// 						built for double precision, these should be PointD, else PointF. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public Fortune(IEnumerable points)
+		public Fortune(IEnumerable<PT> points)
 		{
 			Bchl = new Beachline();
 			QevEvents = new EventQueue();
@@ -135,13 +133,18 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Public methods
+		public static WingedEdge ComputeVoronoi(IEnumerable<PT> pts)
+		{
+			Fortune f = new Fortune(pts);
+			f.Voronoi();
+			return f.BuildWingedEdge();
+		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Calculates the voronoi diagram. </summary>
 		///
 		/// <remarks>	Darrellp, 2/17/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		public void Voronoi()
 		{
 			// Process all the events
@@ -200,7 +203,6 @@ namespace DAP.CompGeom
 		///
 		/// <returns>	The winged edge structure for the diagram. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		public WingedEdge BuildWingedEdge()
 		{
 			// Initialize
@@ -636,7 +638,7 @@ namespace DAP.CompGeom
 						var cevt = evt as CircleEvent;
 						var cevtPrev = evtPrev as CircleEvent;
 
-						// If we have idneically placed circle events
+						// If we have identically placed circle events
 						//
 						// Identically placed circle events still have to be processed but we handle the
 						// case specially.  The implication of identically placed circle events is that
