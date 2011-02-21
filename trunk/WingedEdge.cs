@@ -166,7 +166,7 @@ namespace DAP.CompGeom
 		public class TestWingedEdge
 		{
 			#region Private Variables
-			WingedEdge _we;
+			WingedEdge<WePolygon, WeEdge,WeVertex> _we;
 			#endregion
 
 			#region Example
@@ -187,12 +187,12 @@ namespace DAP.CompGeom
 			// with the outer region representing the "polygon at infinity", polygon 0.
 			// All elements are indexed starting at the upper left and working our way
 			// left to right then top to bottom.
-			static WingedEdge WeExample()
+			static WingedEdge<WePolygon, WeEdge, WeVertex> WeExample()
 			{
 				var edges = new List<WeEdge>(16);
 				var vertices = new List<WeVertex>(12);
 				var polys = new List<WePolygon>(6);
-				var we = new WingedEdge();
+				var we = new WingedEdge<WePolygon, WeEdge, WeVertex>();
 
 				for (var i = 0; i < polys.Capacity; i++)
 				{
