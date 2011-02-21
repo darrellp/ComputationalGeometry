@@ -883,9 +883,8 @@ namespace DAP.CompGeom
 				{
 					pts.Add(new PT((TPT)rnd.NextDouble(), (TPT)rnd.NextDouble()));
 				}
-				Fortune f = new Fortune(pts);
 				Stopwatch sw = Stopwatch.StartNew();
-				f.Voronoi();
+				var t = Fortune.ComputeVoronoi(pts);
 				sw.Stop();
  
 				Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
