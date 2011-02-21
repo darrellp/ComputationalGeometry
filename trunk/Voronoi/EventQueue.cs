@@ -14,7 +14,7 @@ namespace DAP.CompGeom
 
 		public EventQueue()
 		{
-			CircleEvents = new List<CircleEvent>();
+			CircleEvents = new LinkedList<CircleEvent>();
 		}
 
 		#endregion
@@ -24,7 +24,8 @@ namespace DAP.CompGeom
 		{
 			// We have to keep special track of circle events
 			Add(cevt);
-			CircleEvents.Add(cevt);
+			CircleEvents.AddFirst(cevt);
+			cevt.LinkedListNode = CircleEvents.First;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +33,7 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The circle events. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		internal List<CircleEvent> CircleEvents { get; private set; }
+		internal LinkedList<CircleEvent> CircleEvents { get; private set; }
 
 		#endregion
 	}

@@ -234,6 +234,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Properties
+		internal LinkedListNode<CircleEvent> LinkedListNode { get; set; }
 		internal bool FZeroLength
 		{
 			get { return _fZeroLength; }

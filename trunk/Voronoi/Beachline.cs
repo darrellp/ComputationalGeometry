@@ -2,6 +2,7 @@
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
+using System.Collections.Generic;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
@@ -771,18 +772,20 @@ namespace DAP.CompGeom
 			// Remove any circle events that this generator is inside since it will be closer to the center
 			// of the circle than any of the three points which lie on the circle
 			// TODO: Is there a good way to optimize this?
-			int cevt = evq.CircleEvents.Count;
-			for (var icevt = 0; icevt < cevt; icevt++)
+			var lln = evq.CircleEvents.First;
+			while (lln != null)
 			{
-				// If the circle event contains the site event
-				if (evq.CircleEvents[icevt].Contains(evt.Pt))
+				CircleEvent cevt = lln.Value;
+				var llnNext = lln.Next;
+				if (cevt.Contains(evt.Pt))
 				{
 					// Delete the circle event
 					Tracer.Trace(tv.CircleDeletions, "Removing {0} (contains ({1}, {2}))",
-					             evq.CircleEvents[icevt].ToString(), evt.Pt.X, evt.Pt.Y);
-					cevt--;
-					evq.CircleEvents.RemoveAt(icevt);
+								 cevt.ToString(), evt.Pt.X, evt.Pt.Y);
+					evq.CircleEvents.Remove(lln);
+					cevt.LinkedListNode = null;
 				}
+				lln = llnNext;
 			}
 
 			// Create any circle events which this site causes
