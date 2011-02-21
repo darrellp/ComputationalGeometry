@@ -49,9 +49,9 @@ namespace DAP.CompGeom
 			Y = y;
 		}
 
-		public PointF ToPointf()
+		public static implicit operator PointF(PointD pt)
 		{
-			return new PointF((Single) X, (Single) Y);
+			return new PointF((float)pt.X, (float)pt.Y);
 		}
 	}
 }
