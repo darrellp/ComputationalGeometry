@@ -227,8 +227,8 @@ namespace DAP.CompGeom
 	internal class CircleEvent : FortuneEvent
 	{
 		#region Private Variables
-		TPT _radius = 0;						// Radius of the circle
-		private TPT _radiusSq = 0;
+		private readonly TPT _radius = 0;						// Radius of the circle
+		private readonly TPT _radiusSq = 0;
 		LeafNode _lfnEliminated = null;			// The leafnode which will be eliminated by this circle event
 		bool _fZeroLength = false;				// True if this represents a zero length edge
 		#endregion
@@ -310,14 +310,30 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Queries
-		/// <summary>
-		/// Returns true if the circle event contains the passed in point
-		/// </summary>
-		/// <param name="pt">Point to check</param>
-		/// <returns>True if its contained in the circle, else false</returns>
+		/// <summary>	Returns true if the circle event contains the passed in point. </summary>
+		///
+		/// <remarks>
+		/// Profiling shows that this routine is a huge bottleneck.  It gets called a zillion times an
+		/// almost always returns false so we go to extraordinary measures to optimize it for the case
+		/// of turning out false.  Hence some kind of odd code here.
+		/// 
+		/// Darrell Plank, 2/21/2011.
+		/// </remarks>
+		///
+		/// <param name="pt">	Point to check. </param>
+		///
+		/// <returns>	True if its contained in the circle, else false. </returns>
 		internal bool Contains(PT pt)
 		{
-			return Geometry.DistanceSq(pt, Pt) <= _radiusSq;
+			var dx = pt.X - Pt.X;
+			if (dx < 0) dx = -dx;
+			if (dx > _radius) return false;
+
+			var dy = pt.Y - Pt.Y;
+			if (dy < 0) dy = -dy;
+			if (dy > _radius) return false;
+
+			return dx * dx + dy * dy <= _radiusSq;
 		}
 		#endregion
 	}
