@@ -317,7 +317,7 @@ namespace DAP.CompGeom
 		/// <returns>True if its contained in the circle, else false</returns>
 		internal bool Contains(PT pt)
 		{
-			return Geometry.DistanceSq(pt, Pt) <= _radiusSq);
+			return Geometry.DistanceSq(pt, Pt) <= _radiusSq;
 		}
 		#endregion
 	}
