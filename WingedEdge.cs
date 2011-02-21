@@ -6,13 +6,19 @@ using PT = System.Drawing.PointF;
 #endif
 using System.Linq;
 using System.Collections.Generic;
+#if NUNIT || DEBUG
 using NUnit.Framework;
+#endif
 
 namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	
-	/// Winged Edge data structure for representing a B-rep or "boundary representation". Intuitively,
+	/// Winged Edge data structure for representing a B-rep or "boundary representation".
+	/// </summary>
+	///
+	/// <remarks>
+	/// Intuitively,
 	/// a B-rep can be though of as the representation for a map of polygonal countries.  This is
 	/// precisely what the voronoi diagram returns.  Winged Edge is a bit redundant in it's
 	/// representation but provides a very flexible structure for working with the underlying B-rep.
@@ -24,9 +30,9 @@ namespace DAP.CompGeom
 	/// 				 /    \
 	/// 				/      \
 	/// The "WingedEdge" name comes from the resemblance of this diagram to a butterfly. 
-	/// </summary>
-	///
-	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	/// 
+	/// Darrellp, 2/18/2011.
+	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	public class WingedEdge<P,E,V>

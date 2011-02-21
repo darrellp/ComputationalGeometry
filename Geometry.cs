@@ -7,7 +7,9 @@ using TPT = System.Single;
 #endif
 
 using System;
+#if NUNIT || DEBUG
 using NUnit.Framework;
+#endif
 
 namespace DAP.CompGeom
 {
@@ -20,7 +22,7 @@ namespace DAP.CompGeom
 	public static class Geometry
 	{
 		/// Tolerance we use in "near enough" calculations
-		public const TPT Tolerance = (TPT)1e-10;
+		public const TPT Tolerance = 1e-10;
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	True if two values are "essentially" equal (i.e., equal within tolerance). </summary>
@@ -250,7 +252,7 @@ namespace DAP.CompGeom
 			var dx = pt1.X - pt2.X;
 			var dy = pt1.Y - pt2.Y;
 
-			return (TPT)Math.Sqrt(dx * dx + dy * dy);
+			return Math.Sqrt(dx * dx + dy * dy);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,8 +299,7 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// Determine the x coordinate where the parabolas with focus at pt1 and pt2 intersect between
-		/// the two points. The directrix for both parabolas is the line y = ys.  This is a very specific
-		/// calculation for the Fortune algorithm for the Voronoi diagram. 
+		/// the two points. The directrix for both parabolas is the line y = ys.
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/17/2011. </remarks>
@@ -362,8 +363,6 @@ namespace DAP.CompGeom
 			var m = 0.25 / da;
 			var xs1 = m * (s1 + s2);
 			var xs2 = m * (s1 - s2);
-			//xs1 = Math.Round(xs1,10);
-			//xs2 = Math.Round(xs2,10);
 
 			// If we need to reorder
 			if(xs1 > xs2)
@@ -376,8 +375,8 @@ namespace DAP.CompGeom
 
 			// Get the solution we're looking for
 			if(pt1.Y >= pt2.Y)
-				return (TPT)xs2;
-			return (TPT)xs1;
+				return xs2;
+			return xs1;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////

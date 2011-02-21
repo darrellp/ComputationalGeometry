@@ -191,10 +191,8 @@ namespace FortuneTest
 #if NETTRACE || DEBUG
 			if (Tracer.FTracing(t.autosave))
 			{
-				Fortune frt = new Fortune(_lstPt);
-				frt.Voronoi();
-				WingedEdge we = frt.BuildWingedEdge();
-				_lstPoly = frt.Polygons;
+				WingedEdge<FortunePoly, FortuneEdge, FortuneVertex> we = Fortune.ComputeVoronoi(_lstPt);
+				_lstPoly = we.LstPolygons;
 				pnlDraw.Invalidate();
 			}
 #endif
@@ -263,10 +261,7 @@ namespace FortuneTest
 
 		private void btnCompute_Click(object sender, EventArgs e)
 		{
-			Fortune frt = new Fortune(_lstPt);
-			frt.Voronoi();
-			_lstPoly = frt.Polygons;
-			frt.BuildWingedEdge();
+			_lstPoly = (List<FortunePoly>) (Fortune.ComputeVoronoi(_lstPt).LstPolygons);
 			pnlDraw.Invalidate();
 		}
 

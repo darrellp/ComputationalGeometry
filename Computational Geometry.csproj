@@ -38,7 +38,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETTRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETTRACE DOUBLEPRECISION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>true</UseVSHostingProcess>
@@ -48,9 +48,10 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;DOUBLEPRECISION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Computational Geometry.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NetTrace, Version=1.0.4062.21384, Culture=neutral, processorArchitecture=MSIL">
@@ -67,10 +68,8 @@
     <Compile Include="Geometry.cs" />
     <Compile Include="IPriorityQueueElement.cs" />
     <Compile Include="PointD.cs" />
-    <Compile Include="PointSorters.cs" />
     <Compile Include="Priority Queue.cs" />
     <Compile Include="PriorityQueueWithDeletions.cs" />
-    <Compile Include="Set.cs" />
     <Compile Include="Voronoi\Beachline.cs" />
     <Compile Include="Voronoi\EventQueue.cs" />
     <Compile Include="Voronoi\Fortune.cs" />
