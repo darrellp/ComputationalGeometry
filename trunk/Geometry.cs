@@ -254,6 +254,25 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Euclidean distance between two points. </summary>
+		///
+		/// <remarks>	Darrellp, 2/17/2011. </remarks>
+		///
+		/// <param name="pt1">	First point. </param>
+		/// <param name="pt2">	Second point. </param>
+		///
+		/// <returns>	Distance between the two points. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static TPT DistanceSq(PT pt1, PT pt2)
+		{
+			var dx = pt1.X - pt2.X;
+			var dy = pt1.Y - pt2.Y;
+
+			return dx * dx + dy * dy;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// Manhattan Distance between two points.  Quicker metric for short distances than the Euclidean
 		/// one. 
@@ -343,8 +362,8 @@ namespace DAP.CompGeom
 			var m = 0.25 / da;
 			var xs1 = m * (s1 + s2);
 			var xs2 = m * (s1 - s2);
-			xs1 = Math.Round(xs1,10);
-			xs2 = Math.Round(xs2,10);
+			//xs1 = Math.Round(xs1,10);
+			//xs2 = Math.Round(xs2,10);
 
 			// If we need to reorder
 			if(xs1 > xs2)
