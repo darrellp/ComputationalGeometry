@@ -29,7 +29,10 @@ namespace DAP.CompGeom
 	/// <remarks>	Darrellp, 2/18/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public class WingedEdge
+	public class WingedEdge<P,E,V>
+		where P:WePolygon
+		where E:WeEdge
+		where V:WeVertex
 	{
 		#region Constructor
 
@@ -41,9 +44,9 @@ namespace DAP.CompGeom
 
 		public WingedEdge()
 		{
-			LstVertices = new List<WeVertex>();
-			LstEdges = new List<WeEdge>();
-			LstPolygons = new List<WePolygon>();
+			LstVertices = new List<V>();
+			LstEdges = new List<E>();
+			LstPolygons = new List<P>();
 		}
 
 		#endregion
@@ -55,21 +58,21 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The list of contained polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<WePolygon> LstPolygons { get; set; }
+		public List<P> LstPolygons { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the list of contained edges. </summary>
 		///
 		/// <value>	The list of contained edges. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<WeEdge> LstEdges { get; set; }
+		public List<E> LstEdges { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the list of contained vertices. </summary>
 		///
 		/// <value>	The list of contained vertices. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<WeVertex> LstVertices { get; set; }
+		public List<V> LstVertices { get; set; }
 
 		#endregion
 
@@ -125,7 +128,7 @@ namespace DAP.CompGeom
 		/// <param name="edge">	The edge to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddEdge(WeEdge edge)
+		public void AddEdge(E edge)
 		{
 			LstEdges.Add(edge);
 		}
@@ -138,7 +141,7 @@ namespace DAP.CompGeom
 		/// <param name="polygon">	The polygon to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddPoly(WePolygon polygon)
+		public void AddPoly(P polygon)
 		{
 			LstPolygons.Add(polygon);
 		}
@@ -151,7 +154,7 @@ namespace DAP.CompGeom
 		/// <param name="vertex">	The vertex to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddVertex(WeVertex vertex)
+		public void AddVertex(V vertex)
 		{
 			LstVertices.Add(vertex);
 		}
