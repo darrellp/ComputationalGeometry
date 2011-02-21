@@ -7,6 +7,7 @@ using TPT = System.Double;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
+using WE = DAP.CompGeom.WingedEdge<DAP.CompGeom.FortunePoly, DAP.CompGeom.FortuneEdge, DAP.CompGeom.FortuneVertex>;
 
 namespace DAP.CompGeom
 {
@@ -593,7 +594,7 @@ namespace DAP.CompGeom
 		/// <param name="we">	Winged edge structure to add edge to. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal void Process(FortunePoly poly, WingedEdge we)
+		internal void Process(FortunePoly poly, WE we)
 		{
 			// Put the poly properly to the left or right of this edge
 			SetOrderedPoly(poly);

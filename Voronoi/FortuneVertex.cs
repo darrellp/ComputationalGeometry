@@ -7,6 +7,7 @@ using TPT = System.Double;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
+using WE = DAP.CompGeom.WingedEdge<DAP.CompGeom.FortunePoly, DAP.CompGeom.FortuneEdge, DAP.CompGeom.FortuneVertex>;
 
 namespace DAP.CompGeom
 {
@@ -75,7 +76,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Winged Edge
-		internal void AddToWingedEdge(WingedEdge we)
+		internal void AddToWingedEdge(WE we)
 		{
 			if (!_fAddedToWingedEdge)
 			{

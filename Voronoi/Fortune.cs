@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Collections;
 using NUnit.Framework;
 using NetTrace;
+using WE = DAP.CompGeom.WingedEdge<DAP.CompGeom.FortunePoly, DAP.CompGeom.FortuneEdge, DAP.CompGeom.FortuneVertex>;
 
 namespace DAP.CompGeom
 {
@@ -133,7 +134,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Public methods
-		public static WingedEdge ComputeVoronoi(IEnumerable<PT> pts)
+		public static WE ComputeVoronoi(IEnumerable<PT> pts)
 		{
 			Fortune f = new Fortune(pts);
 			f.Voronoi();
@@ -203,14 +204,14 @@ namespace DAP.CompGeom
 		///
 		/// <returns>	The winged edge structure for the diagram. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public WingedEdge BuildWingedEdge()
+		public WE BuildWingedEdge()
 		{
 			// Initialize
 			// The first infinite polygon we locate and the index for the infinite
 			// edge ccw to that polygon
 			FortunePoly polyInfinityStart = null;
 			var iLeadingInfiniteEdgeCw = -1;
-			var we = new WingedEdge();
+			var we = new WE();
 
 			// for all polygons in the voronoi diagram
 			foreach (var poly in Polygons)
@@ -329,7 +330,7 @@ namespace DAP.CompGeom
 
 		private static void ProcessPolygonEdges(
 			FortunePoly poly,
-			WingedEdge we,
+			WE we,
 			ref FortunePoly polyInfinityStart,
 			ref int iLeadingInfiniteEdgeCw)
 		{
@@ -397,7 +398,7 @@ namespace DAP.CompGeom
 		/// <param name="iLeadingEdgeCw">	Starting infinite edge. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private static void AddPolygonAtInfinity(WingedEdge we, FortunePoly polyStart, int iLeadingEdgeCw)
+		private static void AddPolygonAtInfinity(WE we, FortunePoly polyStart, int iLeadingEdgeCw)
 		{
 			// See if we've got a degenerate case
 			//
