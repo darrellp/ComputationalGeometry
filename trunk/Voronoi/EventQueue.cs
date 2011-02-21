@@ -12,7 +12,7 @@ namespace DAP.CompGeom
 	{
 		#region Constructor
 
-		public EventQueue()
+		internal EventQueue()
 		{
 			CircleEvents = new LinkedList<CircleEvent>();
 		}

@@ -220,14 +220,14 @@ namespace DAP.CompGeom
 			// If we've got a left sibling
 			if (LeftAdjacentLeaf != null)
 			{
-				// Make my right sibling it's sibling
+				// Make my right sibling it's right sibling
 				LeftAdjacentLeaf.RightAdjacentLeaf = RightAdjacentLeaf;
 			}
 
 			// If we've got a right sibling
 			if (RightAdjacentLeaf != null)
 			{
-				// Make my left sibling it's sibling
+				// Make my left sibling it's left sibling
 				RightAdjacentLeaf.LeftAdjacentLeaf = LeftAdjacentLeaf;
 			}
 		}

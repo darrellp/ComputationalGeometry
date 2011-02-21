@@ -13,14 +13,23 @@ using System.Collections.Generic;
 
 namespace DAP.CompGeom
 {
-	/// <summary>
-	/// The fortune algorithm works by moving a sweepline down through the sites of the 
-	/// diagram.  During that movement, events are added, removed and popped from a priority
-	/// queue.  Those events each have a y coordinate and the event with the largest y
-	/// coordinate is popped out of the priority queue.  These events are of two types: circle
-	/// events (CircleEvent) and site events (SiteEvent).  FortuneEvent is an abstract class
-	/// which serves as the base for both these types of event.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	
+	/// A class for the events that drive the Fortune algorithm 
 	/// </summary>
+	///
+	/// <remarks>	
+	/// The fortune algorithm works by moving a sweepline down through the sites of the diagram.
+	/// During that movement, events are added, removed and popped from a priority queue.  Those
+	/// events each have a y coordinate and the event with the largest y coordinate is popped out of
+	/// the priority queue.  These events are of two types: circle events (CircleEvent) and site
+	/// events (SiteEvent).  FortuneEvent is an abstract class which serves as the base for both
+	/// these types of event.
+	/// 
+	/// Darrellp, 2/21/2011. 
+	/// </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	abstract internal class FortuneEvent : IPriorityQueueElement
 	{
 		#region Private Variables

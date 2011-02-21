@@ -31,8 +31,7 @@ namespace DAP.CompGeom
 		///
 		/// <remarks>	Darrellp, 2/19/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public Beachline()
+		internal Beachline()
 		{
 			NdRoot = null;
 		}
@@ -55,74 +54,57 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// Find the leaf node representing the parabola on the beachline which lays at a specified X
-		/// coordinate.  Does a binary search on the parabolas to locate the parabola in question. 
-		/// </summary>
-		///
-		/// <remarks>	Darrellp, 2/18/2011. </remarks>
-		///
-		/// <exception cref="InvalidOperationException">	Thrown when there is no root node. </exception>
-		///
-		/// <param name="xSite">		The X coordinate to search for. </param>
-		/// <param name="yScanLine">	Height of the scan line. </param>
-		///
-		/// <returns>	The leaf node for the parabola over xSite. </returns>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		LeafNode LfnSearch(TPT xSite, TPT yScanLine)
-		{
-			if (NdRoot == null)
-			{
-				throw new InvalidOperationException("Searching a null beachline");
-			}
-
-			return LfnSearchNode(NdRoot, xSite, yScanLine);
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
 		/// Do a binary search down the tree looking for the leaf node which covers the passed in X
 		/// coordinate. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		///
-		/// <param name="nd">			Node to start search at. </param>
 		/// <param name="xSite">		X coordinate. </param>
 		/// <param name="yScanLine">	Where the scan line is at now. </param>
 		///
 		/// <returns>	Leaf node for parabola covering xSite. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private static LeafNode LfnSearchNode(Node nd, TPT xSite, TPT yScanLine)
+		private LeafNode LfnSearchNode( TPT xSite, TPT yScanLine)
 		{
 			// Initialize
 			LeafNode ndRet;
 
+			// Make sure we've got a root
+			if (NdRoot == null)
+			{
+				// Complain if we don't
+				throw new InvalidOperationException("Searching a null beachline");
+			}
+
+			// Start with ndCur at the root
+			Node ndCur = NdRoot;
+
 			while (true)
 			{
 				// Diagnostics
-				Tracer.Trace(tv.Search, "Searching for x={0} with yScan={1} at {2}", xSite, yScanLine, nd.ToString());
+				Tracer.Trace(tv.Search, "Searching for x={0} with yScan={1} at {2}", xSite, yScanLine, ndCur.ToString());
 
 				// If it's a leaf node, we've arrived
-				if (nd.IsLeaf)
+				if (ndCur.IsLeaf)
 				{
 					// The leaf node is our return
-					ndRet = nd as LeafNode;
+					ndRet = ndCur as LeafNode;
 					break;
 				}
 				// It's an internal node
 				// Internal nodes represent developing edges as the sweep line sweeps downward.  They've got pointers to the
-				// polygons on each side of that line.  The place those two polygons meet is the place where two parabolas with
+				// polygons on each side of that line.  The next vertex of that edge is the place where two parabolas with
 				// foci at the voronoi input points and directrix at the current sweep line meet.  This is pure geometry and is
 				// determined in CurrentEdgeXPos below.
 
 				// Determine the break point on the beach line 
-				var edgeXPos = ((InternalNode)nd).CurrentEdgeXPos(yScanLine);
+				var edgeXPos = ((InternalNode)ndCur).CurrentEdgeXPos(yScanLine);
 
 				// Search the side of the break point that xSite is on
 				Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
-				nd = edgeXPos < xSite ? nd.RightChild : nd.LeftChild;
+				ndCur = edgeXPos < xSite ? ndCur.RightChild : ndCur.LeftChild;
 			}
 
 			// Return the node we located
@@ -309,8 +291,7 @@ namespace DAP.CompGeom
 				return;
 			}
 
-			// If we're a child of the root then all we do is change the root to our immediate
-			// sibling...
+			// If we're a child of the root then all we do is change the root to our immediate sibling
 			if (lfn.NdParent == NdRoot)
 			{
 				NdRoot = lfn.ImmediateSibling;
@@ -322,33 +303,35 @@ namespace DAP.CompGeom
 			//
 			// We remove both the leafnode and it's parent (it's parent represents the edge
 			// that just terminated in our new fortune vertex, hence it's need to be removed
-			// also).  It's immediate sibling
+			// also).  Our immediate sibling
 			// is moved up to be a child of the grandparent.  This changes the height
 			// balance on the grandparent since it loses a level.
 			var innParent = lfn.NdParent;
 			var innGrandparent = innParent.NdParent;
 			var fIsParentLeftChild = innParent.IsLeftChild;
+
+			// Remove our parent
 			innParent.SnipFromParent();
 
 			// Insert our sibling in place of our parent
 
-			// Was our parent on the left side of their parent?
+			// Was our parent the left child of our grandparent?
 			if (fIsParentLeftChild)
 			{
-				// Move us in on the left side
+				// Move sibling to be the left child of our grandparent
 				innGrandparent.LeftChild = lfn.ImmediateSibling;
 				innGrandparent.DecDht();
 			}
 			else
 			{
-				// Move us in on the right side
+				// Move sibling to be the right child of our grandparent
 				innGrandparent.RightChild = lfn.ImmediateSibling;
 				innGrandparent.IncDht();
 			}
 
 			// Link our former siblings together
 			//
-			// Now that we're being removed, our former siblings become direct siblings so link them together
+			// Now that we've been removed, our former siblings become direct siblings so link them together
 			// in the adjacent leaf chain
 			lfn.LinkSiblingsTogether();
 		}
@@ -579,7 +562,7 @@ namespace DAP.CompGeom
 			innSubRoot.LeftChild = lfnLeft;
 			innSubRoot.RightChild = lfnRight;
 
-			FortuneEdge edge = new FortuneEdge();
+			var edge = new FortuneEdge();
 			innSubRoot.SetEdge(edge);
 			innSubRoot.AddEdgeToPolygons(edge);
 			lfnLeft.LeftAdjacentLeaf = lfnAdjacentParabolaLeft;
@@ -701,7 +684,7 @@ namespace DAP.CompGeom
 		/// <param name="lfnRight">Node to the right</param>
 		/// <param name="yScanLine">Scan line position</param>
 		/// <param name="evq">Event queue</param>
-		void CreateCircleEventsFromSiteEvent(
+		static void CreateCircleEventsFromSiteEvent(
 			LeafNode lfnLeft,
 			LeafNode lfnRight,
 			TPT yScanLine,
@@ -741,7 +724,7 @@ namespace DAP.CompGeom
 			}
 
 			// Get the parabola above this site and the parabolas to its left and right
-			var lfn = LfnSearch(evt.Pt.X, evt.Pt.Y);
+			var lfn = LfnSearchNode(evt.Pt.X, evt.Pt.Y);
 			var lfnLeft = lfn.LeftAdjacentLeaf;
 			var lfnRight = lfn.RightAdjacentLeaf;
 

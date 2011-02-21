@@ -10,7 +10,6 @@ using TPT = System.Single;
 #endif
 
 using System.Collections.Generic;
-using System.Collections;
 using NUnit.Framework;
 using NetTrace;
 using WE = DAP.CompGeom.WingedEdge<DAP.CompGeom.FortunePoly, DAP.CompGeom.FortuneEdge, DAP.CompGeom.FortuneVertex>;
@@ -67,8 +66,7 @@ namespace DAP.CompGeom
 		/// <param name="points">	Points whose Voronoi diagram will be calculated. If the library is
 		/// 						built for double precision, these should be PointD, else PointF. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public Fortune(IEnumerable<PT> points)
+		private Fortune(IEnumerable<PT> points)
 		{
 			Bchl = new Beachline();
 			QevEvents = new EventQueue();
@@ -113,7 +111,7 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<FortunePoly> Polygons { get; private set; }
+		internal List<FortunePoly> Polygons { get; private set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the event queue. </summary>
@@ -147,7 +145,7 @@ namespace DAP.CompGeom
 
 		public static WE ComputeVoronoi(IEnumerable<PT> pts)
 		{
-			Fortune f = new Fortune(pts);
+			var f = new Fortune(pts);
 			f.Voronoi();
 			return f.BuildWingedEdge();
 		}
@@ -290,7 +288,9 @@ namespace DAP.CompGeom
 				              polyInfinityStart.EdgesCW[0].VtxEnd.FAtInfinity && polyInfinityStart.EdgesCW[1].VtxEnd.FAtInfinity,
 				              "Two edged polygon without both edges at infinity");
 				// If we run clockwise from the origin through edge 0 through edge 1
+				// ReSharper disable ConvertIfStatementToConditionalTernaryExpression
 				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.EdgesCW[0].VtxEnd.Pt, polyInfinityStart.EdgesCW[1].VtxEnd.Pt) > 0)
+				// ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 				{
 					// Edge 1 is our leading edge
 					iLeadingInfiniteEdgeCw = 1;
@@ -900,15 +900,15 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestPerf()
 			{
-				Random rnd = new Random();
-				List<PT> pts = new List<PT>();
+				var rnd = new Random();
+				var pts = new List<PT>();
 				for (int i = 0; i < 10000; i++)
 
 				{
-					pts.Add(new PT((TPT)rnd.NextDouble(), (TPT)rnd.NextDouble()));
+					pts.Add(new PT(rnd.NextDouble(), rnd.NextDouble()));
 				}
-				Stopwatch sw = Stopwatch.StartNew();
-				var t = Fortune.ComputeVoronoi(pts);
+				var sw = Stopwatch.StartNew();
+				var t = ComputeVoronoi(pts);
 				sw.Stop();
  
 				Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);

@@ -1,9 +1,10 @@
-﻿using System.Drawing;
-using NetTrace;
+﻿using NetTrace;
+#if NUNIT || DEBUG
 using NUnit.Framework;
+#endif
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
+
 #else
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
@@ -35,7 +36,7 @@ namespace DAP.CompGeom
 		/// <value>	true if zero length edge is present </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public bool FZeroLengthEdge { get; set; }
+		internal bool FZeroLengthEdge { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	The original point which caused this voronoi cell to exist. </summary>
@@ -50,8 +51,7 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The index. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public int Index { get; set; }
+		internal int Index { get; set; }
 
 		#endregion
 
