@@ -154,50 +154,150 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Heapifying
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Queries if a given right son exists. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the parent. </param>
+		///
+		/// <returns>	true if the right son exists. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected bool RightSonExists(int i)
 		{
 			return RightChildIndex(i) < LstHeap.Count;
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Queries if a given left son exists. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the parent. </param>
+		///
+		/// <returns>	true if the left son exists. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		protected bool LeftSonExists(int i)
 		{
 			return LeftChildIndex(i) < LstHeap.Count;
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Index of parent node. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	Child's index. </param>
+		///
+		/// <returns>	Index to the parent. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected int ParentIndex(int i)
 		{
 			return (i - 1) / 2;
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Index of left child's node. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	Parent's index. </param>
+		///
+		/// <returns>	Index to the left child. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		protected int LeftChildIndex(int i)
 		{
 			return 2 * i + 1;
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Index of right child's node. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	Parent's index. </param>
+		///
+		/// <returns>	Index to the right child. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected int RightChildIndex(int i)
 		{
 			return 2 * (i + 1);
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Array value at index i. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index. </param>
+		///
+		/// <returns>	Array value at i. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		protected T ArrayVal(int i)
 		{
 			return LstHeap[i];
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Returns the parent. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the child. </param>
+		///
+		/// <returns>	The parent. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected T Parent(int i)
 		{
 			return LstHeap[ParentIndex(i)];
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Returns the left child. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the parent. </param>
+		///
+		/// <returns>	The left child. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		protected T Left(int i)
 		{
 			return LstHeap[LeftChildIndex(i)];
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Returns the right child. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the parent. </param>
+		///
+		/// <returns>	The right child. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected T Right(int i)
 		{
 			return LstHeap[RightChildIndex(i)];
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Swaps two elements of the priority queue. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index of the first element. </param>
+		/// <param name="j">	The index of the second element. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		protected void Swap(int i, int j)
 		{
@@ -280,7 +380,18 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Debugging
+		/// <summary> The string indent </summary>
 		protected string StrIndent = "";
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Trace element. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="iPos">	The position. </param>
+		/// <param name="val">	The value. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		[Conditional("DEBUG")]
 		virtual protected void TraceElement(int iPos, T val)
 		{
@@ -302,6 +413,12 @@ namespace DAP.CompGeom
 			}
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Print tree. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		[Conditional("DEBUG")]
 		protected void PrintTree()
 		{
@@ -317,6 +434,14 @@ namespace DAP.CompGeom
 			PrintTree(0);
 			Tracer.Trace(t.PqTrees, "<<< PQ TREE END >>>");
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Print tree. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="i">	The index into LstHeap. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		[Conditional("DEBUG")]
 		protected void PrintTree(int i)
@@ -379,6 +504,15 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region IEnumerable<T> Members
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets an enumerator for the items in the queue. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <returns>	The enumerator. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected virtual IEnumerator<T> GetEnumerator()
 		{
 			return LstHeap.GetEnumerator();

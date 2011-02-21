@@ -116,7 +116,7 @@ namespace DAP.CompGeom
 			PT ptCenter;
 			CircleEvent cevtRet = null;
 
-			/// Circle events are created at the circumcenters of three sites - the sites for poly1/2/3.
+			// Circle events are created at the circumcenters of three sites - the sites for poly1/2/3.
 			if (Geometry.FFindCircumcenter(poly1.VoronoiPoint, poly2.VoronoiPoint, poly3.VoronoiPoint, out ptCenter))
 			{
 				TPT radius = Geometry.Distance(poly1.VoronoiPoint, ptCenter);
