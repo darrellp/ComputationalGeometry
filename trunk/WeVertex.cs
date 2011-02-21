@@ -166,6 +166,20 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region ToString
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:
+		/// System.Object" />. 
+		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <returns>	
+		/// A <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />. 
+		/// </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public override string ToString()
 		{
 			return String.Format("{0}({1}, {2})", FAtInfinity ? "I" : "", Pt.X, Pt.Y);

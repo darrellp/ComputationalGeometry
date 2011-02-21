@@ -249,6 +249,20 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region ToString
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Returns a <see cref="T:System.String" /> that represents the current <see cref="T:
+		/// System.Object" />. 
+		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <returns>	
+		/// A <see cref="T:System.String" /> that represents the current <see cref="T:System.Object" />. 
+		/// </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public override string ToString()
 		{
 			var strStart = VtxStart == null ? "Inf" : VtxStart.ToString();

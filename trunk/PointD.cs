@@ -49,6 +49,16 @@ namespace DAP.CompGeom
 			Y = y;
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	PointF casting operator. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="pt">	The PointD. </param>
+		///
+		/// <returns>	The PointF value of this PointD. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public static implicit operator PointF(PointD pt)
 		{
 			return new PointF((float)pt.X, (float)pt.Y);

@@ -134,6 +134,17 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Public methods
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Calculates the voronoi winged edge data structure for a collection of points. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="pts">	The points we want the Voronoi diagram for. </param>
+		///
+		/// <returns>	The calculated voronoi diagram. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public static WE ComputeVoronoi(IEnumerable<PT> pts)
 		{
 			Fortune f = new Fortune(pts);
@@ -846,6 +857,13 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region NUNIT
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Test voronoi. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		[TestFixture]
 		public class TestVoronoi
 		{
@@ -872,6 +890,12 @@ namespace DAP.CompGeom
 				Example().ProcessEvents();
 			}
 #endif
+
+			////////////////////////////////////////////////////////////////////////////////////////////////////
+			/// <summary>	Tests perf. </summary>
+			///
+			/// <remarks>	Darrellp, 2/21/2011. </remarks>
+			////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			[Test]
 			public void TestPerf()

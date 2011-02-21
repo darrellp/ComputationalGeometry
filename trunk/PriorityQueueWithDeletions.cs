@@ -104,6 +104,15 @@ namespace DAP.CompGeom
 			return base.FValidate();
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Trace element. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="iPos">	The position. </param>
+		/// <param name="val">	The value. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		protected override void TraceElement(int iPos, T val)
 		{
 			Tracer.Trace(t.PqTrees,

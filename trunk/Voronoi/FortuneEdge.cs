@@ -1,8 +1,6 @@
-﻿using System.Drawing;
-using NetTrace;
+﻿using NetTrace;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
 #else
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
@@ -102,6 +100,15 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region ToString
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Convert this object into a string representation. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <returns>	A string representation of this object. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		public override string ToString()
 		{
 			return string.Format("{0} : Gens {1} - {2}:", base.ToString(), _arPoly[0].Index, _arPoly[1].Index);
