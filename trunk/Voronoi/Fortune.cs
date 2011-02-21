@@ -146,7 +146,7 @@ namespace DAP.CompGeom
 		///
 		/// <remarks>	Darrellp, 2/17/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public void Voronoi()
+		private void Voronoi()
 		{
 			// Process all the events
 			//
@@ -204,7 +204,7 @@ namespace DAP.CompGeom
 		///
 		/// <returns>	The winged edge structure for the diagram. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public WE BuildWingedEdge()
+		private WE BuildWingedEdge()
 		{
 			// Initialize
 			// The first infinite polygon we locate and the index for the infinite
