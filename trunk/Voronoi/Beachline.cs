@@ -110,21 +110,18 @@ namespace DAP.CompGeom
 					ndRet = nd as LeafNode;
 					break;
 				}
-				else
-				{
-					// It's an internal node
-					// Internal nodes represent developing edges as the sweep line sweeps downward.  They've got pointers to the
-					// polygons on each side of that line.  The place those two polygons meet is the place where two parabolas with
-					// foci at the voronoi input points and directrix at the current sweep line meet.  This is pure geometry and is
-					// determined in CurrentEdgeXPos below.
+				// It's an internal node
+				// Internal nodes represent developing edges as the sweep line sweeps downward.  They've got pointers to the
+				// polygons on each side of that line.  The place those two polygons meet is the place where two parabolas with
+				// foci at the voronoi input points and directrix at the current sweep line meet.  This is pure geometry and is
+				// determined in CurrentEdgeXPos below.
 
-					// Determine the break point on the beach line 
-					var edgeXPos = ((InternalNode)nd).CurrentEdgeXPos(yScanLine);
+				// Determine the break point on the beach line 
+				var edgeXPos = ((InternalNode)nd).CurrentEdgeXPos(yScanLine);
 
-					// Search the side of the break point that xSite is on
-					Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
-					nd = edgeXPos < xSite ? nd.RightChild : nd.LeftChild;
-				}
+				// Search the side of the break point that xSite is on
+				Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
+				nd = edgeXPos < xSite ? nd.RightChild : nd.LeftChild;
 			}
 
 			// Return the node we located
@@ -783,6 +780,7 @@ namespace DAP.CompGeom
 					// Delete the circle event
 					Tracer.Trace(tv.CircleDeletions, "Removing {0} (contains ({1}, {2}))",
 					             evq.CircleEvents[icevt].ToString(), evt.Pt.X, evt.Pt.Y);
+					cevt--;
 					evq.CircleEvents.RemoveAt(icevt);
 				}
 			}
