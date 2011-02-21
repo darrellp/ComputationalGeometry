@@ -156,6 +156,10 @@ namespace DAP.CompGeom
 				// Delete it
 				Tracer.Trace(tv.CircleDeletions, "Deleting {0}", _cevt.ToString());
 				evq.Delete(_cevt);
+				if (_cevt.LinkedListNode != null)
+				{
+					evq.CircleEvents.Remove(_cevt.LinkedListNode);
+				}
 				_cevt = null;
 			}
 		}
