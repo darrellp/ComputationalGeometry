@@ -60,7 +60,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Debug.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="IPriorityQueueElement.cs" />
     <Compile Include="PointD.cs" />
