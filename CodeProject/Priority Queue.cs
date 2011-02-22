@@ -1,10 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using NetTrace;
-#if DEBUG || NUNIT
-using NUnit.Framework;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -47,19 +42,12 @@ namespace DAP.CompGeom
 
 		public virtual void Add(T val)
 		{
-			// Tracing
-			Tracer.Trace(t.PqInserts, "Adding {0}...", val.ToString());
-			Tracer.Indent();
-
 			// Add the new element to the end of the list
 			LstHeap.Add(val);
 			SetAt(LstHeap.Count - 1, val);
 
 			// Move it up the tree to it's correct position
 			UpHeap(LstHeap.Count - 1);
-			Tracer.Unindent();
-			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
-			PrintTree();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,14 +96,6 @@ namespace DAP.CompGeom
 			// Save away the max value in the heap
 			var valRet = LstHeap[0];
 
-			// Diagnostics
-			Tracer.Trace(t.PqDeletes, "Popping {0}", valRet.ToString());
-			Tracer.Indent();
-			Tracer.Trace(
-				t.PqDeletes,
-				"Removing {0} from the array end and placing at the first position",
-				LstHeap[LstHeap.Count - 1]);
-
 			// Move the last element in the list to the now vacated first
 			// Yea, and I sayeth unto you, the last shall be first...
 			SetAt(0, LstHeap[LstHeap.Count - 1]);
@@ -125,10 +105,6 @@ namespace DAP.CompGeom
 
 			// Move the top item down the tree to its proper position
 			DownHeap(0);
-			Tracer.Trace(t.PqInserts, "Array Count = {0}", LstHeap.Count);
-			Tracer.Unindent();
-			PrintTree();
-			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
 
 			// Return the element we removed
 			return valRet;
@@ -321,13 +297,6 @@ namespace DAP.CompGeom
 			// While we're not the root and our parent is smaller than we are
 			while (i > 0 && ArrayVal(i).CompareTo(Parent(i)) > 0)
 			{
-				//Diagnostics
-				Tracer.Trace(t.PqInserts, "Moving {0} to {1}", Parent(i).ToString(), i);
-				Tracer.Trace(t.PqPercolates, "UpHeap: Swapping {0} (indx={1}) and {2} (indx={3})",
-					LstHeap[i].ToString(),
-					i,
-					LstHeap[ParentIndex(i)],
-					ParentIndex(i));
 				// Swap us with our parents
 				Swap(i, ParentIndex(i));
 				i = ParentIndex(i);
@@ -367,141 +336,12 @@ namespace DAP.CompGeom
 				if (iContinue >= 0 && iContinue < LstHeap.Count)
 				{
 					// Make the swap
-					Tracer.Trace(t.PqPercolates, "DownHeap: Swapping {0} (indx={1}) and {2} (indx={3})",
-						LstHeap[i].ToString(),
-						i,
-						LstHeap[iContinue],
-						iContinue);
 					Swap(i, iContinue);
 				}
 
 				// Continue on down the tree if we made a swap
 				i = iContinue;
 			}
-		}
-		#endregion
-
-		#region Debugging
-		/// <summary> The string indent </summary>
-		protected string StrIndent = "";
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Trace element. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		///
-		/// <param name="iPos">	The position. </param>
-		/// <param name="val">	The value. </param>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		[Conditional("DEBUG")]
-		virtual protected void TraceElement(int iPos, T val)
-		{
-			Tracer.Trace(t.PqTrees, "Pos " + iPos + ":" + StrIndent + val);
-		}
-
-		[Conditional("DEBUG")]
-		void Indent()
-		{
-			StrIndent = StrIndent + "\t";
-		}
-
-		[Conditional("DEBUG")]
-		void Unindent()
-		{
-			if (StrIndent != String.Empty)
-			{
-				StrIndent = StrIndent.Remove(StrIndent.Length - 1, 1);
-			}
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Print tree. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		[Conditional("DEBUG")]
-		protected void PrintTree()
-		{
-			if (!Tracer.FTracing(t.PqTrees))
-			{
-				return;
-			}
-			Tracer.Trace(t.PqTrees, "<<< PQ TREE >>>");
-			if (LstHeap.Count == 0)
-			{
-				return;
-			}
-			PrintTree(0);
-			Tracer.Trace(t.PqTrees, "<<< PQ TREE END >>>");
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Print tree. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		///
-		/// <param name="i">	The index into LstHeap. </param>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		[Conditional("DEBUG")]
-		protected void PrintTree(int i)
-		{
-			TraceElement(i, LstHeap[i]);
-			Indent();
-
-			if (LeftSonExists(i))
-			{
-				PrintTree(LeftChildIndex(i));
-			}
-			if (RightSonExists(i))
-			{
-				PrintTree(RightChildIndex(i));
-			}
-			Unindent();
-		}
-		#endregion
-
-		#region Validation
-		internal virtual bool FValidate()
-		{
-			if (LstHeap.Count == 0)
-			{
-				return true;
-			}
-			return FValidate(0);
-		}
-
-		bool FValidate(int iRoot)
-		{
-			T valRoot = LstHeap[iRoot];
-
-			if (LeftSonExists(iRoot))
-			{
-				if (valRoot.CompareTo(Left(iRoot)) < 0)
-				{
-					Tracer.Assert(t.PqValidate, false, "Child is > than parent");
-					return false;
-				}
-				if (!FValidate(LeftChildIndex(iRoot)))
-				{
-					return false;
-				}
-			}
-			if (RightSonExists(iRoot))
-			{
-				if (valRoot.CompareTo(Right(iRoot)) < 0)
-				{
-					Tracer.Assert(t.PqValidate, false, "Child is > than parent");
-					return false;
-				}
-				if (!FValidate(LeftChildIndex(iRoot)))
-				{
-					return false;
-				}
-			}
-			return true;
 		}
 		#endregion
 

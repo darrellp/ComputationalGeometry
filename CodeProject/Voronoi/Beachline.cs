@@ -8,8 +8,6 @@ using TPT = System.Single;
 #endif
 
 using System;
-using System.Diagnostics;
-using NetTrace;
 
 namespace DAP.CompGeom
 {
@@ -83,9 +81,6 @@ namespace DAP.CompGeom
 
 			while (true)
 			{
-				// Diagnostics
-				Tracer.Trace(tv.Search, "Searching for x={0} with yScan={1} at {2}", xSite, yScanLine, ndCur.ToString());
-
 				// If it's a leaf node, we've arrived
 				if (ndCur.IsLeaf)
 				{
@@ -103,12 +98,10 @@ namespace DAP.CompGeom
 				var edgeXPos = ((InternalNode)ndCur).CurrentEdgeXPos(yScanLine);
 
 				// Search the side of the break point that xSite is on
-				Tracer.Trace(tv.Search, "Current edge X pos = {0}", edgeXPos);
 				ndCur = edgeXPos < xSite ? ndCur.RightChild : ndCur.LeftChild;
 			}
 
 			// Return the node we located
-			Tracer.Trace(tv.Search, "Located node at {0}", ndRet.ToString());
 			return ndRet;
 		}
 		#endregion
@@ -145,9 +138,7 @@ namespace DAP.CompGeom
 		internal void RemoveNodeAndInsertVertex(CircleEvent cevt, LeafNode lfnEliminated, PT voronoiVertex, EventQueue evq)
 		{
 			// Initialize
-			Tracer.Assert(t.Assertion, NdRoot != null, "Trying to delete from a null tree");
 			var yScanLine = cevt.Pt.Y;
-			Tracer.Trace(tv.NDelete, "Deleting node {0}", lfnEliminated.Poly.Index);
 
 			// Determine whether we're the left or right child of our parent
 			var fLeftChildEliminated = lfnEliminated.IsLeftChild;
@@ -380,12 +371,9 @@ namespace DAP.CompGeom
 		private static void RemoveAssociatedCircleEvents(LeafNode lfnEliminated, EventQueue evq)
 		{
 			// Delete circle events which involve us and our siblings
-			Tracer.Trace(tv.CircleDeletions, "Deleting Circle events associated with the leaf node...");
-			Tracer.Indent();
 			lfnEliminated.DeleteAssociatedCircleEvent(evq);
 			lfnEliminated.LeftAdjacentLeaf.DeleteAssociatedCircleEvent(evq);
 			lfnEliminated.RightAdjacentLeaf.DeleteAssociatedCircleEvent(evq);
-			Tracer.Unindent();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -459,15 +447,10 @@ namespace DAP.CompGeom
 				return;
 			}
 
-			// Diagnostics
-			Tracer.Trace(tv.CCreate, "Considering creation of cevt: {0}-{1}-{2}...",
-				lfnLeft.Poly.Index, lfnCenter.Poly.Index, lfnRight.Poly.Index);
-
 			// We need at least three points
 			if (lfnRight == lfnCenter || lfnRight == lfnLeft || lfnCenter == lfnLeft)
 			{
 				// If two of the points are identical then we don't have three points
-				Tracer.Trace(tv.CCreate, "Rejected circle event because it involves fewer than three generators");
 
 				return;
 			}
@@ -476,7 +459,6 @@ namespace DAP.CompGeom
 			if (ICcwVoronoi(lfnLeft.Poly.VoronoiPoint, lfnCenter.Poly.VoronoiPoint, lfnRight.Poly.VoronoiPoint) > 0)
 			{
 				// Don't create an event if we've already put it in before
-				Tracer.Trace(tv.CCreate, "Rejected circle event because it is not properly clockwise");
 
 				return;
 			}
@@ -487,14 +469,6 @@ namespace DAP.CompGeom
 			// If we got a valid circle event
 			if (cevt != null)
 			{
-				// Diagnostics
-				Tracer.Trace(tv.CCreate, "Creating circle for gens {0}, {1} and {2} to fire at ({3}, {4})",
-					lfnLeft.Poly.Index,
-					lfnCenter.Poly.Index,
-					lfnRight.Poly.Index,
-					cevt.Pt.X,
-					cevt.Pt.Y);
-
 				// Indicate which leaf node gets snuffed when this event is handled
 				cevt.LfnEliminated = lfnCenter;
 
@@ -732,10 +706,7 @@ namespace DAP.CompGeom
 			//
 			// We are inserting ourselves into this parabola which means it's old circle event is defunct
 			// so toss it.
-			Tracer.Trace(tv.CircleDeletions, "Deleting circle for intersected parabolic arc...");
-			Tracer.Indent();
 			lfn.DeleteAssociatedCircleEvent(evq);
-			Tracer.Unindent();
 
 			// Create a new subtree to hold the new leaf node
 			var innSubRoot = NdCreateInsertionSubtree(lfn, evt);
@@ -754,7 +725,6 @@ namespace DAP.CompGeom
 			//
 			// Remove any circle events that this generator is inside since it will be closer to the center
 			// of the circle than any of the three points which lie on the circle
-			// TODO: Is there a good way to optimize this?
 			var lln = evq.CircleEvents.First;
 			while (lln != null)
 			{
@@ -763,8 +733,6 @@ namespace DAP.CompGeom
 				if (cevt.Contains(evt.Pt))
 				{
 					// Delete the circle event
-					Tracer.Trace(tv.CircleDeletions, "Removing {0} (contains ({1}, {2}))",
-								 cevt.ToString(), evt.Pt.X, evt.Pt.Y);
 					evq.CircleEvents.Remove(lln);
 					cevt.LinkedListNode = null;
 				}
@@ -779,45 +747,6 @@ namespace DAP.CompGeom
 		private void Rebalance(InternalNode innSubRoot)
 		{
 			throw new Exception("The method or operation is not implemented.");
-		}
-		#endregion
-
-		#region Debugging
-		LeafNode LfnLeftmost()
-		{
-			Node nd = NdRoot;
-
-			while (!nd.IsLeaf)
-			{
-				nd = nd.LeftChild;
-			}
-			return nd as LeafNode;
-		}
-
-		[Conditional("DEBUG")]
-		internal void TraceBeachline(TPT yScanLine)
-		{
-			Tracer.Trace(tv.Beachline, "Current beachline (scanline = {0}:", yScanLine);
-			if (NdRoot == null)
-			{
-				Tracer.Trace(tv.Beachline, "No Beachline yet...");
-				return;
-			}
-			Tracer.Indent();
-			LeafNode lfn = LfnLeftmost();
-			while (lfn.RightAdjacentLeaf != null)
-			{
-				TPT tptBreakpoint = Geometry.ParabolicCut(
-					lfn.RightAdjacentLeaf.Poly.VoronoiPoint,
-					lfn.Poly.VoronoiPoint,
-					yScanLine);
-
-				Tracer.Trace(tv.Beachline, "bpt between gens {0} and {1}: {2}", 
-					lfn.Poly.Index, lfn.RightAdjacentLeaf.Poly.Index, tptBreakpoint);
-				lfn = lfn.RightAdjacentLeaf;
-			}
-			Tracer.Unindent();
-			Tracer.Trace(tv.Beachline, "End of BeachLine");
 		}
 		#endregion
 	}
