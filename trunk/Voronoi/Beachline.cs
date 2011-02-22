@@ -158,13 +158,13 @@ namespace DAP.CompGeom
 			var lfnRight = lfnEliminated.RightAdjacentLeaf;
 			var lfnNearSibling = fLeftChildEliminated ? lfnRight : lfnLeft;
 
-			// Remove from the queue any circle events which involve the eliminated node
+			// Remove from the queue any circle events which involve the eliminated node or its siblings
 			RemoveAssociatedCircleEvents(lfnEliminated, evq);
 
 			// remove the leaf from the tree and rearrange the nodes around it
 			RemoveLeaf(lfnEliminated);
 
-			// Locate the internal node which represents the breakpoint opposite our near sibling
+			// Locate the internal node which represents the breakpoint between our near and far sibling
 			var innFarSiblingEdge = lfnNearSibling.InnFindSiblingEdge(fLeftChildEliminated);
 
 			// Get the edges being developed on each side of us
