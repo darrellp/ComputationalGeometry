@@ -350,6 +350,7 @@ namespace DAP.CompGeom
 			Tracer.Indent();
 
 			// Add the poly to the winged edge struct and sort it's edges
+			poly.FirstEdge = poly.EdgesCW[0];
 			we.AddPoly(poly);
 			poly.SortEdges();
 

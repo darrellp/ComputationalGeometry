@@ -29,7 +29,12 @@ namespace DAP.CompGeom
 	/// Other Edges		 \____/    Other Edges
 	/// 				 /    \
 	/// 				/      \
-	/// The "WingedEdge" name comes from the resemblance of this diagram to a butterfly. 
+	/// The "WingedEdge" name comes from the resemblance of this diagram to a butterfly.
+	/// 
+	/// The version here is not much more than a shell.  It has some validation routines and some
+	/// navigation routines, but it's pretty much up to the user to set up the structure via adding
+	/// Polygons, vertices and edges to the structure and ensuring that their fields are set up
+	/// correctly.
 	/// 
 	/// Darrellp, 2/18/2011.
 	/// </remarks>
