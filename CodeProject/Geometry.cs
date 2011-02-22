@@ -7,9 +7,6 @@ using TPT = System.Single;
 #endif
 
 using System;
-#if NUNIT || DEBUG
-using NUnit.Framework;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -457,56 +454,4 @@ namespace DAP.CompGeom
 			return true;
 		}
 	}
-
-	#region NUnit
-#if NUNIT || DEBUG
-	[TestFixture]
-	public class TestGeometry
-	{
-		[Test]
-		public void TestCcw()
-		{
-			var pt1 = new PT(1, 0);
-			var pt2 = new PT(0, 0);
-			var pt3 = new PT(1, 1);
-
-			Assert.Less(Geometry.ICcw(pt1, pt2, pt3), 0);
-			Assert.Greater(Geometry.ICcw(pt3, pt2, pt1), 0);
-		}
-
-		[Test]
-		public void TestCircumcenter()
-		{
-			var pt1 = new PT(0, 0);
-			var pt2 = new PT(1, 1);
-			var pt3 = new PT(1, -1);
-			var pt4 = new PT(2, 2);
-			PT ptOut;
-
-			Assert.IsTrue(Geometry.FFindCircumcenter(pt1, pt2, pt3, out ptOut));
-			Assert.IsTrue(Geometry.FCloseEnough(ptOut.X, 1));
-			Assert.IsTrue(Math.Abs(ptOut.Y) <= Geometry.Tolerance);
-			Assert.IsFalse(Geometry.FFindCircumcenter(pt1, pt2, pt4, out ptOut));
-			Assert.IsFalse(Geometry.FFindCircumcenter(pt2, pt1, pt1, out ptOut));
-			Assert.IsFalse(Geometry.FFindCircumcenter(pt1, pt2, pt1, out ptOut));
-			Assert.IsFalse(Geometry.FFindCircumcenter(pt1, pt1, pt2, out ptOut));
-			Assert.IsFalse(Geometry.FFindCircumcenter(pt1, pt1, pt1, out ptOut));
-		}
-
-		[Test]
-		public void TestParabolicCut()
-		{
-			var pt1 = new PT(0, 0);
-			var pt2 = new PT(1, 1);
-			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt1, pt2, -1), -3));
-			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt2, pt1, -1), 1));
-
-			pt1 = new PT(0, 0);
-			pt2 = new PT(8, 4);
-			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt1, pt2, -1), -7));
-			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt2, pt1, -1), 3));
-		}
-	}
-#endif
-	#endregion
 }

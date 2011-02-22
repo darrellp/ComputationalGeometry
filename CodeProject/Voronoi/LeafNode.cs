@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-using NetTrace;
-#if DOUBLEPRECISION
+﻿#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
@@ -67,25 +64,6 @@ namespace DAP.CompGeom
 		{
 			return string.Format("LeafNode: Gen = {0}", Poly.Index);
 		}
-		#endregion
-
-		#region overrides
-#if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
-		{
-			StringBuilder sbIndent = new StringBuilder();
-
-			// *SURELY* there is a better way to repeat a single character into a string, but I can't
-			// seem to locate it for the life of me.
-
-			for (int iIndent = 0; iIndent < cIndent; iIndent++)
-			{
-				sbIndent.Append("|  ");
-			}
-
-			Tracer.Trace(traceEnumElement, sbIndent.ToString() + ToString());
-		}
-#endif
 		#endregion
 
 		#region Queries
@@ -154,7 +132,6 @@ namespace DAP.CompGeom
 			if (_cevt != null)
 			{
 				// Delete it
-				Tracer.Trace(tv.CircleDeletions, "Deleting {0}", _cevt.ToString());
 				evq.Delete(_cevt);
 				if (_cevt.LinkedListNode != null)
 				{

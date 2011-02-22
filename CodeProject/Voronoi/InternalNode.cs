@@ -1,9 +1,4 @@
-﻿#if DEBUG || NUNIT
-using System.Text;
-using NetTrace;
-using NUnit.Framework;
-#endif
-#if DOUBLEPRECISION
+﻿#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
@@ -48,28 +43,6 @@ namespace DAP.CompGeom
 		// Winged edge polygon on the other
 		internal FortunePoly PolyLeft { get; set; }
 
-		#endregion
-
-		#region overrides
-#if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
-		{
-			var sbIndent = new StringBuilder();
-
-			// *SURELY* there is a better way to repeat a string into another string, but I can't
-			// seem to locate it for the life of me.
-
-			for (int iIndent = 0; iIndent < cIndent; iIndent++)
-			{
-				sbIndent.Append("|  ");
-			}
-
-			Tracer.Trace(traceEnumElement, sbIndent + ToString());
-
-			LeftChild.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
-			RightChild.TraceTreeWithIndent(traceEnumElement, cIndent + 1);
-		}
-#endif
 		#endregion
 
 		#region Manipulation
@@ -148,27 +121,6 @@ namespace DAP.CompGeom
 		{
 			return string.Format("InternNode: Gens = {0}, {1}", PolyLeft.Index, PolyRight.Index);
 		}
-		#endregion
-
-		#region NUnit
-#if DEBUG || NUNIT
-		[TestFixture]
-		public class TestInternalNode
-		{
-			[Test]
-			public void TestParabolicCut()
-			{
-				FortunePoly poly1 = new FortunePoly(new PT(0, 0), 0);
-				FortunePoly poly2 = new FortunePoly(new PT(8, 4), 1);
-
-				InternalNode inn = new InternalNode(poly1, poly2);
-				InternalNode innReverse = new InternalNode(poly2, poly1);
-
-				Assert.AreEqual(-7, inn.CurrentEdgeXPos(-1));
-				Assert.AreEqual(3, innReverse.CurrentEdgeXPos(-1));
-			}
-		}
-#endif
 		#endregion
 	}
 }

@@ -1,6 +1,4 @@
 #define NEW
-using System;
-using System.Diagnostics;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
@@ -10,8 +8,6 @@ using TPT = System.Single;
 #endif
 
 using System.Collections.Generic;
-using NUnit.Framework;
-using NetTrace;
 using WE = DAP.CompGeom.WingedEdge<DAP.CompGeom.FortunePoly, DAP.CompGeom.FortuneEdge, DAP.CompGeom.FortuneVertex>;
 
 namespace DAP.CompGeom
@@ -94,9 +90,6 @@ namespace DAP.CompGeom
 
 		FortunePoly InsertPoly(PT pt)
 		{
-			Tracer.Trace(tv.GeneratorList, "Generator {0}: ({1}, {2})",
-				Polygons.Count, pt.X, pt.Y);
-
 			// The count is being passed in only as a unique identifier for this point.
 			var poly = new FortunePoly(pt, Polygons.Count);
 			Polygons.Add(poly);
@@ -244,14 +237,6 @@ namespace DAP.CompGeom
 			// Create the polygon at infinity
 			AddPolygonAtInfinity(we, polyInfinityStart, iLeadingInfiniteEdgeCw);
 
-#if NETTRACE || DEBUG
-			// If we're doing validation
-			if (Tracer.FTracing(t.WeValidate))
-			{
-				// Check the validation of our final winged edge structure
-				Tracer.Assert(t.WeValidate, we.Validate(), "Invalid Winged edge");
-			}
-#endif
 			// Return the final winged edge
 			return we;
 		}
@@ -283,10 +268,6 @@ namespace DAP.CompGeom
 			// "leading".
 			if (polyInfinityStart.VertexCount == 2)
 			{
-				// Diagnostics
-				Tracer.Assert(t.Assertion,
-				              polyInfinityStart.EdgesCW[0].VtxEnd.FAtInfinity && polyInfinityStart.EdgesCW[1].VtxEnd.FAtInfinity,
-				              "Two edged polygon without both edges at infinity");
 				// If we run clockwise from the origin through edge 0 through edge 1
 				// ReSharper disable ConvertIfStatementToConditionalTernaryExpression
 				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.EdgesCW[0].VtxEnd.Pt, polyInfinityStart.EdgesCW[1].VtxEnd.Pt) > 0)
@@ -345,10 +326,6 @@ namespace DAP.CompGeom
 			ref FortunePoly polyInfinityStart,
 			ref int iLeadingInfiniteEdgeCw)
 		{
-			// Diagnostics
-			Tracer.Trace(tv.FinalEdges, "Edges for generator {0}", poly.Index);
-			Tracer.Indent();
-
 			// Add the poly to the winged edge struct and sort it's edges
 			we.AddPoly(poly);
 			poly.SortEdges();
@@ -360,7 +337,6 @@ namespace DAP.CompGeom
 				var edge = poly.EdgesCW[iEdge] as FortuneEdge;
 				var iEdgeNext = (iEdge + 1) % poly.VertexCount;
 				var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
-				Tracer.Trace(tv.FinalEdges, edge.ToString());
 
 				// Incorporate the edge into the winged edge
 				edge.Process(poly, we);
@@ -388,7 +364,6 @@ namespace DAP.CompGeom
 			// value may be off and we have to check for that later.  It's ugly code, but rarely occurs in
 			// practice so isn't a performance hit.
 			poly.HandleZeroLengthEdges();
-			Tracer.Unindent();
 			return;
 		}
 
@@ -501,8 +476,6 @@ namespace DAP.CompGeom
 			polyNextCcw = edgeLeadingCw.PolyLeft as FortunePoly;
 
 			// Diagnostics
-			Tracer.Assert(t.Assertion, polyNextCcw.Index != poly.Index,
-				"Next polygon in AddEdgeAtInfinity is the same as the current poly");
 			
 			// Create the edge at infinity
 			//
@@ -711,7 +684,6 @@ namespace DAP.CompGeom
 				{
 					// Obtain our fortune edge
 					var edge = wedge as FortuneEdge;
-					Tracer.Assert(t.Assertion, edge != null, "Non-FortuneEdge in FortunePoly list");
 
 					// Is this an infinite edge?
 					if (edge.VtxStart == null || edge.VtxEnd == null)
@@ -849,71 +821,8 @@ namespace DAP.CompGeom
 				edge.PolyLeft = edgeNew.PolyRight = edge.Poly1;
 				edge.PolyRight = edgeNew.PolyLeft = edge.Poly2;
 			}
-
-			// Diagnostics
-			Tracer.Trace(tv.FinalEdges, "Edge split into {0} and {1}", edge, edgeNew);
 		}
 
-		#endregion
-
-		#region NUNIT
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Test voronoi. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		[TestFixture]
-		public class TestVoronoi
-		{
-#if NUNIT || DEBUG
-			static Fortune Example()
-			{
-				var pts = new[] {
-					new PT(0, 0),
-					new PT(1, 1),
-					new PT(1, -1)
-				};
-				return new Fortune(pts);
-			}
-
-			[Test]
-			public void TestGeneratorAdds()
-			{
-				Assert.AreEqual(3, Example().Polygons.Count);
-			}
-
-			[Test]
-			public void TestProcessEvents()
-			{
-				Example().ProcessEvents();
-			}
-#endif
-
-			////////////////////////////////////////////////////////////////////////////////////////////////////
-			/// <summary>	Tests perf. </summary>
-			///
-			/// <remarks>	Darrellp, 2/21/2011. </remarks>
-			////////////////////////////////////////////////////////////////////////////////////////////////////
-
-			[Test]
-			public void TestPerf()
-			{
-				var rnd = new Random();
-				var pts = new List<PT>();
-				for (int i = 0; i < 10000; i++)
-
-				{
-					pts.Add(new PT(rnd.NextDouble(), rnd.NextDouble()));
-				}
-				var sw = Stopwatch.StartNew();
-				var t = ComputeVoronoi(pts);
-				sw.Stop();
- 
-				Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
-			}
-		}
 		#endregion
 	}
 

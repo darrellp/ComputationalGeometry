@@ -1,8 +1,4 @@
-﻿#if DEBUG || NUNIT
-using NetTrace;
-using NUnit.Framework;
-#endif
-#if DOUBLEPRECISION
+﻿#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
@@ -36,18 +32,6 @@ namespace DAP.CompGeom
 			NdParent = null;
 		}
 
-		#endregion
-
-		#region Trace Tree
-#if DEBUG || NETTRACE
-		internal void TraceTree(string str, tv traceEnumElement)
-		{
-			Tracer.Trace(tv.Trees, str);
-			TraceTreeWithIndent(traceEnumElement, 0);
-		}
-
-		abstract internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent);
-#endif
 		#endregion
 
 		#region Properties
@@ -164,46 +148,6 @@ namespace DAP.CompGeom
 			// Null our own parent pointer
 			NdParent = null;
 		}
-		#endregion
-
-		#region NUnit
-#if NUNIT || DEBUG
-		[TestFixture]
-		public class TestNode
-		{
-			[Test]
-			public void TestInsertDelete()
-			{
-				var poly = new FortunePoly(new PT(0, 0), 0);
-
-				Node ndRoot = new InternalNode(poly, poly);
-				Node ndLeft = new InternalNode(poly, poly);
-				Node ndRight = new InternalNode(poly, poly);
-				Node ndLL = new LeafNode(poly);
-				Node ndLR = new LeafNode(poly);
-				Node ndRL = new LeafNode(poly);
-				Node ndRR = new LeafNode(poly);
-
-				ndRoot.LeftChild = ndLeft;
-				ndRoot.RightChild = ndRight;
-				ndRight.LeftChild = ndRL;
-				ndRight.RightChild = ndRR;
-				ndLeft.LeftChild = ndLL;
-				ndLeft.RightChild = ndLR;
-
-				Assert.IsTrue(ndLeft.NdParent == ndRoot);
-				Assert.IsTrue(ndRL.NdParent == ndRight);
-				Assert.IsTrue(ndLL.IsLeaf);
-				Assert.IsFalse(ndRoot.IsLeaf);
-				Assert.IsTrue(ndLeft.IsLeftChild);
-				Assert.IsFalse(ndRight.IsLeftChild);
-
-				ndLeft.SnipFromParent();
-				Assert.IsNull(ndLeft.NdParent);
-				Assert.IsNull(ndRoot.LeftChild);
-			}
-		}
-#endif
 		#endregion
 	}
 }

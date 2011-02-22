@@ -1,5 +1,4 @@
-﻿using NetTrace;
-#if DOUBLEPRECISION
+﻿#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 #else
 using PT = System.Drawing.PointF;
@@ -132,7 +131,6 @@ namespace DAP.CompGeom
 				}
 			}
 			// We should never make it to here
-			Tracer.Assert(t.Assertion, false, "Edge isn't in it's adjoining edge list");
 			return -1;
 		}
 
@@ -274,19 +272,14 @@ namespace DAP.CompGeom
 				lstSpliceInto.Insert(iStart, lstSpliceFrom[i]);
 			}
 
-			// Diagnostics
-			Tracer.Indent();
-
 			// RQS- Take care of CW Predecessor
 			if (EdgeCWPredecessor.VtxStart == VtxEnd)
 			{
 				EdgeCWPredecessor.EdgeCCWSuccessor = EdgeCCWSuccessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
 			}
 			else
 			{
 				EdgeCWPredecessor.EdgeCCWPredecessor = EdgeCCWSuccessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
 			}
 			//-RQS
 
@@ -294,12 +287,10 @@ namespace DAP.CompGeom
 			if (EdgeCCWPredecessor.VtxStart == VtxEnd)
 			{
 				EdgeCCWPredecessor.EdgeCWSuccessor = EdgeCWSuccessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
 			}
 			else
 			{
 				EdgeCCWPredecessor.EdgeCWPredecessor = EdgeCWSuccessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
 			}
 			//-RQS
 
@@ -307,12 +298,10 @@ namespace DAP.CompGeom
 			if (EdgeCWSuccessor.VtxStart == VtxStart)
 			{
 				EdgeCWSuccessor.EdgeCCWSuccessor = EdgeCCWPredecessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
 			}
 			else
 			{
 				EdgeCWSuccessor.EdgeCCWPredecessor = EdgeCCWPredecessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWPredecessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
 			}
 			//-RQS
 
@@ -320,12 +309,10 @@ namespace DAP.CompGeom
 			if (EdgeCCWSuccessor.VtxStart == VtxStart)
 			{
 				EdgeCCWSuccessor.EdgeCWSuccessor = EdgeCWPredecessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
 			}
 			else
 			{
 				EdgeCCWSuccessor.EdgeCWPredecessor = EdgeCWPredecessor;
-				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWPredecessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
 			}
 			//-RQS
 
@@ -333,7 +320,6 @@ namespace DAP.CompGeom
 			//
 			// Our index has been bumped by all the edges
 			// we inserted which is just all the ones from the end vertex minus 1 for ourself.
-			Tracer.Unindent();
 			lstSpliceInto.RemoveAt(iStart + lstSpliceFrom.Count - 1);
 		}
 
@@ -460,7 +446,6 @@ namespace DAP.CompGeom
 		{
 			// Locals
 			int iEdge;
-			Tracer.Assert(t.Assertion, vtx.Edges.Count == 3, "Vertex without valency of 3");
 
 			// Figure out which of the edges is ours
 			for (iEdge = 0; iEdge < 3; iEdge++)
@@ -650,9 +635,6 @@ namespace DAP.CompGeom
 			}
 
 			// Otherwise, return Poly2
-			Tracer.Assert(t.Assertion,
-			              ReferenceEquals(Poly2, edge.Poly1) || ReferenceEquals(Poly2, edge.Poly2),
-			              "Calling GenCommon on two edges with no common generator");
 			return Poly2;
 		}
 
@@ -675,9 +657,6 @@ namespace DAP.CompGeom
 		{
 			// Get our fortune edge
 			var edge = edgeIn as FortuneEdge;
-
-			// Complain if it's not a fortune edge
-			Tracer.Assert(t.Assertion, edge != null, "Non-fortuneEdge passed to fortuneEdge compare");
 
 			// If they're identical
 			if (ReferenceEquals(edgeIn, this))

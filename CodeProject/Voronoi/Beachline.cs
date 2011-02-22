@@ -728,7 +728,7 @@ namespace DAP.CompGeom
 			var lln = evq.CircleEvents.First;
 			while (lln != null)
 			{
-				CircleEvent cevt = lln.Value;
+				var cevt = lln.Value;
 				var llnNext = lln.Next;
 				if (cevt.Contains(evt.Pt))
 				{

@@ -5,10 +5,6 @@ using TPT = System.Double;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
-#if NETUNIT || DEBUG
-using NUnit.Framework;
-#endif
-using NetTrace;
 using System;
 using System.Collections.Generic;
 
@@ -78,9 +74,6 @@ namespace DAP.CompGeom
 		/// <returns></returns>
 		int IComparable.CompareTo(object obj)
 		{
-			Tracer.Assert(t.Assertion, obj.GetType().IsSubclassOf(typeof(FortuneEvent)),
-				"Passing in non-Event to CompareTo");
-
 			// Get our PointD
 			var ptCompare = ((FortuneEvent)obj).Pt;
 
@@ -153,38 +146,10 @@ namespace DAP.CompGeom
 				{
 					cevtRet = new CircleEvent(ptCenter, radius);
 				}
-				else
-				{
-					// Diagnostics
-					Tracer.Trace(tv.CCreate, "Rejected circle event because it is above scan line");
-				}
-			}
-			else
-			{
-				// Diagnostics
-				Tracer.Trace(tv.CCreate, "Rejected circle event generators are collinear");
 			}
 
 			return cevtRet;
 		}
-		#endregion
-
-		#region NUnit
-#if NUNIT || DEBUG
-		[TestFixture]
-		public class TestEvent
-		{
-			[Test]
-			public void TestICompare()
-			{
-				SiteEvent evtSmaller = new SiteEvent(new FortunePoly(new PT(0, 0), 0));
-				SiteEvent evtLarger = new SiteEvent(new FortunePoly(new PT(-1, 1), 0));
-				SiteEvent evtEqual = new SiteEvent(new FortunePoly(new PT(1, 1), 0));
-
-				Assert.IsTrue(((IComparable)evtSmaller).CompareTo(evtLarger) < 0);
-			}
-		}
-#endif
 		#endregion
 	}
 
@@ -231,24 +196,8 @@ namespace DAP.CompGeom
 
 		internal override void Handle(Fortune fortune)
 		{
-			Tracer.Trace(tv.SiteEvents, "Site event at ({0}, {1}) for gen {2}", Pt.X, Pt.Y, Poly.Index);
-#if NETTRACE || DEBUG
-			if (Tracer.FTracing(tv.Beachline))
-			{
-				fortune.Bchl.TraceBeachline(Pt.Y);
-			}
-#endif
-			Tracer.Indent();
-
 			// Insert the new parabola into the beachline
 			fortune.Bchl.PolyInsertNode(this, fortune.QevEvents);
-			Tracer.Unindent();
-#if NETTRACE || DEBUG
-			if (Tracer.FTracing(tv.Trees))
-			{
-				fortune.Bchl.NdRoot.TraceTree("After Site event:", tv.Trees);
-			}
-#endif
 		}
 		#endregion
 	}
@@ -310,32 +259,9 @@ namespace DAP.CompGeom
 
 		internal override void Handle(Fortune fortune)
 		{
-			Tracer.Trace(tv.CircleEvents,
-				"Handling Circle event {5}at y = {5} with vtx ({0}, {1}) for edge between gen {2} and gen {3} - eliminating gen {4}",
-				VoronoiVertex.X, VoronoiVertex.Y,
-				LfnEliminated.LeftAdjacentLeaf.Poly.Index,
-				LfnEliminated.RightAdjacentLeaf.Poly.Index,
-				LfnEliminated.Poly.Index,
-				Pt.Y,
-				FZeroLength ? "(fzero) " : "");
-#if NETTRACE || DEBUG
-			if (Tracer.FTracing(tv.Beachline))
-			{
-				fortune.Bchl.TraceBeachline(Pt.Y);
-			}
-#endif
-			Tracer.Indent();
 			// Remove a parabola node from the beachline since it's being squeezed out.  Insert a vertex into
 			// the voronoi diagram
 			fortune.Bchl.RemoveNodeAndInsertVertex(this, LfnEliminated, VoronoiVertex, fortune.QevEvents);
-			Tracer.Unindent();
-
-#if NETTRACE || DEBUG
-			if (Tracer.FTracing(tv.Trees))
-			{
-				fortune.Bchl.NdRoot.TraceTree("After Circle event:", tv.Trees);
-			}
-#endif
 		}
 		#endregion
 

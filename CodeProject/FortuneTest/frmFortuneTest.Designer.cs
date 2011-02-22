@@ -1,5 +1,3 @@
-using NetTrace;
-
 namespace FortuneTest
 {
 	partial class frmFortuneTest
@@ -35,7 +33,6 @@ namespace FortuneTest
 			this.btnVTriangle = new System.Windows.Forms.Button();
 			this.btnHTriangle = new System.Windows.Forms.Button();
 			this.btnCompute = new System.Windows.Forms.Button();
-			this.btnTraceTags = new System.Windows.Forms.Button();
 			this.btnClear = new System.Windows.Forms.Button();
 			this.btnCHTriangle = new System.Windows.Forms.Button();
 			this.btnRectangle = new System.Windows.Forms.Button();
@@ -57,9 +54,9 @@ namespace FortuneTest
 			this.pnlDraw.Name = "pnlDraw";
 			this.pnlDraw.Size = new System.Drawing.Size(366, 358);
 			this.pnlDraw.TabIndex = 0;
+			this.pnlDraw.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
 			this.pnlDraw.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pnlDraw_MouseDown);
 			this.pnlDraw.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pnlDraw_MouseMove);
-			this.pnlDraw.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
 			// 
 			// btnSinglePoint
 			// 
@@ -93,23 +90,13 @@ namespace FortuneTest
 			// 
 			// btnCompute
 			// 
-			this.btnCompute.Location = new System.Drawing.Point(395, 344);
+			this.btnCompute.Location = new System.Drawing.Point(395, 311);
 			this.btnCompute.Name = "btnCompute";
 			this.btnCompute.Size = new System.Drawing.Size(106, 26);
 			this.btnCompute.TabIndex = 4;
 			this.btnCompute.Text = "Compute";
 			this.btnCompute.UseVisualStyleBackColor = true;
 			this.btnCompute.Click += new System.EventHandler(this.btnCompute_Click);
-			// 
-			// btnTraceTags
-			// 
-			this.btnTraceTags.Location = new System.Drawing.Point(395, 311);
-			this.btnTraceTags.Name = "btnTraceTags";
-			this.btnTraceTags.Size = new System.Drawing.Size(106, 27);
-			this.btnTraceTags.TabIndex = 5;
-			this.btnTraceTags.Text = "Trace Tags";
-			this.btnTraceTags.UseVisualStyleBackColor = true;
-			this.btnTraceTags.Click += new System.EventHandler(this.btnTraceTags_Click);
 			// 
 			// btnClear
 			// 
@@ -186,8 +173,8 @@ namespace FortuneTest
 			// sstMain
 			// 
 			this.sstMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-			this.toolStripStatusLabel1,
-			this.sstlblGenIndex});
+            this.toolStripStatusLabel1,
+            this.sstlblGenIndex});
 			this.sstMain.Location = new System.Drawing.Point(0, 376);
 			this.sstMain.Name = "sstMain";
 			this.sstMain.Size = new System.Drawing.Size(528, 22);
@@ -197,14 +184,14 @@ namespace FortuneTest
 			// toolStripStatusLabel1
 			// 
 			this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-			this.toolStripStatusLabel1.Size = new System.Drawing.Size(87, 17);
+			this.toolStripStatusLabel1.Size = new System.Drawing.Size(90, 17);
 			this.toolStripStatusLabel1.Text = "Generator Index";
 			// 
 			// sstlblGenIndex
 			// 
 			this.sstlblGenIndex.ForeColor = System.Drawing.Color.Blue;
 			this.sstlblGenIndex.Name = "sstlblGenIndex";
-			this.sstlblGenIndex.Size = new System.Drawing.Size(32, 17);
+			this.sstlblGenIndex.Size = new System.Drawing.Size(36, 17);
 			this.sstlblGenIndex.Text = "None";
 			// 
 			// frmFortuneTest
@@ -219,7 +206,6 @@ namespace FortuneTest
 			this.Controls.Add(this.btnRectangle);
 			this.Controls.Add(this.btnCHTriangle);
 			this.Controls.Add(this.btnClear);
-			this.Controls.Add(this.btnTraceTags);
 			this.Controls.Add(this.btnCompute);
 			this.Controls.Add(this.btnHTriangle);
 			this.Controls.Add(this.btnVTriangle);
@@ -242,7 +228,6 @@ namespace FortuneTest
 		private System.Windows.Forms.Button btnVTriangle;
 		private System.Windows.Forms.Button btnHTriangle;
 		private System.Windows.Forms.Button btnCompute;
-		private System.Windows.Forms.Button btnTraceTags;
 		private System.Windows.Forms.Button btnClear;
 		private System.Windows.Forms.Button btnCHTriangle;
 		private System.Windows.Forms.Button btnRectangle;

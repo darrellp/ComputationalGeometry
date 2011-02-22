@@ -1,5 +1,4 @@
-﻿using NetTrace;
-#if DOUBLEPRECISION
+﻿#if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 #else
 using PT = System.Drawing.PointF;
@@ -67,8 +66,6 @@ namespace DAP.CompGeom
 					return edgeDifferent.Poly1;
 				}
 			}
-			// Diagnostics
-			Tracer.Assert(t.Assertion, false, "Couldn't find third generator");
 			return null;
 		}
 		#endregion

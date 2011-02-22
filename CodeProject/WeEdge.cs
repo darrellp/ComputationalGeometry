@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using NetTrace;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
@@ -273,7 +272,6 @@ namespace DAP.CompGeom
 			// winged edge structure and have no position at all.  They aren't processed here (and if they
 			// were, it would be a problem).  While this is a touch Fortune specific, there's no reason not to
 			// insist on it in the general case.
-			Tracer.Assert(t.Assertion, !VtxStart.FAtInfinity, "Found non-infinite edge with start vertex at infinity");
 			
 			// If the end vtx is at infinity, convert it to a real point
 			var pt1 = VtxStart.Pt;

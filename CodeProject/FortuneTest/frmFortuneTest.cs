@@ -16,18 +16,10 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Xml;
-using NetTrace;
 using DAP.CompGeom;
 
 namespace FortuneTest
 {
-	[TraceTags]
-	enum t
-	{
-		[TagDesc("Auto Test/Save after each point is entered")]
-		autosave
-	}
-
 	public partial class frmFortuneTest : Form
 	{
 		#region Constants
@@ -252,11 +244,6 @@ namespace FortuneTest
 		private void btnReadLastPts_Click(object sender, EventArgs e)
 		{
 			ReadPts();
-		}
-
-		private void btnTraceTags_Click(object sender, EventArgs e)
-		{
-			Tracer.ShowTraceTagDialog(this);
 		}
 
 		private void btnCompute_Click(object sender, EventArgs e)

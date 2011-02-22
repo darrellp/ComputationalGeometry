@@ -1,6 +1,4 @@
-﻿using NetTrace;
-
-namespace DAP.CompGeom
+﻿namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	Priority queue with deletions. </summary>
@@ -54,8 +52,6 @@ namespace DAP.CompGeom
 			{
 				// Reset the index on the item
 				val.Index = -1;
-				Tracer.Assert(t.Assertion, i < LstHeap.Count, "Trying to remove an element beyond the end of the heap");
-				Tracer.Trace(t.PqDeletes, "Deleting {0} (pos {1})", val.ToString(), i);
 
 				// Swap the item to be deleted for the last element in the array
 				Swap(i, LstHeap.Count - 1);
@@ -82,43 +78,10 @@ namespace DAP.CompGeom
 					}
 				}
 			}
-			
-			// Trace output
-			PrintTree();
-			Tracer.Assert(t.PqValidate, FValidate(), "Invalid heap");
 		}
 		#endregion
 
 		#region Private overrides
-		internal override bool FValidate()
-		{
-			for (int iVal = 0; iVal < LstHeap.Count; iVal++)
-			{
-				if (LstHeap[iVal].Index != iVal)
-				{
-					Tracer.Assert(t.Assertion, false, "Indices not set correctly");
-					return false;
-				}
-			}
-
-			return base.FValidate();
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Trace element. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		///
-		/// <param name="iPos">	The position. </param>
-		/// <param name="val">	The value. </param>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		protected override void TraceElement(int iPos, T val)
-		{
-			Tracer.Trace(t.PqTrees,
-			             "Pos " + iPos + (val.Index < 0 ? "<DEL>" : "" + ":") + StrIndent + val);
-		}
-
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// This override is the magic that makes the deletions work by keeping track of the index a
