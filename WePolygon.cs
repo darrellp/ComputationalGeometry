@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>	
-	/// Polygons in a WingedEdge structure.
-	/// </summary>
+	/// <summary>	Polygons in a WingedEdge structure. </summary>
 	///
 	/// <remarks>	
-	/// Essentially a list of the edges comprising this polygon
-	/// in clockwise order.  Which edge is first has no particular significance. 	/// 
+	/// <para>Essentially a list of the edges comprising this polygon in clockwise order.  Which edge
+	/// is first has no particular significance.</para>
 	/// 
 	/// Darrellp, 2/18/2011. 
 	/// </remarks>
@@ -17,21 +16,6 @@ namespace DAP.CompGeom
 
 	public class WePolygon
 	{
-		#region Constructor
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Default constructor. </summary>
-		///
-		/// <remarks>	Darrellp, 2/18/2011. </remarks>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public WePolygon()
-		{
-			EdgesCW = new List<WeEdge>();
-		}
-
-		#endregion
-
 		#region Properties
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,29 +27,37 @@ namespace DAP.CompGeom
 		public object Cookie { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or sets the first edge of an enumeration. </summary>
+		///
+		/// <value>	The first edge in an enumeration. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		internal WeEdge FirstEdge { get; set; }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the list of our edges in clockwise order. </summary>
 		///
 		/// <value>	The edges cw. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public List<WeEdge> EdgesCW { get; protected set; }
+		public List<WeEdge> EdgesCWwe { get; protected set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets the number of vertices. </summary>
+		/// <summary>	Gets the edges in clockwise order. </summary>
 		///
-		/// <value>	The number of vertexes. </value>
+		/// <value>	The edges. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public int VertexCount
+		public IEnumerable<OrientedEdge> Edges
 		{
 			get
 			{
-				return EdgesCW.Count;
+				return new EdgeEnumerable(this);
 			}
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets our vertices. </summary>
+		/// <summary>	Gets the vertices in clockwise order. </summary>
 		///
 		/// <value>	The vertices. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,27 +66,8 @@ namespace DAP.CompGeom
 		{
 			get
 			{
-				return new VertexEnumerable(this);
+				return Edges.Select(oe => oe.Forward ? oe.Edge.VtxStart : oe.Edge.VtxEnd);
 			}
-		}
-		#endregion
-
-		#region Modifiers
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Add edges to this polygon	</summary>
-		///
-		/// <remarks>	
-		/// Edges are expected to be added in a Clockwise direction. 
-		/// Darrellp, 2/18/2011.
-		/// </remarks>
-		///
-		/// <param name="edge">	Next edge to add in clockwise order. </param>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public void AddEdge(WeEdge edge)
-		{
-			EdgesCW.Add(edge);
 		}
 		#endregion
 
@@ -120,7 +93,7 @@ namespace DAP.CompGeom
 
 		internal bool FValidateEdgeIsAdjacent(WeEdge edge)
 		{
-			return EdgesCW.Contains(edge);
+			return edge.PolyLeft == this || edge.PolyRight == this;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,30 +107,29 @@ namespace DAP.CompGeom
 		internal bool FValidateEdgesInOrder()
 		{
 			// Declarations
-			int iNextEdge;
-			int iEdge;
+			var fFirstTimeThroughLoop = true;
+			var edgePrev = new OrientedEdge();
+			var edgeFirst = new OrientedEdge();
 
-			// For each edge in Clockwise order
-			for (iEdge = 0, iNextEdge = 1; iEdge < EdgesCW.Count; iEdge++)
+			foreach (var orientedEdge in Edges)
 			{
-				// Retrieve the edge
-				var edge = EdgesCW[iEdge];
-
-				// If we need to wrap the index for the next edge
-				if (iNextEdge == EdgesCW.Count)
+				if (fFirstTimeThroughLoop)
 				{
-					// Wrap to 0
-					iNextEdge = 0;
+					fFirstTimeThroughLoop = false;
+					edgePrev = edgeFirst = orientedEdge;
 				}
-
-				// If this edge doesn't hook to the next one
-				if (!edge.FConnectsToEdge(EdgesCW[iNextEdge]))
+				else
 				{
-					return Failure();
+					if (!orientedEdge.Edge.FConnectsToEdge(edgePrev.Edge))
+					{
+						return Failure();
+					}
+					edgePrev = orientedEdge;
 				}
-
-				// Continue around the polygon
-				iNextEdge++;
+			}
+			if (!edgePrev.Edge.FConnectsToEdge(edgeFirst.Edge))
+			{
+				return Failure();
 			}
 			return true;
 		}
@@ -167,33 +139,69 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// WingedEdge doesn't directly give the edges around a polygon so this is an enumerator for that. 
+		/// Gives an edge along with an orientation showing whether it starts at the actual StartVertex
+		/// or is reversed and starts at the EndVertex.  I wouldn't have to do this if I'd have used the
+		/// half edge structure rather than winged edge.  Live and learn. 
+		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/22/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public struct OrientedEdge
+		{
+			internal OrientedEdge(WeEdge edge, bool fForward)
+			{
+				Forward = fForward;
+				Edge = edge;
+			}
+
+			/// <summary> True if the edge travels from the StartVertex to the EndVertex.  If false
+			/// then we should traverse the edge from the EndVertex to the StartVertex. </summary>
+			public bool Forward;
+
+			/// <summary> The edge in question </summary>
+			public WeEdge Edge;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// The standard WingedEdge doesn't directly give the edges around a polygon so this is an enumerator for that. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class VertexEnumerator : IEnumerator<WeVertex>
+		class EdgeEnumerator : IEnumerator<OrientedEdge>
 		{
 			#region Private Variables
-			int _iEdge = -1;		// Index of the edge preceding this vertex in CW order
+			private WeEdge _edgeCur;
 			readonly WePolygon _poly;		// Polygon whose vertices we're enumerating
 			#endregion
 
+			#region Properties
+			bool FForward
+			{
+				get
+				{
+					return _poly == _edgeCur.PolyLeft;
+				}
+			}
+			#endregion
+
 			#region Constructor
-			internal VertexEnumerator(WePolygon poly)
+			internal EdgeEnumerator(WePolygon poly)
 			{
 				_poly = poly;
+				_edgeCur = poly.FirstEdge;
 			}
 			#endregion
 
 			#region IEnumerator<WEPolygon> Members
-			public WeVertex Current
+			public OrientedEdge Current
 			{
 				get
 				{
-					var edge = _poly.EdgesCW[_iEdge];
-					return (_poly == edge.PolyLeft) ? edge.VtxEnd : edge.VtxStart;
+					return new OrientedEdge(_edgeCur, FForward);
 				}
 			}
 			#endregion
@@ -210,19 +218,19 @@ namespace DAP.CompGeom
 			{
 				get
 				{
-					var edge = _poly.EdgesCW[_iEdge];
-					return (_poly == edge.PolyLeft) ? edge.VtxEnd : edge.VtxStart;
+					return Current;
 				}
 			}
 
 			public bool MoveNext()
 			{
-				return ++_iEdge < _poly.EdgesCW.Count;
+				_edgeCur = FForward ? _edgeCur.EdgeCWSuccessor : _edgeCur.EdgeCWPredecessor;
+				return _edgeCur == _poly.FirstEdge;
 			}
 
 			public void Reset()
 			{
-				_iEdge = 0;
+				_edgeCur = _poly.FirstEdge;
 			}
 
 			#endregion
@@ -234,30 +242,30 @@ namespace DAP.CompGeom
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class VertexEnumerable : IEnumerable<WeVertex>
+		class EdgeEnumerable : IEnumerable<OrientedEdge>
 		{
 			#region Private Variables
 			readonly WePolygon _poly;
 			#endregion
 
 			#region Constructor
-			internal VertexEnumerable(WePolygon poly)
+			internal EdgeEnumerable(WePolygon poly)
 			{
 				_poly = poly;
 			}
 			#endregion
 
-			#region IEnumerable<WEPolygon> Members
-			IEnumerator<WeVertex> IEnumerable<WeVertex>.GetEnumerator()
+			#region IEnumerable<OrientedEdge> Members
+			IEnumerator<OrientedEdge> IEnumerable<OrientedEdge>.GetEnumerator()
 			{
-				return new VertexEnumerator(_poly);
+				return new EdgeEnumerator(_poly);
 			}
 			#endregion
 
 			#region IEnumerable Members
 			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 			{
-				return new VertexEnumerator(_poly);
+				return new EdgeEnumerator(_poly);
 			}
 			#endregion
 		}

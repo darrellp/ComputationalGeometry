@@ -1,4 +1,5 @@
-﻿using NetTrace;
+﻿using System.Collections.Generic;
+using NetTrace;
 #if NUNIT || DEBUG
 using NUnit.Framework;
 #endif
@@ -15,13 +16,59 @@ namespace DAP.CompGeom
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	Fortune polygon. </summary>
 	///
-	/// <remarks>	Darrellp, 2/18/2011. </remarks>
+	/// <remarks>
+	/// <para>I should point out that classic winged edge polygons don't keep a list of edges on each
+	/// polygon.  They are enumerable through the Edges property.  Only a single arbitrary "starting"
+	/// edge is kept in the polygon structure.  In general, that is the way winged edges work.  In
+	/// the fortune case, we kind of come at the edges in an almost random manner so we keep them in
+	/// a list.  The Edges enumeration should still work, though it's slower and unnecessary since
+	/// you can just retrieve the list through FortunePoly.EdgesCW.  We could end up with lower
+	/// performance and less space by nulling out the array in the fortune polygons at the end of
+	/// processing and relying on the Edges enumeration but we'd still need to keep the arrays around
+	/// while we're actually creating the structure so I don't know how much real space we'd
+	/// save.</para>
+	/// 
+	/// Darrellp, 2/18/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public class FortunePoly : WePolygon
 	{
 		#region Properties
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or sets a list of edges in Clockwise order. </summary>
+		///
+		/// <value>	The edges in Clockwise order. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public List<WeEdge> EdgesCW { get; protected set; }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Adds an edge to the Fortune polygon. </summary>
+		///
+		/// <remarks>	Darrellp, 2/22/2011. </remarks>
+		///
+		/// <param name="edge">	The edge to be added. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public void AddEdge(WeEdge edge)
+		{
+			EdgesCW.Add(edge);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets the number of vertices. </summary>
+		///
+		/// <value>	The number of vertices. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public int VertexCount
+		{
+			get
+			{
+				return EdgesCW.Count;
+			}
+		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Indicates that this is the singleton polygon at infinity </summary>
 		///
