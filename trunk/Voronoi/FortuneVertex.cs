@@ -1,4 +1,5 @@
-﻿using NetTrace;
+﻿using System.Collections.Generic;
+using NetTrace;
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
 #else
@@ -20,6 +21,38 @@ namespace DAP.CompGeom
 		#region Private variables
 		bool _fAlreadyOrdered;			// True after this vertex has had its edges ordered in post processing
 		bool _fAddedToWingedEdge;		// True if this vertex has already been added to the winged edge data structure
+		readonly List<FortuneEdge> _lstCWEdges = new List<FortuneEdge>();	// List of edges in clockwise order (if 
+		#endregion
+
+		#region Properties
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets the count of edges abutting this vertex. </summary>
+		///
+		/// <value>	The count of edges. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public int CtEdges
+		{
+			get
+			{
+				return _lstCWEdges.Count;
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets the list of edges abutting this vertex. </summary>
+		///
+		/// <value>	The list of edges. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public new List<FortuneEdge> Edges
+		{
+			get
+			{
+				return _lstCWEdges;
+			}
+		}
+
 		#endregion
 
 		#region Constructors
@@ -85,6 +118,22 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Edges
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Edges are assumed to be added in a Clockwise direction.  The first edge is random and has no
+		/// particular significance. 
+		/// </summary>
+		///
+		/// <remarks>	Darrellp, 2/19/2011. </remarks>
+		///
+		/// <param name="edge">	Next clockwise edge to add. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public virtual void Add(FortuneEdge edge)
+		{
+			_lstCWEdges.Add(edge);
+		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	

@@ -350,7 +350,10 @@ namespace DAP.CompGeom
 			Tracer.Indent();
 
 			// Add the poly to the winged edge struct and sort it's edges
-			poly.FirstEdge = poly.EdgesCW[0];
+			if (poly.EdgesCW != null && poly.EdgesCW.Count > 0)
+			{
+				poly.FirstEdge = poly.EdgesCW[0];
+			}
 			we.AddPoly(poly);
 			poly.SortEdges();
 
@@ -797,7 +800,7 @@ namespace DAP.CompGeom
 
 			// Create the new infinite vertex and add it to our edge
 			edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection, true);
-			edge.VtxEnd.Edges.Add(edge);
+			((FortuneVertex)edge.VtxEnd).Edges.Add(edge);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -828,8 +831,8 @@ namespace DAP.CompGeom
 			edgeNew.SetPolys(edge.Poly1, edge.Poly2);
 			edge.Poly1.AddEdge(edgeNew);
 			edge.Poly2.AddEdge(edgeNew);
-			edge.VtxStart.Add(edge);
-			edge.VtxStart.Add(edgeNew);
+			((FortuneVertex)edge.VtxStart).Add(edge);
+			((FortuneVertex)edge.VtxStart).Add(edgeNew);
 			vtx1.Add(edge);
 			vtx2.Add(edgeNew);
 			edge.FSplit = edgeNew.FSplit = true;

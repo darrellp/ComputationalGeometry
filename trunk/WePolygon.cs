@@ -192,7 +192,6 @@ namespace DAP.CompGeom
 			internal EdgeEnumerator(WePolygon poly)
 			{
 				_poly = poly;
-				_edgeCur = poly.FirstEdge;
 			}
 			#endregion
 
@@ -224,13 +223,24 @@ namespace DAP.CompGeom
 
 			public bool MoveNext()
 			{
+				// If this is the first call
+				if (_edgeCur == null)
+				{
+					// Use the first edge
+					_edgeCur = _poly.FirstEdge;
+
+					// Return true only if there's an edge in the polygon at all
+					return _edgeCur != null;
+				}
+
+				// If not our first call, just get the next edge until we've looped back
 				_edgeCur = FForward ? _edgeCur.EdgeCWSuccessor : _edgeCur.EdgeCWPredecessor;
-				return _edgeCur == _poly.FirstEdge;
+				return !ReferenceEquals(_edgeCur, _poly.FirstEdge);
 			}
 
 			public void Reset()
 			{
-				_edgeCur = _poly.FirstEdge;
+				_edgeCur = null;
 			}
 
 			#endregion
