@@ -261,8 +261,8 @@ namespace DAP.CompGeom
 			// Initialize locals
 			var iEnd = EdgeIndex(false);
 			var iStart = EdgeIndex(true);
-			var lstSpliceInto = VtxStart.Edges;
-			var lstSpliceFrom = VtxEnd.Edges;
+			var lstSpliceInto = ((FortuneVertex)VtxStart).Edges;
+			var lstSpliceFrom = ((FortuneVertex)VtxEnd).Edges;
 
 			// Now add all our end vertices to the start vertex's edge list.
 			// 
@@ -399,9 +399,9 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		void GetSuccessorEdgesFromVertex(
-			WeVertex vtx,
-			out WeEdge edgeCW,
-			out WeEdge edgeCCW)
+			FortuneVertex vtx,
+			out FortuneEdge edgeCW,
+			out FortuneEdge edgeCCW)
 		{
 			// Are we free of zero length edges?
 			if (vtx.Edges.Count == 3)
@@ -420,18 +420,18 @@ namespace DAP.CompGeom
 				{
 					// Find our place in the list of edges for start vertex
 					iEdge = EdgeIndex(true);
-					cEdges = VtxStart.CtEdges;
+					cEdges = ((FortuneVertex)VtxStart).CtEdges;
 				}
 				else
 				{
 					// Find our place in the list of edges for end vertex
 					iEdge = EdgeIndex(false);
-					cEdges = VtxEnd.CtEdges;
+					cEdges = ((FortuneVertex)VtxEnd).CtEdges;
 				}
 
 				// Get our immediate neighbors on the edge list
-				edgeCW = vtx.Edges[(iEdge + 1) % cEdges];
-				edgeCCW = vtx.Edges[(iEdge + cEdges - 1) % cEdges];
+				edgeCW = ((FortuneVertex)vtx).Edges[(iEdge + 1) % cEdges];
+				edgeCCW = ((FortuneVertex)vtx).Edges[(iEdge + cEdges - 1) % cEdges];
 			}
 		}
 
@@ -454,9 +454,9 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		void GetSuccessorEdgesFrom3ValentVertex(
-			WeVertex vtx,
-			out WeEdge edgeCW,
-			out WeEdge edgeCCW)
+			FortuneVertex vtx,
+			out FortuneEdge edgeCW,
+			out FortuneEdge edgeCCW)
 		{
 			// Locals
 			int iEdge;
@@ -512,7 +512,8 @@ namespace DAP.CompGeom
 		internal void SetSuccessorEdges()
 		{
 			// Locals
-			WeEdge edgeCW, edgeCCW;
+			FortuneEdge edgeCW, edgeCCW;
+			var fvtx = ((FortuneVertex) VtxStart);
 
 			// If this is the degenerate case of a fully infinite line
 			//
@@ -522,19 +523,18 @@ namespace DAP.CompGeom
 			// rays pointing in opposite directions.  If we're one of those
 			// edges, then both our predecessor and our successor are the
 			// other edge.
-			if (VtxStart.Edges.Count == 2)
+			if (fvtx.Edges.Count == 2)
 			{
-
 				// If we're Edges[0]
-				if (ReferenceEquals(this, VtxStart.Edges[0]))
+				if (ReferenceEquals(this, fvtx.Edges[0]))
 				{
 					// Set our pred and succ to Edges[1]
-					EdgeCCWPredecessor = EdgeCWPredecessor = VtxStart.Edges[1];
+					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.Edges[1];
 				}
 				else
 				{
 					// Set our pred ans succ to Edges[0]
-					EdgeCCWPredecessor = EdgeCWPredecessor = VtxStart.Edges[0];
+					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.Edges[0];
 				}
 				return;
 			}
@@ -547,7 +547,7 @@ namespace DAP.CompGeom
 
 			// Get our predecessor edges
 			GetSuccessorEdgesFromVertex(
-				VtxStart,
+				((FortuneVertex)VtxStart),
 				out edgeCW,
 				out edgeCCW);
 			EdgeCWPredecessor = edgeCW;
@@ -564,7 +564,7 @@ namespace DAP.CompGeom
 
 				// Get our successor edges
 				GetSuccessorEdgesFromVertex(
-					VtxEnd,
+					((FortuneVertex)VtxEnd),
 					out edgeCW,
 					out edgeCCW);
 				EdgeCWSuccessor = edgeCW;
@@ -597,8 +597,12 @@ namespace DAP.CompGeom
 
 				we.AddEdge(this);
 				_fAddedToWingedEdge = true;
-				((FortuneVertex)VtxStart).AddToWingedEdge(we);
-				((FortuneVertex)VtxEnd).AddToWingedEdge(we);
+
+				// Set up the start and end vertex
+				((FortuneVertex) VtxStart).FirstEdge = this;
+				((FortuneVertex) VtxEnd).FirstEdge = this;
+				((FortuneVertex) VtxStart).AddToWingedEdge(we);
+				((FortuneVertex) VtxEnd).AddToWingedEdge(we);
 			}
 		}
 

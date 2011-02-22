@@ -31,39 +31,9 @@ namespace DAP.CompGeom
 
 	public class WeVertex
 	{
-		#region Private Variables
-		readonly List<WeEdge> _lstCWEdges = new List<WeEdge>();	// List of edges in clockwise order (if 
-		#endregion
-
 		#region Properties
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets the count of edges abutting this vertex. </summary>
-		///
-		/// <value>	The count of edges. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public int CtEdges
-		{
-			get
-			{
-				return _lstCWEdges.Count;
-			}
-		}
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets the list of edges butting this vertex. </summary>
-		///
-		/// <value>	The list of edges. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public List<WeEdge> Edges
-		{
-			get
-			{
-				return _lstCWEdges;
-			}
-		}
+		internal WeEdge FirstEdge { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets the polygons which contain this vertex. </summary>
@@ -75,7 +45,21 @@ namespace DAP.CompGeom
 		{
 			get
 			{
-				return new PolyEnumerable(this);
+				return Edges.Select(e => ReferenceEquals(this, e.VtxStart) ? e.PolyLeft : e.PolyRight);
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets the polygons which contain this vertex. </summary>
+		///
+		/// <value>	The polygons. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<WeEdge> Edges
+		{
+			get
+			{
+				return new EdgeEnumerable(this);
 			}
 		}
 
@@ -187,21 +171,6 @@ namespace DAP.CompGeom
 
 		#region Modifiers
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// Edges are assumed to be added in a Clockwise direction.  The first edge is random and has no
-		/// particular significance. 
-		/// </summary>
-		///
-		/// <remarks>	Darrellp, 2/19/2011. </remarks>
-		///
-		/// <param name="edge">	Next clockwise edge to add. </param>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public virtual void Add(WeEdge edge)
-		{
-			_lstCWEdges.Add(edge);
-		}
 		#endregion
 
 		#region Validation
@@ -218,7 +187,7 @@ namespace DAP.CompGeom
 
 		internal bool FValidateEdgeIsAdjacent(WeEdge edge)
 		{
-			return _lstCWEdges.Any(edgeCur => ReferenceEquals(edgeCur, edge));
+			return Edges.Any(edgeCur => ReferenceEquals(edgeCur, edge));
 		}
 		#endregion
 
@@ -242,42 +211,36 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Internal Classes
-
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// WingedEdge doesn't directly give the polygons which contain this vertex so we give an
+		/// WingedEdge doesn't directly give the edges which contain this vertex so we give an
 		/// enumerator for that. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/19/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class PolyEnumerator : IEnumerator<WePolygon>
+		class EdgeEnumerator : IEnumerator<WeEdge>
 		{
 			#region Private Variables
-			int _iEdge = -1;		// The index to the edge to the right of the current polygon
+
+			private WeEdge _edgeCur;
 			readonly WeVertex _vtx;			// The vertex we're enumerating around
 			#endregion
 
 			#region Constructor
-			internal PolyEnumerator(WeVertex vtx)
+			internal EdgeEnumerator(WeVertex vtx)
 			{
 				_vtx = vtx;
 			}
 			#endregion
 
 			#region IEnumerator<WEPolygon> Members
-			public WePolygon Current
+			public WeEdge Current
 			{
 				get
 				{
-					WeEdge edge = _vtx._lstCWEdges[_iEdge];
-
-					// The edge is to the right of the polygon so the polygon is to the left of
-					// the edge as we look from start to end vertex.
-					return (_vtx == edge.VtxStart) ?
-					                               	edge.PolyLeft :
-					                               	              	edge.PolyRight;
+					return _edgeCur;
 				}
 			}
 			#endregion
@@ -294,59 +257,61 @@ namespace DAP.CompGeom
 			{
 				get
 				{
-					WeEdge edge = _vtx._lstCWEdges[_iEdge];
-
-					// The edge is to the right of the polygon so the polygon is to the left of
-					// the edge as we look from start to end vertex.
-					return (_vtx == edge.VtxStart) ? 
-					                               	edge.PolyLeft : 
-					                               	              	edge.PolyRight;
+					return _edgeCur;
 				}
 			}
 
 			public bool MoveNext()
 			{
-				return ++_iEdge < _vtx._lstCWEdges.Count;
+				if (_edgeCur == null)
+				{
+					_edgeCur = _vtx.FirstEdge;
+					return _edgeCur != null;
+				}
+				_edgeCur = ReferenceEquals(_edgeCur.VtxStart, this)
+				           	? _edgeCur.EdgeCWPredecessor
+				           	: _edgeCur.EdgeCWSuccessor;
+				return ReferenceEquals(_edgeCur, _vtx.FirstEdge);
 			}
 
 			public void Reset()
 			{
-				_iEdge = 0;
+				_edgeCur = null;
 			}
 
 			#endregion
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	The enumerable for PolyEnumerator. </summary>
+		/// <summary>	The enumerable for EdgeEnumerator. </summary>
 		///
 		/// <remarks>	Darrellp, 2/19/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class PolyEnumerable : IEnumerable<WePolygon>
+		class EdgeEnumerable : IEnumerable<WeEdge>
 		{
 			#region Private Variables
 			readonly WeVertex _vtx;
 			#endregion
 
 			#region Constructor
-			internal PolyEnumerable(WeVertex vtx)
+			internal EdgeEnumerable(WeVertex vtx)
 			{
 				_vtx = vtx;
 			}
 			#endregion
 
-			#region IEnumerable<WEPolygon> Members
-			IEnumerator<WePolygon> IEnumerable<WePolygon>.GetEnumerator()
+			#region IEnumerable<WeEdge> Members
+			IEnumerator<WeEdge> IEnumerable<WeEdge>.GetEnumerator()
 			{
-				return new PolyEnumerator(_vtx);
+				return new EdgeEnumerator(_vtx);
 			}
 			#endregion
 
 			#region IEnumerable Members
 			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
 			{
-				return new PolyEnumerator(_vtx);
+				return new EdgeEnumerator(_vtx);
 			}
 			#endregion
 		}

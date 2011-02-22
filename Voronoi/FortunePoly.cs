@@ -119,6 +119,7 @@ namespace DAP.CompGeom
 			FAtInfinity = false;
 			Index = index;
 			VoronoiPoint = pt;
+			EdgesCW = new List<WeEdge>();
 		}
 		#endregion
 
