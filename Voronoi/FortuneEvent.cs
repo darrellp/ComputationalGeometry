@@ -5,9 +5,10 @@ using TPT = System.Double;
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
 #endif
-using NetTrace;
+#if NETUNIT || DEBUG
 using NUnit.Framework;
-
+#endif
+using NetTrace;
 using System;
 using System.Collections.Generic;
 
@@ -34,28 +35,25 @@ namespace DAP.CompGeom
 	{
 		#region Private Variables
 		int _i = -1;				// Index we maintain for the IPriorityQueueElement operations
-		PT _pt;						// Point this event is based on - the center of the circle for circle events
-									// and the location of the site for site events.
+		// and the location of the site for site events.
 		#endregion
 
 		#region Properties
-		internal PT Pt
-		{
-			get
-			{
-				return _pt;
-			}
-			set
-			{
-				_pt = value;
-			}
-		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets or sets the point where this event occurs. </summary>
+		///
+		/// <value>	The point where this event occurs. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		internal PointD Pt { get; set; }
+
 		#endregion
 
 		#region Constructor
 		internal FortuneEvent(PT pt)
 		{
-			_pt = pt;
+			Pt = pt;
 		}
 		#endregion
 
@@ -83,7 +81,8 @@ namespace DAP.CompGeom
 			Tracer.Assert(t.Assertion, obj.GetType().IsSubclassOf(typeof(FortuneEvent)),
 				"Passing in non-Event to CompareTo");
 
-			PT ptCompare = ((FortuneEvent)obj).Pt;
+			// Get our PointD
+			var ptCompare = ((FortuneEvent)obj).Pt;
 
 			// If two events have essentially the same Y coordinate, we defer to the X coordinate
 			if (Geometry.FCloseEnough(Pt.Y, ptCompare.Y))
@@ -92,13 +91,15 @@ namespace DAP.CompGeom
 				{
 					return 1;
 				}
-				else if (Pt.X < ptCompare.X)
+				if (Pt.X < ptCompare.X)
 				{
 					return -1;
 				}
-				else if (GetType() == typeof(SiteEvent) && obj.GetType() == typeof(CircleEvent))
+				// If we are a site event and the compared object is a circle event
+				if (GetType() == typeof(SiteEvent) && obj.GetType() == typeof(CircleEvent))
 				{
 					// Site events are bigger than circle events at the same point
+
 					return 1;
 				}
 				return 0;
@@ -120,16 +121,31 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Circle creation
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Creates a circle event. </summary>
+		///
+		/// <remarks>Circle events are created at the circumcenters of three sites - the sites for poly1/2/3.</remarks>
+		/// <param name="poly1">		The first polygon. </param>
+		/// <param name="poly2">		The second polygon. </param>
+		/// <param name="poly3">		The third polygon. </param>
+		/// <param name="yScanLine">	The y coordinate scan line. </param>
+		///
+		/// <returns>	A new circle event. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal static CircleEvent CreateCircleEvent(FortunePoly poly1, FortunePoly poly2, FortunePoly poly3, TPT yScanLine)
 		{
+			// Locals
 			PT ptCenter;
 			CircleEvent cevtRet = null;
 
-			// Circle events are created at the circumcenters of three sites - the sites for poly1/2/3.
+			// Determine a circumcenter for the sites of poly1/2/3.
 			if (Geometry.FFindCircumcenter(poly1.VoronoiPoint, poly2.VoronoiPoint, poly3.VoronoiPoint, out ptCenter))
 			{
-				TPT radius = Geometry.Distance(poly1.VoronoiPoint, ptCenter);
-
+				// Determine y coordinate for the side of the circle
+				// The event will fire when the scan line hits that y position
+				var radius = Geometry.Distance(poly1.VoronoiPoint, ptCenter);
 				ptCenter.Y -= radius;
 
 				// If the circumcenter is above the scan line we've already passed it by, so don't put it in the queue
@@ -139,11 +155,13 @@ namespace DAP.CompGeom
 				}
 				else
 				{
+					// Diagnostics
 					Tracer.Trace(tv.CCreate, "Rejected circle event because it is above scan line");
 				}
 			}
 			else
 			{
+				// Diagnostics
 				Tracer.Trace(tv.CCreate, "Rejected circle event generators are collinear");
 			}
 
@@ -152,6 +170,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region NUnit
+#if NUNIT || DEBUG
 		[TestFixture]
 		public class TestEvent
 		{
@@ -165,32 +184,31 @@ namespace DAP.CompGeom
 				Assert.IsTrue(((IComparable)evtSmaller).CompareTo(evtLarger) < 0);
 			}
 		}
+#endif
 		#endregion
 	}
 
-	/// <summary>
-	/// Site events are inserted into the priority queue when the fortune object is created.
-	/// See its constructor for details.
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	
+	/// Site events are inserted into the priority queue when the fortune object is created. See its
+	/// constructor for details. 
 	/// </summary>
+	///
+	/// <remarks>	Darrellp, 2/21/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	internal class SiteEvent : FortuneEvent
 	{
-		#region Private variables
-		FortunePoly _poly;				// The polygon in the Fortune object this site corresponds to
-		#endregion
-
 		#region Properties
-		internal FortunePoly Poly
-		{
-			get { return _poly; }
-			set { _poly = value; }
-		}
+
+		internal FortunePoly Poly { get; set; }
+
 		#endregion
 
 		#region Constructor
 		internal SiteEvent(FortunePoly poly) : base(poly.VoronoiPoint)
 		{
-			_poly = poly;
-			Tracer.Trace(tv.InsertSite, "Inserting site: {0}", this.ToString());
+			Poly = poly;
 		}
 		#endregion
 
@@ -202,10 +220,15 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Event handling
-		/// <summary>
-		/// Handle a site event.  This is done by adding a polgyon/parabola to the beachline.
-		/// </summary>
-		/// <param name="fortune">The fortune object to update</param>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Handle a site event.  This is done by adding a polgyon/parabola to the beachline. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="fortune">	The fortune object to update. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal override void Handle(Fortune fortune)
 		{
 			Tracer.Trace(tv.SiteEvents, "Site event at ({0}, {1}) for gen {2}", Pt.X, Pt.Y, Poly.Index);
@@ -230,33 +253,25 @@ namespace DAP.CompGeom
 		#endregion
 	}
 
-	/// <summary>
-	/// Circle events snuff out a parabola on the beachline
-	/// </summary>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	Circle events snuff out a parabola on the beachline. </summary>
+	///
+	/// <remarks>	Darrellp, 2/21/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	internal class CircleEvent : FortuneEvent
 	{
 		#region Private Variables
-		private readonly TPT _radius = 0;						// Radius of the circle
-		private readonly TPT _radiusSq = 0;
-		LeafNode _lfnEliminated = null;			// The leafnode which will be eliminated by this circle event
-		bool _fZeroLength = false;				// True if this represents a zero length edge
+		private readonly TPT _radius;						// Radius of the circle
+		private readonly TPT _radiusSq;						// Square of circle radius
+
 		#endregion
 
 		#region Properties
 		internal LinkedListNode<CircleEvent> LinkedListNode { get; set; }
-		internal bool FZeroLength
-		{
-			get { return _fZeroLength; }
-			set { _fZeroLength = value; }
-		}
-		internal LeafNode LfnEliminated
-		{
-			get { return _lfnEliminated; }
-			set
-			{
-				_lfnEliminated = value;
-			}
-		}
+		internal bool FZeroLength { get; set; }
+
+		internal LeafNode LfnEliminated { get; set; }
 
 		internal PT VoronoiVertex
 		{
@@ -284,10 +299,15 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Event handling
-		/// <summary>
-		/// Handle a circle event.  Snuff out the a parabola, form a vertex of the diagram.
-		/// </summary>
-		/// <param name="fortune"></param>
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Handle a circle event.  Snuff out the a parabola, form a vertex of the diagram. </summary>
+		///
+		/// <remarks>	Darrellp, 2/21/2011. </remarks>
+		///
+		/// <param name="fortune">	The fortune. </param>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal override void Handle(Fortune fortune)
 		{
 			Tracer.Trace(tv.CircleEvents,
@@ -320,30 +340,22 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Queries
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Returns true if the circle event contains the passed in point. </summary>
 		///
-		/// <remarks>
-		/// Profiling shows that this routine is a huge bottleneck.  It gets called a zillion times an
-		/// almost always returns false so we go to extraordinary measures to optimize it for the case
-		/// of turning out false.  Hence some kind of odd code here.
-		/// 
-		/// Darrell Plank, 2/21/2011.
+		/// <remarks>	
+		/// Darrell Plank, 2/21/2011. 
 		/// </remarks>
 		///
 		/// <param name="pt">	Point to check. </param>
 		///
 		/// <returns>	True if its contained in the circle, else false. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
 		internal bool Contains(PT pt)
 		{
-			var dx = pt.X - Pt.X;
-			if (dx < 0) dx = -dx;
-			if (dx > _radius) return false;
-
-			var dy = pt.Y - Pt.Y;
-			if (dy < 0) dy = -dy;
-			if (dy > _radius) return false;
-
-			return dx * dx + dy * dy <= _radiusSq;
+			return Geometry.DistanceSq(pt, Pt) <= _radiusSq;
 		}
 		#endregion
 	}
