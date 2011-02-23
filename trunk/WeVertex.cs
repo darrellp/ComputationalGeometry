@@ -230,7 +230,6 @@ namespace DAP.CompGeom
 		{
 			#region Private Variables
 
-			private WeEdge _edgeCur;
 			readonly WeVertex _vtx;			// The vertex we're enumerating around
 			#endregion
 
@@ -242,13 +241,9 @@ namespace DAP.CompGeom
 			#endregion
 
 			#region IEnumerator<WEPolygon> Members
-			public WeEdge Current
-			{
-				get
-				{
-					return _edgeCur;
-				}
-			}
+
+			public WeEdge Current { get; private set; }
+
 			#endregion
 
 			#region IDisposable Members
@@ -263,26 +258,26 @@ namespace DAP.CompGeom
 			{
 				get
 				{
-					return _edgeCur;
+					return Current;
 				}
 			}
 
 			public bool MoveNext()
 			{
-				if (_edgeCur == null)
+				if (Current == null)
 				{
-					_edgeCur = _vtx.FirstEdge;
-					return _edgeCur != null;
+					Current = _vtx.FirstEdge;
+					return Current != null;
 				}
-				_edgeCur = ReferenceEquals(_edgeCur.VtxStart, _vtx)
-							? _edgeCur.EdgeCWPredecessor
-							: _edgeCur.EdgeCWSuccessor;
-				return !ReferenceEquals(_edgeCur, _vtx.FirstEdge);
+				Current = ReferenceEquals(Current.VtxStart, _vtx)
+							? Current.EdgeCWPredecessor
+							: Current.EdgeCWSuccessor;
+				return !ReferenceEquals(Current, _vtx.FirstEdge);
 			}
 
 			public void Reset()
 			{
-				_edgeCur = null;
+				Current = null;
 			}
 
 			#endregion
