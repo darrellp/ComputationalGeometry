@@ -7,8 +7,9 @@ namespace DAP.CompGeom
 	/// <summary>	Polygons in a WingedEdge structure. </summary>
 	///
 	/// <remarks>	
-	/// <para>Essentially a list of the edges comprising this polygon in clockwise order.  Which edge
-	/// is first has no particular significance.</para>
+	/// <para>Essentially a pointer to a random edge in this polygon.  The other edges can be
+	/// navigated to by following predecessor and successor fields in the edges.  An enumerator is
+	/// supplied which does this for you.  We also supply one for the vertices.</para>
 	/// 
 	/// Darrellp, 2/18/2011. 
 	/// </remarks>
@@ -45,6 +46,20 @@ namespace DAP.CompGeom
 			get
 			{
 				return new EdgeEnumerable(this);
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Gets oriented edges which gives the edge along with the direction to move on it. </summary>
+		///
+		/// <value>	The oriented edges. </value>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<OrientedEdge> OrientedEdges
+		{
+			get
+			{
+				return Edges.Select(e => new OrientedEdge(e, ReferenceEquals(e.PolyLeft, this)));
 			}
 		}
 
@@ -239,7 +254,7 @@ namespace DAP.CompGeom
 			}
 			#endregion
 
-			#region IEnumerable<OrientedEdge> Members
+			#region IEnumerable<WeEdge> Members
 			IEnumerator<WeEdge> IEnumerable<WeEdge>.GetEnumerator()
 			{
 				return new EdgeEnumerator(_poly);
