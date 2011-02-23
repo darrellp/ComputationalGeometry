@@ -453,6 +453,13 @@ namespace DAP.CompGeom
 				// Move to the neighboring polygon at infinity
 				polyCur = polyNext;
 				iLeadingEdgeCw = iLeadingEdgeNext;
+
+				// Save this edge as the "first edge" for the polygon at infinity
+				//
+				// We could check to do this only once, but it doesn't make any difference which
+				// edge we get, just so long as we get one and the check would take as long as
+				// just doing it every time.
+				polyAtInfinity.FirstEdge = edgePreviousAtInfinity;
 			}
 			// we reach the end of the "outer" infinite polygons of the diagram
 			//
