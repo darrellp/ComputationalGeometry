@@ -66,10 +66,10 @@
   <ItemGroup>
     <Compile Include="Debug.cs" />
     <Compile Include="Geometry.cs" />
-    <Compile Include="IPriorityQueueElement.cs" />
+    <Compile Include="PriorityQueue\IPriorityQueueElement.cs" />
     <Compile Include="PointD.cs" />
-    <Compile Include="Priority Queue.cs" />
-    <Compile Include="PriorityQueueWithDeletions.cs" />
+    <Compile Include="PriorityQueue\Priority Queue.cs" />
+    <Compile Include="PriorityQueue\PriorityQueueWithDeletions.cs" />
     <Compile Include="Voronoi\Beachline.cs" />
     <Compile Include="Voronoi\EventQueue.cs" />
     <Compile Include="Voronoi\Fortune.cs" />
@@ -80,10 +80,10 @@
     <Compile Include="Voronoi\InternalNode.cs" />
     <Compile Include="Voronoi\LeafNode.cs" />
     <Compile Include="Voronoi\Node.cs" />
-    <Compile Include="WeEdge.cs" />
-    <Compile Include="WePolygon.cs" />
-    <Compile Include="WeVertex.cs" />
-    <Compile Include="WingedEdge.cs" />
+    <Compile Include="WingedEdge\WeEdge.cs" />
+    <Compile Include="WingedEdge\WePolygon.cs" />
+    <Compile Include="WingedEdge\WeVertex.cs" />
+    <Compile Include="WingedEdge\WingedEdge.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
