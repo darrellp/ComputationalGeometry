@@ -906,7 +906,7 @@ namespace DAP.CompGeom
 			{
 				var rnd = new Random();
 				var pts = new List<PT>();
-				for (int i = 0; i < 10000; i++)
+				for (var i = 0; i < 10000; i++)
 
 				{
 					pts.Add(new PT(rnd.NextDouble(), rnd.NextDouble()));
