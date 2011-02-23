@@ -374,9 +374,7 @@ namespace DAP.CompGeom
 			}
 
 			// Get the solution we're looking for
-			if(pt1.Y >= pt2.Y)
-				return xs2;
-			return xs1;
+			return pt1.Y >= pt2.Y ? xs2 : xs1;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////

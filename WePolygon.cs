@@ -35,20 +35,12 @@ namespace DAP.CompGeom
 		internal WeEdge FirstEdge { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Gets or sets the list of our edges in clockwise order. </summary>
-		///
-		/// <value>	The edges cw. </value>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public List<WeEdge> EdgesCWwe { get; protected set; }
-
-		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets the edges in clockwise order. </summary>
 		///
 		/// <value>	The edges. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public IEnumerable<OrientedEdge> Edges
+		public IEnumerable<WeEdge> Edges
 		{
 			get
 			{
@@ -66,7 +58,7 @@ namespace DAP.CompGeom
 		{
 			get
 			{
-				return Edges.Select(oe => oe.Forward ? oe.Edge.VtxStart : oe.Edge.VtxEnd);
+				return Edges.Select(e => ReferenceEquals(e.PolyLeft, this) ? e.VtxStart : e.VtxEnd);
 			}
 		}
 		#endregion
@@ -108,30 +100,26 @@ namespace DAP.CompGeom
 		{
 			// Declarations
 			var fFirstTimeThroughLoop = true;
-			var edgePrev = new OrientedEdge();
-			var edgeFirst = new OrientedEdge();
+			var edgePrev = new WeEdge();
+			var edgeFirst = new WeEdge();
 
-			foreach (var orientedEdge in Edges)
+			foreach (var edgeCur in Edges)
 			{
 				if (fFirstTimeThroughLoop)
 				{
 					fFirstTimeThroughLoop = false;
-					edgePrev = edgeFirst = orientedEdge;
+					edgePrev = edgeFirst = edgeCur;
 				}
 				else
 				{
-					if (!orientedEdge.Edge.FConnectsToEdge(edgePrev.Edge))
+					if (!edgeCur.FConnectsToEdge(edgePrev))
 					{
 						return Failure();
 					}
-					edgePrev = orientedEdge;
+					edgePrev = edgeCur;
 				}
 			}
-			if (!edgePrev.Edge.FConnectsToEdge(edgeFirst.Edge))
-			{
-				return Failure();
-			}
-			return true;
+			return edgePrev.FConnectsToEdge(edgeFirst) || Failure();
 		}
 		#endregion
 
@@ -171,21 +159,11 @@ namespace DAP.CompGeom
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class EdgeEnumerator : IEnumerator<OrientedEdge>
+		class EdgeEnumerator : IEnumerator<WeEdge>
 		{
 			#region Private Variables
-			private WeEdge _edgeCur;
-			readonly WePolygon _poly;		// Polygon whose vertices we're enumerating
-			#endregion
 
-			#region Properties
-			bool FForward
-			{
-				get
-				{
-					return _poly == _edgeCur.PolyLeft;
-				}
-			}
+			readonly WePolygon _poly;		// Polygon whose vertices we're enumerating
 			#endregion
 
 			#region Constructor
@@ -196,13 +174,9 @@ namespace DAP.CompGeom
 			#endregion
 
 			#region IEnumerator<WEPolygon> Members
-			public OrientedEdge Current
-			{
-				get
-				{
-					return new OrientedEdge(_edgeCur, FForward);
-				}
-			}
+
+			public WeEdge Current { get; private set; }
+
 			#endregion
 
 			#region IDisposable Members
@@ -224,23 +198,23 @@ namespace DAP.CompGeom
 			public bool MoveNext()
 			{
 				// If this is the first call
-				if (_edgeCur == null)
+				if (Current == null)
 				{
 					// Use the first edge
-					_edgeCur = _poly.FirstEdge;
+					Current = _poly.FirstEdge;
 
 					// Return true only if there's an edge in the polygon at all
-					return _edgeCur != null;
+					return Current != null;
 				}
 
 				// If not our first call, just get the next edge until we've looped back
-				_edgeCur = FForward ? _edgeCur.EdgeCWSuccessor : _edgeCur.EdgeCWPredecessor;
-				return !ReferenceEquals(_edgeCur, _poly.FirstEdge);
+				Current = ReferenceEquals(Current.PolyLeft, _poly) ? Current.EdgeCWSuccessor : Current.EdgeCWPredecessor;
+				return !ReferenceEquals(Current, _poly.FirstEdge);
 			}
 
 			public void Reset()
 			{
-				_edgeCur = null;
+				Current = null;
 			}
 
 			#endregion
@@ -252,7 +226,7 @@ namespace DAP.CompGeom
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		class EdgeEnumerable : IEnumerable<OrientedEdge>
+		class EdgeEnumerable : IEnumerable<WeEdge>
 		{
 			#region Private Variables
 			readonly WePolygon _poly;
@@ -266,7 +240,7 @@ namespace DAP.CompGeom
 			#endregion
 
 			#region IEnumerable<OrientedEdge> Members
-			IEnumerator<OrientedEdge> IEnumerable<OrientedEdge>.GetEnumerator()
+			IEnumerator<WeEdge> IEnumerable<WeEdge>.GetEnumerator()
 			{
 				return new EdgeEnumerator(_poly);
 			}

@@ -466,16 +466,12 @@ namespace DAP.CompGeom
 		#region Validation
 		internal virtual bool FValidate()
 		{
-			if (LstHeap.Count == 0)
-			{
-				return true;
-			}
-			return FValidate(0);
+			return LstHeap.Count == 0 || FValidate(0);
 		}
 
 		bool FValidate(int iRoot)
 		{
-			T valRoot = LstHeap[iRoot];
+			var valRoot = LstHeap[iRoot];
 
 			if (LeftSonExists(iRoot))
 			{

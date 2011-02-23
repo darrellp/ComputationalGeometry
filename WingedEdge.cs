@@ -224,48 +224,22 @@ namespace DAP.CompGeom
 
 				#region Polygons
 				// Polygon at infinity
-				polys[0].AddEdge(edges[0]);
-				polys[0].AddEdge(edges[1]);
-				polys[0].AddEdge(edges[3]);
-				polys[0].AddEdge(edges[6]);
-				polys[0].AddEdge(edges[10]);
-				polys[0].AddEdge(edges[13]);
-				polys[0].AddEdge(edges[15]);
-				polys[0].AddEdge(edges[14]);
-				polys[0].AddEdge(edges[12]);
-				polys[0].AddEdge(edges[9]);
-				polys[0].AddEdge(edges[5]);
-				polys[0].AddEdge(edges[2]);
+				polys[0].FirstEdge = edges[0];
 
 				// Top Square
-				polys[1].AddEdge(edges[0]);
-				polys[1].AddEdge(edges[2]);
-				polys[1].AddEdge(edges[4]);
-				polys[1].AddEdge(edges[1]);
+				polys[1].FirstEdge = edges[0];
 
 				// Left Square
-				polys[2].AddEdge(edges[3]);
-				polys[2].AddEdge(edges[7]);
-				polys[2].AddEdge(edges[10]);
-				polys[2].AddEdge(edges[6]);
+				polys[2].FirstEdge = edges[3];
 
 				// Center Square
-				polys[3].AddEdge(edges[4]);
-				polys[3].AddEdge(edges[8]);
-				polys[3].AddEdge(edges[11]);
-				polys[3].AddEdge(edges[7]);
+				polys[3].FirstEdge = edges[4];
 
 				// Right Square
-				polys[4].AddEdge(edges[5]);
-				polys[4].AddEdge(edges[9]);
-				polys[4].AddEdge(edges[12]);
-				polys[4].AddEdge(edges[8]);
+				polys[4].FirstEdge = edges[5];
 
 				// Bottom Square
-				polys[5].AddEdge(edges[11]);
-				polys[5].AddEdge(edges[14]);
-				polys[5].AddEdge(edges[15]);
-				polys[5].AddEdge(edges[13]);
+				polys[5].FirstEdge = edges[11];
 				#endregion
 
 				#region Vertices
@@ -282,49 +256,18 @@ namespace DAP.CompGeom
 				vertices[10].Pt = new PT(1, 0);
 				vertices[11].Pt = new PT(2, 0);
 
-				vertices[0].Add(edges[0]);
-				vertices[0].Add(edges[1]);
-
-				vertices[1].Add(edges[0]);
-				vertices[1].Add(edges[2]);
-
-				vertices[2].Add(edges[3]);
-				vertices[2].Add(edges[6]);
-
-				vertices[3].Add(edges[3]);
-				vertices[3].Add(edges[1]);
-				vertices[3].Add(edges[4]);
-				vertices[3].Add(edges[7]);
-
-				vertices[4].Add(edges[2]);
-				vertices[4].Add(edges[5]);
-				vertices[4].Add(edges[4]);
-				vertices[4].Add(edges[8]);
-
-				vertices[5].Add(edges[5]);
-				vertices[5].Add(edges[9]);
-
-				vertices[6].Add(edges[6]);
-				vertices[6].Add(edges[10]);
-
-				vertices[7].Add(edges[7]);
-				vertices[7].Add(edges[11]);
-				vertices[7].Add(edges[13]);
-				vertices[7].Add(edges[10]);
-
-				vertices[8].Add(edges[8]);
-				vertices[8].Add(edges[12]);
-				vertices[8].Add(edges[14]);
-				vertices[8].Add(edges[11]);
-
-				vertices[9].Add(edges[9]);
-				vertices[9].Add(edges[12]);
-
-				vertices[10].Add(edges[13]);
-				vertices[10].Add(edges[15]);
-
-				vertices[11].Add(edges[14]);
-				vertices[11].Add(edges[15]);
+				vertices[0].FirstEdge = edges[0];
+				vertices[1].FirstEdge = edges[0];
+				vertices[2].FirstEdge = edges[3];
+				vertices[3].FirstEdge = edges[3];
+				vertices[4].FirstEdge = edges[2];
+				vertices[5].FirstEdge = edges[5];
+				vertices[6].FirstEdge = edges[6];
+				vertices[7].FirstEdge = edges[7];
+				vertices[8].FirstEdge = edges[8];
+				vertices[9].FirstEdge = edges[9];
+				vertices[10].FirstEdge = edges[13];
+				vertices[11].FirstEdge = edges[14];
 				#endregion
 
 				#region Edges

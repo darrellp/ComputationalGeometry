@@ -72,7 +72,7 @@ namespace DAP.CompGeom
 			QevEvents = new EventQueue();
 			Polygons = new List<FortunePoly>();
 			// For every point
-			foreach (PT pt in points)
+			foreach (var pt in points)
 			{
 				// Add it to our list
 				QevEvents.Add(new SiteEvent(InsertPoly(pt)));
@@ -285,11 +285,11 @@ namespace DAP.CompGeom
 			{
 				// Diagnostics
 				Tracer.Assert(t.Assertion,
-				              polyInfinityStart.EdgesCW[0].VtxEnd.FAtInfinity && polyInfinityStart.EdgesCW[1].VtxEnd.FAtInfinity,
+				              polyInfinityStart.FortuneEdges[0].VtxEnd.FAtInfinity && polyInfinityStart.FortuneEdges[1].VtxEnd.FAtInfinity,
 				              "Two edged polygon without both edges at infinity");
 				// If we run clockwise from the origin through edge 0 through edge 1
 				// ReSharper disable ConvertIfStatementToConditionalTernaryExpression
-				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.EdgesCW[0].VtxEnd.Pt, polyInfinityStart.EdgesCW[1].VtxEnd.Pt) > 0)
+				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.FortuneEdges[0].VtxEnd.Pt, polyInfinityStart.FortuneEdges[1].VtxEnd.Pt) > 0)
 				// ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 				{
 					// Edge 1 is our leading edge
@@ -307,9 +307,9 @@ namespace DAP.CompGeom
 				for (var iEdge = 0; iEdge < polyInfinityStart.VertexCount; iEdge++)
 				{
 					// Retrieve the edge and the next edge in CW order
-					var edge = polyInfinityStart.EdgesCW[iEdge] as FortuneEdge;
+					var edge = polyInfinityStart.FortuneEdges[iEdge];
 					var iEdgeNext = (iEdge + 1) % polyInfinityStart.VertexCount;
-					var edgeNextCW = polyInfinityStart.EdgesCW[iEdgeNext] as FortuneEdge;
+					var edgeNextCW = polyInfinityStart.FortuneEdges[iEdgeNext];
 
 					// If this edge and the next both end at infinity
 					if (edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
@@ -350,9 +350,9 @@ namespace DAP.CompGeom
 			Tracer.Indent();
 
 			// Add the poly to the winged edge struct and sort it's edges
-			if (poly.EdgesCW != null && poly.EdgesCW.Count > 0)
+			if (poly.FortuneEdges != null && poly.FortuneEdges.Count > 0)
 			{
-				poly.FirstEdge = poly.EdgesCW[0];
+				poly.FirstEdge = poly.FortuneEdges[0];
 			}
 			we.AddPoly(poly);
 			poly.SortEdges();
@@ -361,9 +361,9 @@ namespace DAP.CompGeom
 			for (var iEdge = 0; iEdge < poly.VertexCount; iEdge++)
 			{
 				// Get the edge following the current edge in clockwise order
-				var edge = poly.EdgesCW[iEdge] as FortuneEdge;
+				var edge = poly.FortuneEdges[iEdge];
 				var iEdgeNext = (iEdge + 1) % poly.VertexCount;
-				var edgeNextCW = poly.EdgesCW[iEdgeNext] as FortuneEdge;
+				var edgeNextCW = poly.FortuneEdges[iEdgeNext];
 				Tracer.Trace(tv.FinalEdges, edge.ToString());
 
 				// Incorporate the edge into the winged edge
@@ -461,7 +461,7 @@ namespace DAP.CompGeom
 			while (polyCur != polyStart);
 
 			// Thread the last poly back to the first
-			var edgeFirstAtInfinity = polyCur.EdgesCW[iLeadingEdgeNext];
+			var edgeFirstAtInfinity = polyCur.FortuneEdges[iLeadingEdgeNext];
 			edgePreviousAtInfinity.EdgeCCWPredecessor = edgeFirstAtInfinity;
 			edgeFirstAtInfinity.EdgeCWSuccessor = edgePreviousAtInfinity;
 		}
@@ -490,7 +490,7 @@ namespace DAP.CompGeom
 			FortunePoly polyAtInfinity,
 			FortunePoly poly,
 			int iLeadingEdgeCw,
-			FortuneEdge edgePreviousAtInfinity, 
+			WeEdge edgePreviousAtInfinity, 
 			out FortunePoly polyNextCcw,
 			out int iLeadingEdgeNext)
 		{
@@ -498,8 +498,8 @@ namespace DAP.CompGeom
 			//
 			// This is the edge to the right as we look outward
 			var iTrailingEdgeCw = (iLeadingEdgeCw + 1) % poly.VertexCount;
-			var edgeLeadingCw = poly.EdgesCW[iLeadingEdgeCw] as FortuneEdge;
-			var edgeTrailingCw = poly.EdgesCW[iTrailingEdgeCw] as FortuneEdge;
+			var edgeLeadingCw = poly.FortuneEdges[iLeadingEdgeCw];
+			var edgeTrailingCw = poly.FortuneEdges[iTrailingEdgeCw];
 
 			// Next polygon in order is to the left of our leading edge
 			polyNextCcw = edgeLeadingCw.PolyLeft as FortunePoly;
@@ -528,7 +528,7 @@ namespace DAP.CompGeom
 			// Start and end vertices are the trailing and leading infinite edges
 			// Add the edge at infinity to the poly at infinity and the current infinite poly
 			polyAtInfinity.AddEdge(edgeAtInfinity);
-			poly.EdgesCW.Insert(iTrailingEdgeCw, edgeAtInfinity);
+			poly.FortuneEdges.Insert(iTrailingEdgeCw, edgeAtInfinity);
 
 			// Set up the wings of the wingedEdge
 			edgeAtInfinity.EdgeCWPredecessor = edgeLeadingCw;
@@ -556,7 +556,7 @@ namespace DAP.CompGeom
 			for (iLeadingEdgeNext = 0; iLeadingEdgeNext < polyNextCcw.VertexCount; iLeadingEdgeNext++)
 			{
 				// If it's the same as our leading CW infinite edge
-				if (polyNextCcw.EdgesCW[iLeadingEdgeNext] == edgeLeadingCw)
+				if (polyNextCcw.FortuneEdges[iLeadingEdgeNext] == edgeLeadingCw)
 				{
 					// then their leading edge is the one immediately preceding it in CW order
 					iLeadingEdgeNext = (polyNextCcw.VertexCount + iLeadingEdgeNext - 1) % polyNextCcw.VertexCount;
@@ -581,30 +581,30 @@ namespace DAP.CompGeom
 		private static void HookEdgeAtInfinityToVerticesAtInfinity(FortuneEdge edge, FortuneVertex leadingVtxCw, FortuneVertex trailingVtxCw)
 		{
 			// if we've only got one edge at infinity
-			if (leadingVtxCw.Edges.Count == 1)
+			if (leadingVtxCw.FortuneEdges.Count == 1)
 			{
 				// Add this one as a placeholder
 				//
 				// This will be overwritten later but we have to insert here so that we can insert ourselves at
 				// index 2.  This is just a placeholder.
-				leadingVtxCw.Edges.Add(edge);
+				leadingVtxCw.FortuneEdges.Add(edge);
 			}
 			// Add this edge into it's proper position
-			leadingVtxCw.Edges.Add(edge);
+			leadingVtxCw.FortuneEdges.Add(edge);
 
 			// If we have three edges
-			if (trailingVtxCw.Edges.Count == 3)
+			if (trailingVtxCw.FortuneEdges.Count == 3)
 			{
 				// Overwrite the placeholder we placed in another call
 				//
 				// Here is where the overwriting referred to above occurs
 				// This will happen on a later call - not on the current one
-				trailingVtxCw.Edges[1] = edge;
+				trailingVtxCw.FortuneEdges[1] = edge;
 			}
 			else
 			{
 				// Otherwise just add us in to the trailing vertex's list of edges
-				trailingVtxCw.Edges.Add(edge);
+				trailingVtxCw.FortuneEdges.Add(edge);
 			}
 		}
 		#endregion
@@ -704,17 +704,17 @@ namespace DAP.CompGeom
 		private void FixInfiniteEdges()
 		{
 			// For each of our polygons
-			foreach(FortunePoly poly in Polygons)
+			foreach(var poly in Polygons)
 			{
 				// Loop through the edges of the poly searching for infinite ones
 				//
 				// Ensure that singly infinite edges have the infinite vertex in the
 				// VtxEnd position and split doubly infinite edges into two singly infinite edges.  Replace
 				// the null vertices with the proper infinite vertices.
-				foreach (var wedge in poly.EdgesCW)
+				foreach (var wedge in poly.FortuneEdges)
 				{
 					// Obtain our fortune edge
-					var edge = wedge as FortuneEdge;
+					var edge = wedge;
 					Tracer.Assert(t.Assertion, edge != null, "Non-FortuneEdge in FortunePoly list");
 
 					// Is this an infinite edge?
@@ -800,7 +800,7 @@ namespace DAP.CompGeom
 
 			// Create the new infinite vertex and add it to our edge
 			edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection, true);
-			((FortuneVertex)edge.VtxEnd).Edges.Add(edge);
+			((FortuneVertex)edge.VtxEnd).FortuneEdges.Add(edge);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -912,7 +912,7 @@ namespace DAP.CompGeom
 					pts.Add(new PT(rnd.NextDouble(), rnd.NextDouble()));
 				}
 				var sw = Stopwatch.StartNew();
-				var t = ComputeVoronoi(pts);
+				ComputeVoronoi(pts);
 				sw.Stop();
  
 				Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
