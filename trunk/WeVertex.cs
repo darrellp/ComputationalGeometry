@@ -274,10 +274,10 @@ namespace DAP.CompGeom
 					_edgeCur = _vtx.FirstEdge;
 					return _edgeCur != null;
 				}
-				_edgeCur = ReferenceEquals(_edgeCur.VtxStart, this)
-				           	? _edgeCur.EdgeCWPredecessor
-				           	: _edgeCur.EdgeCWSuccessor;
-				return ReferenceEquals(_edgeCur, _vtx.FirstEdge);
+				_edgeCur = ReferenceEquals(_edgeCur.VtxStart, _vtx)
+							? _edgeCur.EdgeCWPredecessor
+							: _edgeCur.EdgeCWSuccessor;
+				return !ReferenceEquals(_edgeCur, _vtx.FirstEdge);
 			}
 
 			public void Reset()
