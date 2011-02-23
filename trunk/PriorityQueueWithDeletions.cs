@@ -92,7 +92,7 @@ namespace DAP.CompGeom
 		#region Private overrides
 		internal override bool FValidate()
 		{
-			for (int iVal = 0; iVal < LstHeap.Count; iVal++)
+			for (var iVal = 0; iVal < LstHeap.Count; iVal++)
 			{
 				if (LstHeap[iVal].Index != iVal)
 				{

@@ -165,7 +165,7 @@ namespace FortuneTest
 				TPT infiniteLength = (TPT)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
 				foreach (FortunePoly poly in _lstPoly)
 				{
-					foreach (FortuneEdge edge in poly.EdgesCW)
+					foreach (FortuneEdge edge in poly.FortuneEdges)
 					{
 						edge.Draw(e.Graphics, pen, (float)infiniteLength);
 					}

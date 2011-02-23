@@ -122,10 +122,10 @@ namespace DAP.CompGeom
 			var vtx = (FortuneVertex)(fStartVertex ? VtxStart : VtxEnd);
 
 			// Go through all the edges for that vertex
-			for (var iEdge = 0; iEdge < vtx.Edges.Count; iEdge++)
+			for (var iEdge = 0; iEdge < vtx.FortuneEdges.Count; iEdge++)
 			{
 				// When we locate this edge
-				if (vtx.Edges[iEdge] == this)
+				if (vtx.FortuneEdges[iEdge] == this)
 				{
 					// Return the index
 					return iEdge;
@@ -261,8 +261,8 @@ namespace DAP.CompGeom
 			// Initialize locals
 			var iEnd = EdgeIndex(false);
 			var iStart = EdgeIndex(true);
-			var lstSpliceInto = ((FortuneVertex)VtxStart).Edges;
-			var lstSpliceFrom = ((FortuneVertex)VtxEnd).Edges;
+			var lstSpliceInto = ((FortuneVertex)VtxStart).FortuneEdges;
+			var lstSpliceFrom = ((FortuneVertex)VtxEnd).FortuneEdges;
 
 			// Now add all our end vertices to the start vertex's edge list.
 			// 
@@ -404,7 +404,7 @@ namespace DAP.CompGeom
 			out FortuneEdge edgeCCW)
 		{
 			// Are we free of zero length edges?
-			if (vtx.Edges.Count == 3)
+			if (vtx.FortuneEdges.Count == 3)
 			{
 				// Do the extremely simple, extremely common 3 valent case
 				GetSuccessorEdgesFrom3ValentVertex(vtx, out edgeCW, out edgeCCW);
@@ -430,8 +430,8 @@ namespace DAP.CompGeom
 				}
 
 				// Get our immediate neighbors on the edge list
-				edgeCW = ((FortuneVertex)vtx).Edges[(iEdge + 1) % cEdges];
-				edgeCCW = ((FortuneVertex)vtx).Edges[(iEdge + cEdges - 1) % cEdges];
+				edgeCW = vtx.FortuneEdges[(iEdge + 1) % cEdges];
+				edgeCCW = vtx.FortuneEdges[(iEdge + cEdges - 1) % cEdges];
 			}
 		}
 
@@ -460,21 +460,21 @@ namespace DAP.CompGeom
 		{
 			// Locals
 			int iEdge;
-			Tracer.Assert(t.Assertion, vtx.Edges.Count == 3, "Vertex without valency of 3");
+			Tracer.Assert(t.Assertion, vtx.FortuneEdges.Count == 3, "Vertex without valency of 3");
 
 			// Figure out which of the edges is ours
 			for (iEdge = 0; iEdge < 3; iEdge++)
 			{
 				// If the current edge is us
-				if (ReferenceEquals(vtx.Edges[iEdge], this))
+				if (ReferenceEquals(vtx.FortuneEdges[iEdge], this))
 				{
 					break;
 				}
 			}
 
 			// The next two edges, in order, are the onew we're looking for
-			edgeCW = vtx.Edges[(iEdge + 1) % 3] as FortuneEdge;
-			edgeCCW = vtx.Edges[(iEdge + 2) % 3] as FortuneEdge;
+			edgeCW = vtx.FortuneEdges[(iEdge + 1) % 3];
+			edgeCCW = vtx.FortuneEdges[(iEdge + 2) % 3];
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -523,18 +523,18 @@ namespace DAP.CompGeom
 			// rays pointing in opposite directions.  If we're one of those
 			// edges, then both our predecessor and our successor are the
 			// other edge.
-			if (fvtx.Edges.Count == 2)
+			if (fvtx.FortuneEdges.Count == 2)
 			{
 				// If we're Edges[0]
-				if (ReferenceEquals(this, fvtx.Edges[0]))
+				if (ReferenceEquals(this, fvtx.FortuneEdges[0]))
 				{
 					// Set our pred and succ to Edges[1]
-					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.Edges[1];
+					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.FortuneEdges[1];
 				}
 				else
 				{
 					// Set our pred ans succ to Edges[0]
-					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.Edges[0];
+					EdgeCCWPredecessor = EdgeCWPredecessor = fvtx.FortuneEdges[0];
 				}
 				return;
 			}
@@ -599,8 +599,8 @@ namespace DAP.CompGeom
 				_fAddedToWingedEdge = true;
 
 				// Set up the start and end vertex
-				((FortuneVertex) VtxStart).FirstEdge = this;
-				((FortuneVertex) VtxEnd).FirstEdge = this;
+				VtxStart.FirstEdge = this;
+				VtxEnd.FirstEdge = this;
 				((FortuneVertex) VtxStart).AddToWingedEdge(we);
 				((FortuneVertex) VtxEnd).AddToWingedEdge(we);
 			}

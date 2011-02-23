@@ -79,7 +79,7 @@ namespace DAP.CompGeom
 			}
 
 			// Start with ndCur at the root
-			Node ndCur = NdRoot;
+			var ndCur = NdRoot;
 
 			while (true)
 			{
@@ -758,7 +758,7 @@ namespace DAP.CompGeom
 			var lln = evq.CircleEvents.First;
 			while (lln != null)
 			{
-				CircleEvent cevt = lln.Value;
+				var cevt = lln.Value;
 				var llnNext = lln.Next;
 				if (cevt.Contains(evt.Pt))
 				{
@@ -785,7 +785,7 @@ namespace DAP.CompGeom
 		#region Debugging
 		LeafNode LfnLeftmost()
 		{
-			Node nd = NdRoot;
+			var nd = NdRoot;
 
 			while (!nd.IsLeaf)
 			{
@@ -804,10 +804,10 @@ namespace DAP.CompGeom
 				return;
 			}
 			Tracer.Indent();
-			LeafNode lfn = LfnLeftmost();
+			var lfn = LfnLeftmost();
 			while (lfn.RightAdjacentLeaf != null)
 			{
-				TPT tptBreakpoint = Geometry.ParabolicCut(
+				var tptBreakpoint = Geometry.ParabolicCut(
 					lfn.RightAdjacentLeaf.Poly.VoronoiPoint,
 					lfn.Poly.VoronoiPoint,
 					yScanLine);

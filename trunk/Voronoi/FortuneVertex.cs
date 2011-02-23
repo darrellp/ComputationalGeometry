@@ -21,7 +21,7 @@ namespace DAP.CompGeom
 		#region Private variables
 		bool _fAlreadyOrdered;			// True after this vertex has had its edges ordered in post processing
 		bool _fAddedToWingedEdge;		// True if this vertex has already been added to the winged edge data structure
-		readonly List<FortuneEdge> _lstCWEdges = new List<FortuneEdge>();	// List of edges in clockwise order (if 
+
 		#endregion
 
 		#region Properties
@@ -35,7 +35,7 @@ namespace DAP.CompGeom
 		{
 			get
 			{
-				return _lstCWEdges.Count;
+				return FortuneEdges.Count;
 			}
 		}
 
@@ -44,20 +44,22 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The list of edges. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		public new List<FortuneEdge> Edges
-		{
-			get
-			{
-				return _lstCWEdges;
-			}
-		}
+		
+		public List<FortuneEdge> FortuneEdges { get; private set; }
 
 		#endregion
 
 		#region Constructors
-		internal FortuneVertex(PT pt) : base(pt) { }
-		internal FortuneVertex() { }
+		internal FortuneVertex(PT pt) : base(pt)
+		{
+			FortuneEdges = new List<FortuneEdge>();
+		}
+
+		internal FortuneVertex()
+		{
+			FortuneEdges = new List<FortuneEdge>();
+		}
+
 		#endregion
 
 		#region Polygons
@@ -82,7 +84,7 @@ namespace DAP.CompGeom
 			var i2 = edge.Poly2.Index;
 
 			// For each edge incident with this vertex
-			foreach (FortuneEdge edgeDifferent in Edges)
+			foreach (var edgeDifferent in FortuneEdges)
 			{
 				// If it's not our own edge
 				if (edgeDifferent != edge)
@@ -132,7 +134,7 @@ namespace DAP.CompGeom
 
 		public virtual void Add(FortuneEdge edge)
 		{
-			_lstCWEdges.Add(edge);
+			FortuneEdges.Add(edge);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +150,7 @@ namespace DAP.CompGeom
 		/// <returns>	The point at the opposite end of the edge. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private PT PtAtOtherEnd(FortuneEdge edge)
+		private PT PtAtOtherEnd(WeEdge edge)
 		{
 			// Get the vertex at the other end
 			var ptRet = VtxOtherEnd(edge).Pt;
@@ -212,17 +214,17 @@ namespace DAP.CompGeom
 			if (CtEdges == 3)
 			{
 				// Get the points at the other end of each of the 3 edges
-				var pt0 = PtAtOtherEnd(Edges[0] as FortuneEdge);
-				var pt1 = PtAtOtherEnd(Edges[1] as FortuneEdge);
-				var pt2 = PtAtOtherEnd(Edges[2] as FortuneEdge);
+				var pt0 = PtAtOtherEnd(FortuneEdges[0]);
+				var pt1 = PtAtOtherEnd(FortuneEdges[1]);
+				var pt2 = PtAtOtherEnd(FortuneEdges[2]);
 
 				// If ordered incorrectly
 				if (Geometry.ICcw(pt0, pt1, pt2) > 0)
 				{
 					// Swap the first two
-					var edge0 = Edges[0];
-					Edges[0] = Edges[1];
-					Edges[1] = edge0;
+					var edge0 = FortuneEdges[0];
+					FortuneEdges[0] = FortuneEdges[1];
+					FortuneEdges[1] = edge0;
 				}
 
 				// Mark ourselves as ordered
@@ -231,7 +233,7 @@ namespace DAP.CompGeom
 			else
 			{
 				// Do the more complicated sort
-				Edges.Sort(CompareEdges); 
+				FortuneEdges.Sort(CompareEdges); 
 			}
 		}
 		#endregion
