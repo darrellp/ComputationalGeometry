@@ -147,7 +147,7 @@ namespace DAP.CompGeom
 		/// <returns>	A point on the ray different than the starting point. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PT ConvertToReal(PT ptStart, Single rayLength)
+		public PT ConvertToReal(PT ptStart, Double rayLength)
 		{
 			return new PT(
 				Pt.X * rayLength + ptStart.X,
