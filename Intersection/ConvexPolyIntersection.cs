@@ -39,6 +39,8 @@ namespace DAP.CompGeom
 		/// this case is often unnecessary and so we leave it out here and plan on incorporating it in a separate
 		/// method at a later date.</para>
 		/// 
+		/// <para>This is based on the code in "Computational Geometry in C" by Joseph O'Rourke.</para>
+		/// 
 		/// Darrellp, 2/23/2011. </remarks>
 		///
 		/// <param name="poly1Enum">	The polygon 1 enum. </param>
