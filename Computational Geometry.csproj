@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="Debug.cs" />
     <Compile Include="Geometry.cs" />
+    <Compile Include="Intersection\ConvexPolyIntersection.cs" />
     <Compile Include="PriorityQueue\IPriorityQueueElement.cs" />
     <Compile Include="PointD.cs" />
     <Compile Include="PriorityQueue\Priority Queue.cs" />
