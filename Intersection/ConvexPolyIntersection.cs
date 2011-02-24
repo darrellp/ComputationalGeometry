@@ -30,9 +30,14 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Finds the intersection of two convex polygons. </summary>
 		///
-		/// <remarks>	No check is made for convexity.  The enumerables must yield the points in counterclockwise
+		/// <remarks>	<para>No check is made for convexity.  The enumerables must yield the points in counterclockwise
 		/// order.  That is opposite to the way they're returned from the code in fortune so put in a Reverse on
-		/// those enumerables.
+		/// those enumerables.</para>
+		/// 
+		/// <para>This code works by looking for intersections between the two polygons.  If there is no intersection
+		/// then no points will be returned even if one is wholly contains within the other.  Putting a check in for
+		/// this case is often unnecessary and so we leave it out here and plan on incorporating it in a separate
+		/// method at a later date.</para>
 		/// 
 		/// Darrellp, 2/23/2011. </remarks>
 		///
@@ -72,8 +77,8 @@ namespace DAP.CompGeom
 
 				// if A & B intersect
 				PT ptCrossing;
-				int code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out ptCrossing);
-				if (code == '1' || code == 'v')
+				var code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out ptCrossing);
+				if (code == Geometry.CrossingType.Normal || code == Geometry.CrossingType.Vertex)
 				{
 					// Initialize the first time through
 					if (inflag == InflagVals.Unknown && fFoundFirstPoint)
@@ -96,18 +101,20 @@ namespace DAP.CompGeom
 				//
 				// This means that one edge of the polys meets the edge of the other with the polygons lying on
 				// opposite sides so that this overlap is the entirety of the overlap for the entire polygons
-				if (code == 'e' && Geometry.Dot(vecA, vecB) < 0)
+				if (code == Geometry.CrossingType.Edge && Geometry.Dot(vecA, vecB) < 0)
 				{
 					yield break;
 				}
 				// else if A and B are parallel and separated
-				else if (cross == 0 && bHalfPlaneContainsA < 0 && aHalfPlaneContainsB < 0)
+				//
+				// The union of the two polygons is empty
+				if (cross == 0 && bHalfPlaneContainsA < 0 && aHalfPlaneContainsB < 0)
 				{
 					// Handle it
 					yield break;
 				}
-				// else if A and B are collinear
-				else if (cross == 0 && bHalfPlaneContainsA == 0 && aHalfPlaneContainsB == 0)
+					// else if A and B are collinear
+				if (cross == 0 && bHalfPlaneContainsA == 0 && aHalfPlaneContainsB == 0)
 				{
 					// Advance, but don't output point
 					if (inflag == InflagVals.AInterior)
@@ -119,7 +126,7 @@ namespace DAP.CompGeom
 						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 				}
-				// else if cross > 0
+					// else if cross > 0
 				else if (cross >= 0)
 				{
 					if (aHalfPlaneContainsB > 0)
@@ -141,7 +148,7 @@ namespace DAP.CompGeom
 						}
 					}
 				}
-				// else if cross < 0
+					// else if cross < 0
 				else
 				{
 					if (bHalfPlaneContainsA < 0)
@@ -164,8 +171,12 @@ namespace DAP.CompGeom
 					}
 				}
 			}
-			// both indices have cycles or one has cycled twice
-			while ((cAdvancesA < cPolyAVertices || cAdvancesB < cPolyAVertices) && (cAdvancesA < 2*cPolyAVertices || cAdvancesB < 2*cPolyBVertices));
+			// both indices have cycled or one has cycled twice
+			while (
+				(cAdvancesA < cPolyAVertices || cAdvancesB < cPolyAVertices) &&
+				(cAdvancesA < 2*cPolyAVertices || cAdvancesB < 2*cPolyBVertices));
+
+			// TODO: If Inflags is unknown then we never intersected and may have one poly wholly contained in the other.
 		}
 
 		private static int Advance(int iHead, ref int cAdvances, int cPolyVertices)
@@ -187,100 +198,100 @@ namespace DAP.CompGeom
 			return inflag;
 		}
 	}
-		#region NUNIT
+	
+	#region NUNIT
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>	Test convex polygon intersection. </summary>
+	///
+	/// <remarks>	Darrellp, 2/21/2011. </remarks>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Test convex polygon intersection. </summary>
-		///
-		/// <remarks>	Darrellp, 2/21/2011. </remarks>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		[TestFixture]
-		public class TestConvexIntersect
+	[TestFixture]
+	public class TestConvexIntersect
+	{
+		private static void check(List<PT> poly1, List<PT> poly2, List<PT> res)
 		{
-			private static void check(List<PT> poly1, List<PT> poly2, List<PT> res)
+			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
+			foreach (var pt in output)
 			{
-				var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
-				foreach (var pt in output)
-				{
-					Assert.IsTrue(res.Contains(pt));
-				}
-			}
-
-			[Test]
-			public void TestGeneratorAdds()
-			{
-				var poly1 = new List<PT>()
-				                     	{
-				                     		new PT(0, 0),
-				                     		new PT(2, 0),
-				                     		new PT(2, 3),
-				                     		new PT(0, 3)
-				                     	};
-				var poly2 = new List<PT>()
-				                     	{
-				                     		new PT(1, 1),
-											new PT(2, 1),
-											new PT(2, 2),
-											new PT(1, 2)
-				                     	};
-				var res = new List<PT>()
-				                   	{
-				                   		new PT(1, 1),
-				                   		new PT(2, 1),
-				                   		new PT(2, 2),
-				                   		new PT(1, 2)
-				                   	};
-				check(poly1, poly2, res);
-
-				poly1 = new List<PT>()
-				        	{
-				        		new PT(0, 0),
-				        		new PT(4, 0),
-				        		new PT(4, 4),
-				        		new PT(0, 4),
-				        	};
-				poly2 = new List<PT>()
-				        	{
-				        		new PT(2, -1),
-				        		new PT(5, 2),
-				        		new PT(2, 5),
-				        		new PT(-1, 2),
-				        	};
-				res = new List<PT>()
-				        	{
-				        		new PT(1, 0),
-				        		new PT(3, 0),
-				        		new PT(4, 1),
-				        		new PT(4, 3),
-				        		new PT(3, 4),
-				        		new PT(1, 4),
-				        		new PT(0, 3),
-				        		new PT(0, 1),
-				        	};
-				check(poly1, poly2, res);
-
-				poly1 = new List<PT>()
-				        	{
-				        		new PT(0, 0),
-				        		new PT(3, 0),
-				        		new PT(3, 3),
-				        		new PT(0, 3),
-				        	};
-				poly2 = new List<PT>()
-				        	{
-				        		new PT(3, 1),
-				        		new PT(4, 1),
-				        		new PT(4, 2),
-				        		new PT(3, 2),
-				        	};
-				res = new List<PT>()
-				      	{
-				      		new PT(3, 1),
-				      		new PT(3, 2),
-				      	};
-				check(poly1, poly2, res);
+				Assert.IsTrue(res.Contains(pt));
 			}
 		}
-		#endregion
+
+		[Test]
+		public void TestGeneratorAdds()
+		{
+			var poly1 = new List<PT>()
+				                    {
+				                     	new PT(0, 0),
+				                     	new PT(2, 0),
+				                     	new PT(2, 3),
+				                     	new PT(0, 3)
+				                    };
+			var poly2 = new List<PT>()
+				                    {
+				                     	new PT(1, 1),
+										new PT(2, 1),
+										new PT(2, 2),
+										new PT(1, 2)
+				                    };
+			var res = new List<PT>()
+				                {
+				                   	new PT(1, 1),
+				                   	new PT(2, 1),
+				                   	new PT(2, 2),
+				                   	new PT(1, 2)
+				                };
+			check(poly1, poly2, res);
+
+			poly1 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(4, 0),
+				        	new PT(4, 4),
+				        	new PT(0, 4),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(2, -1),
+				        	new PT(5, 2),
+				        	new PT(2, 5),
+				        	new PT(-1, 2),
+				        };
+			res = new List<PT>()
+				        {
+				        	new PT(1, 0),
+				        	new PT(3, 0),
+				        	new PT(4, 1),
+				        	new PT(4, 3),
+				        	new PT(3, 4),
+				        	new PT(1, 4),
+				        	new PT(0, 3),
+				        	new PT(0, 1),
+				        };
+			check(poly1, poly2, res);
+
+			poly1 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(3, 0),
+				        	new PT(3, 3),
+				        	new PT(0, 3),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(3, 1),
+				        	new PT(4, 1),
+				        	new PT(4, 2),
+				        	new PT(3, 2),
+				        };
+			res = new List<PT>()
+				    {
+				      	new PT(3, 1),
+				      	new PT(3, 2),
+				    };
+			check(poly1, poly2, res);
+		}
+	}
+	#endregion
 }
