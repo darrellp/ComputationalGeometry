@@ -236,6 +236,106 @@ namespace DAP.CompGeom
 			return Area(pt1, pt2, pt3) < Tolerance;
 		}
 
+		public static char SegSegInt(PT seg1Pt1, PT seg1Pt2, PT seg2Pt1, PT seg2Pt2, out PT pPt)
+		{
+			double s, t;
+			double num, denom;
+			char code = '?';
+			pPt = new PT();
+
+			denom =
+				seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
+				seg1Pt2.X*(seg2Pt1.Y - seg2Pt2.Y) +
+				seg2Pt2.X*(seg1Pt2.Y - seg1Pt1.Y) +
+				seg2Pt1.X*(seg1Pt1.Y - seg1Pt2.Y);
+
+			if (FNearZero(denom))
+			{
+				return ParallelInt(seg1Pt1, seg1Pt2, seg2Pt1, seg2Pt2, out pPt);
+			}
+
+			num =
+				seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
+				seg2Pt1.X*(seg1Pt1.Y - seg2Pt2.Y) +
+				seg2Pt2.X*(seg2Pt1.Y - seg1Pt1.Y);
+
+			if (FNearZero(num) || FCloseEnough(num, denom))
+			{
+				code = 'v';
+			}
+			s = num/denom;
+
+			num = -(seg1Pt1.X * (seg2Pt1.Y - seg1Pt2.Y) +
+				   seg1Pt2.X * (seg1Pt1.Y - seg2Pt1.Y) +
+				   seg2Pt1.X * (seg1Pt2.Y - seg1Pt1.Y));
+			t = num/denom;
+
+			if (FNearZero(num) || FCloseEnough(num, denom))
+			{
+				code = 'v';
+			}
+
+			if (0 < s && s < 1 && 0 < t && t < 1)
+			{
+				code = '1';
+			}
+			else if (0 > s || s > 1 || 0 > t || t > 1)
+			{
+				code = '0';
+			}
+
+			pPt.X = seg1Pt1.X + s*(seg1Pt2.X - seg1Pt1.X);
+			pPt.Y = seg1Pt1.Y + s*(seg1Pt2.Y - seg1Pt1.Y);
+
+			return code;
+		}
+
+		public static bool Between(PT aPt, PT bPt, PT cPt)
+		{
+			if (!FCollinear(aPt, bPt, cPt))
+			{
+				return false;
+			}
+
+			if (aPt.X != bPt.X)
+				return aPt.X <= cPt.X && cPt.X <= bPt.X || aPt.X >= cPt.X && cPt.X >= bPt.X;
+			else
+			{
+				return aPt.Y <= cPt.Y && cPt.Y <= bPt.Y || aPt.Y >= cPt.Y && cPt.Y >= bPt.Y;
+			}
+		}
+
+		private static char ParallelInt(PT aPt, PT bPt, PT cPt, PT dPt, out PT pPt)
+		{
+			pPt = new PT();
+			if (!FCollinear(aPt, bPt, cPt))
+			{
+				return '0';
+			}
+
+			if (Between(aPt, bPt, cPt))
+			{
+				pPt = cPt;
+				return 'e';
+			}
+			if (Between(aPt, bPt, dPt))
+			{
+				pPt = dPt;
+				return 'e';
+			}
+			if (Between(cPt, dPt, aPt))
+			{
+				pPt = aPt;
+				return 'e';
+			}
+			if (Between(cPt, dPt, bPt))
+			{
+				pPt = cPt;
+				return 'e';
+			}
+			return '0';
+		}
+
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Euclidean distance between two points. </summary>
 		///

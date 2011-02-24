@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 
 namespace DAP.CompGeom
@@ -37,7 +38,7 @@ namespace DAP.CompGeom
 		///
 		/// <param name="x">		The x coordinate. </param>
 		/// <param name="y">		The y coordinate. </param>
-		/// <param name="cookie">	A cookie to hold user specified info in. </param>
+		/// <param name="cookie">	pt1 cookie to hold user specified info in. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		public PointD(double x, double y, object cookie)
@@ -45,6 +46,51 @@ namespace DAP.CompGeom
 			Cookie = cookie;
 			X = x;
 			Y = y;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Convert this object into a string representation. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <returns>	A string representation of this object. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public override string ToString()
+		{
+			return string.Format("({0},{1})", X, Y);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Subtract two PointDs. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <param name="pt1">	First PointD. </param>
+		/// <param name="pt2">	Second PointD. </param>
+		///
+		/// <returns>	The result of the operation. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static PointD operator -(PointD pt1, PointD pt2)
+		{
+			return new PointD(pt1.X - pt2.X, pt1.Y - pt2.Y);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Subtract two PointDs. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <param name="pt1">	First PointD. </param>
+		/// <param name="pt2">	Second PointD. </param>
+		///
+		/// <returns>	The result of the operation. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static PointD operator +(PointD pt1, PointD pt2)
+		{
+			return new PointD(pt1.X + pt2.X, pt1.Y + pt2.Y);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,5 +107,39 @@ namespace DAP.CompGeom
 		{
 			return new PointF((float)pt.X, (float)pt.Y);
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Compares this vector with another one. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <param name="obj">	The object to compare to this object. </param>
+		///
+		/// <returns>	true if the objects are considered equal, false if they are not. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is PointD))
+			{
+				return false;
+			}
+			var ptCompare = (PointD)obj;
+			return X == ptCompare.X && Y == ptCompare.Y;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Retrieves a hashcode that is dependent on the elements. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <returns>	The hashcode. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public override int GetHashCode()
+		{
+			return X.GetHashCode() ^ Y.GetHashCode();
+		}
+
 	}
 }
