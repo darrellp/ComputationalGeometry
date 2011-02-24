@@ -78,6 +78,22 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Multiply by a scalar. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <param name="pt">	Point to be multiplied. </param>
+		/// <param name="v">	Scalar to multiply by. </param>
+		///
+		/// <returns>	The result of the operation. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static PointD operator *(PointD pt, double v)
+		{
+			return new PointD(pt.X * v, pt.Y * v);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Subtract two PointDs. </summary>
 		///
 		/// <remarks>	Darrellp, 2/23/2011. </remarks>
