@@ -5,7 +5,7 @@ using NUnit.Framework;
 #endif
 #if DOUBLEPRECISION
 using PT = DAP.CompGeom.PointD;
-
+using TPT = System.Double;
 #else
 using PT = System.Drawing.PointF;
 using TPT = System.Single;
@@ -100,6 +100,55 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		internal int Index { get; set; }
 
+		#endregion
+
+		#region Queries
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Return real vertices.  Vertices at infinity will be converted based on the passed ray length. </summary>
+		///
+		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		///
+		/// <param name="rayLength">	Length of the ray. </param>
+		///
+		/// <returns>	An enumerable of real points representing the polygon. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<PointD> RealVertices(double rayLength)
+		{
+			// For every edge in the polygon
+			foreach (var oe in OrientedEdges)
+			{
+				// Skip if it's the edge at infinity - we'll pick it up on one of the infinite edges
+				if (oe.Edge.FAtInfinity)
+				{
+					continue;
+				}
+
+				// Get start and end vertices
+				var vtxStart = oe.Forward ? oe.Edge.VtxStart : oe.Edge.VtxEnd;
+				var vtxEnd = oe.Forward ? oe.Edge.VtxEnd : oe.Edge.VtxStart;
+
+				// If the start vtx is at infinity
+				if (vtxStart.FAtInfinity)
+				{
+					// Then return it to count for the edge at infinity
+					yield return vtxStart.ConvertToReal(vtxEnd.Pt, rayLength);
+				}
+				
+				// If the end vertex is at infinity
+				if (vtxEnd.FAtInfinity)
+				{
+					// convert it to a real point and return it
+					yield return vtxEnd.ConvertToReal(vtxStart.Pt, rayLength);
+				}
+				else
+				{
+					// return it normally
+					yield return vtxEnd.Pt;
+				}
+			}
+		}
 		#endregion
 
 		#region Constructor
