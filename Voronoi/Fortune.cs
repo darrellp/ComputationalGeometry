@@ -173,33 +173,64 @@ namespace DAP.CompGeom
 		/// <param name="we">			WingedEdge structure we'll relax. </param>
 		/// <param name="rayLength">	Length of the rays we extend. </param>
 		/// <param name="polyClip">		The polygon to clip to. </param>
+		/// <param name="strength">		Strength of relaxation.  The default is 1 for "standard"
+		/// 							relaxation. 0 has no effect.  Negative values can make it more
+		/// 							"spikey". </param>
 		///
-		/// <returns>	. </returns>
+		/// <returns>	The relaxed Winged Edge structure. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static WE LloydRelax(WE we, double rayLength, IEnumerable<PT> polyClip)
+		public static WE LloydRelax(WE we, double rayLength, IEnumerable<PT> polyClip, double strength = 1)
 		{
+			// Locals
 			var ptsRelaxed = new List<PointD>();
+
+			// For each polygon in the Winged edge
 			foreach (var poly in we.LstPolygons)
 			{
+				// Skip the polygon at infinity
 				if (poly.FAtInfinity)
 				{
 					continue;
 				}
+
+				// Get the polygon vertices in CCW order
 				var ptsPoly = poly.RealVertices(rayLength);
+
+				// Clip them to our clipping polygon
 				var ptsClipped =
 					ConvexPolyIntersection.FindIntersection(polyClip, ptsPoly);
 				var ptsCentroid = ptsClipped.Any() ? ptsClipped : ptsPoly;
 
+				// Locals for the centroid calculations
 				var cpts = 0;
 				var ptCentroid = new PointD();
+
+				// For each point in the clipped polygon
 				foreach (var pt in ptsCentroid)
 				{
+					// Add it in to the centroid accumulator
 					ptCentroid += pt;
 					cpts++;
 				}
-				ptsRelaxed.Add(new PointD(ptCentroid.X / cpts, ptCentroid.Y / cpts));
+
+				// Determine the centroid
+				var ctrd = new PointD(ptCentroid.X / cpts, ptCentroid.Y / cpts);
+
+				// If strength is the default -1, just take our centroid
+				if (strength == 1)
+				{
+					// Calculate the new centroid and add it to our list of points
+					ptsRelaxed.Add(new PointD(ptCentroid.X / cpts, ptCentroid.Y / cpts));
+				}
+				else
+				{
+					// Move the original voronoi point nearer or further from the centroid
+					ptsRelaxed.Add(poly.VoronoiPoint + (poly.VoronoiPoint - ctrd) * (-strength));
+				}
 			}
+
+			// Return the voronoi diagram on all the centroids
 			return ComputeVoronoi(ptsRelaxed);
 		}
 		#endregion
