@@ -85,10 +85,8 @@ namespace DAP.CompGeom
 					// Initialize the first time through
 					if (inflag == InflagVals.Unknown && fFoundFirstPoint)
 					{
-						cAdvancesA = cAdvancesB = 0;
 						fFoundFirstPoint = false;
 						PT ptFirstCrossing = ptCrossing;
-						yield return ptFirstCrossing;
 						ptPrevOutput = ptFirstCrossing;
 					}
 
@@ -133,21 +131,21 @@ namespace DAP.CompGeom
 				{
 					if (aHalfPlaneContainsB > 0)
 					{
-						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
 						{
 							yield return polyA[aCur];
 							ptPrevOutput = polyA[aCur];
 						}
+						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 					else
 					{
-						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
 						{
 							yield return polyB[bCur];
 							ptPrevOutput = polyB[bCur];
 						}
+						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 					}
 				}
 					// else if cross < 0
@@ -155,28 +153,28 @@ namespace DAP.CompGeom
 				{
 					if (bHalfPlaneContainsA < 0)
 					{
-						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
 						{
 							yield return polyA[aCur];
 							ptPrevOutput = polyA[aCur];
 						}
+						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 					else
 					{
-						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
 						{
 							yield return polyB[bCur];
 							ptPrevOutput = polyB[bCur];
 						}
+						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 					}
 				}
 			}
 			// both indices have cycled or one has cycled twice
 			while (
 				(cAdvancesA < cPolyAVertices || cAdvancesB < cPolyAVertices) &&
-				(cAdvancesA < 2*cPolyAVertices || cAdvancesB < 2*cPolyBVertices));
+				cAdvancesA < 2*cPolyAVertices && cAdvancesB < 2*cPolyBVertices);
 
 			// TODO: If Inflags is unknown then we never intersected and may have one poly wholly contained in the other.
 		}
@@ -291,6 +289,28 @@ namespace DAP.CompGeom
 				    {
 				      	new PT(3, 1),
 				      	new PT(3, 2),
+				    };
+			check(poly1, poly2, res);
+			poly1 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(2, 0),
+				        	new PT(2, 5),
+				        	new PT(0, 5),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(4, 1),
+				        	new PT(1, 4),
+				        	new PT(1, 2),
+				        	new PT(3, 0),
+				        };
+			res = new List<PT>()
+				    {
+				      	new PT(2, 1),
+				      	new PT(2, 3),
+				      	new PT(1, 4),
+				      	new PT(1, 2),
 				    };
 			check(poly1, poly2, res);
 		}

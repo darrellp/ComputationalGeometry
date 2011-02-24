@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 #if DOUBLEPRECISION
+using System.Linq;
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
@@ -149,6 +150,61 @@ namespace DAP.CompGeom
 			f.Voronoi();
 			return f.BuildWingedEdge();
 		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Lloyd relaxation. </summary>
+		///
+		/// <remarks>	
+		/// This routine performs a single Lloyd relaxation on a fortune winged edge structure.  That
+		/// means the points for the voronoi diagram are moved to the centroid of their cell and the
+		/// voronoi algorithm is run again.  In order to do this we have to be able to clip the infinite
+		/// polygons or else their centroid is undefined so a clipping polygon is passed in to clip to.
+		/// Also, as usual, we need a ray length to know how far to extend any infinite rays.  This
+		/// should be a large enough value that all rays extend to the side of the clipping polygon.
+		/// 
+		/// Currently, my clipping algorithm only works for convex polygons so the clipping polygon
+		/// passed in must be convex and the points must be in counterclockwise order.  This works fine
+		/// for clipping to rectangles or voronoi cells which are the two cases I'm currently interested
+		/// in.
+		/// 
+		/// Darrellp, 2/24/2011. 
+		/// </remarks>
+		///
+		/// <param name="we">			WingedEdge structure we'll relax. </param>
+		/// <param name="rayLength">	Length of the rays we extend. </param>
+		/// <param name="polyClip">		The polygon to clip to. </param>
+		///
+		/// <returns>	. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static WE LloydRelax(WE we, double rayLength, IEnumerable<PT> polyClip)
+		{
+			var ptsRelaxed = new List<PointD>();
+			foreach (var poly in we.LstPolygons)
+			{
+				if (poly.FAtInfinity)
+				{
+					continue;
+				}
+				var ptsPoly = poly.RealVertices(rayLength);
+				var ptsClipped =
+					ConvexPolyIntersection.FindIntersection(polyClip, ptsPoly);
+				var ptsCentroid = ptsClipped.Any() ? ptsClipped : ptsPoly;
+
+				var cpts = 0;
+				var ptCentroid = new PointD();
+				foreach (var pt in ptsCentroid)
+				{
+					ptCentroid += pt;
+					cpts++;
+				}
+				ptsRelaxed.Add(new PointD(ptCentroid.X / cpts, ptCentroid.Y / cpts));
+			}
+			return ComputeVoronoi(ptsRelaxed);
+		}
+		#endregion
+
+		#region Voronoi  winged edge calculation
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Calculates the voronoi diagram. </summary>

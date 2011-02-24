@@ -251,7 +251,7 @@ namespace DAP.CompGeom
 			/// <summary> Normal crossing.  </summary>
 			Normal,
 			/// <summary> Segments are parallel and do not cross.  </summary>
-			Parallel
+			NonCrossing
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +313,7 @@ namespace DAP.CompGeom
 			}
 			else if (0 > tSeg1 || tSeg1 > 1 || 0 > tSeg2 || tSeg2 > 1)
 			{
-				code = CrossingType.Parallel;
+				code = CrossingType.NonCrossing;
 			}
 
 			pPt.X = seg1Pt1.X + tSeg1*(seg1Pt2.X - seg1Pt1.X);
@@ -360,7 +360,7 @@ namespace DAP.CompGeom
 			pPt = new PT();
 			if (!FCollinear(aPt, bPt, cPt))
 			{
-				return CrossingType.Parallel;
+				return CrossingType.NonCrossing;
 			}
 
 			if (Between(aPt, bPt, cPt))
@@ -383,7 +383,7 @@ namespace DAP.CompGeom
 				pPt = cPt;
 				return CrossingType.Edge;
 			}
-			return CrossingType.Parallel;
+			return CrossingType.NonCrossing;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
