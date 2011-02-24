@@ -52,28 +52,50 @@ namespace DAP.CompGeom
 		public static IEnumerable<PointD> FindIntersection(IEnumerable<PointD> poly1Enum, IEnumerable<PointD> poly2Enum)
 		{
 			// Initialize
+
+			// Put the two polygons into arrays
 			var polyA = poly1Enum.ToArray();
 			var polyB = poly2Enum.ToArray();
+
+			// Index of the heads that chase each other around the polygon
 			var aCur = 0;
 			var bCur = 0;
 			var origin = new PointD(0, 0);
+
+			// Tells whether A or B is currently on the "inside".
 			var inflag = InflagVals.Unknown;
+
+			// Total number of times we've advanced each of the heads
 			var cAdvancesA = 0;
 			var cAdvancesB = 0;
-			var fFoundFirstPoint = true;
+
+			// True after we've found the first point
+			var fFoundFirstPoint = false;
+
+			// Counts of vertices in the two polygons
 			var cPolyAVertices = polyA.Length;
 			var cPolyBVertices = polyB.Length;
+
+			// Last point we output so we don't repeat points
 			var ptPrevOutput = new PointD();
 
 			// Step through the edges
 			do
 			{
 				// Compute key variables
+
+				// Tail of our current sides
 				var aPrev = (aCur + cPolyAVertices - 1)%cPolyAVertices;
 				var bPrev = (bCur + cPolyBVertices - 1)%cPolyBVertices;
+
+				// Direction of each side
 				var vecA = polyA[aCur] - polyA[aPrev];
 				var vecB = polyB[bCur] - polyB[bPrev];
+
+				// cross > 0 means a counterclockwise turn from vector A to vector B
 				var cross = Math.Sign(Geometry.SignedArea(origin, vecA, vecB));
+
+				// Whether the left half plane of each vector contains the head of the other vector
 				var bHalfPlaneContainsA = Math.Sign(Geometry.SignedArea(polyB[bPrev], polyB[bCur], polyA[aCur]));
 				var aHalfPlaneContainsB = Math.Sign(Geometry.SignedArea(polyA[aPrev], polyA[aCur], polyB[bCur]));
 
@@ -82,25 +104,24 @@ namespace DAP.CompGeom
 				var code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out ptCrossing);
 				if (code == Geometry.CrossingType.Normal || code == Geometry.CrossingType.Vertex)
 				{
-					// Initialize the first time through
-					if (inflag == InflagVals.Unknown && fFoundFirstPoint)
+					// If this is the first intersection we've seen
+					if (inflag == InflagVals.Unknown && !fFoundFirstPoint)
 					{
-						fFoundFirstPoint = false;
-						PT ptFirstCrossing = ptCrossing;
-						ptPrevOutput = ptFirstCrossing;
+						// Set First Point Found
+						fFoundFirstPoint = true;
 					}
 
 					// update the inflag
 					inflag = InOut(inflag, bHalfPlaneContainsA, aHalfPlaneContainsB);
 					yield return ptCrossing;
+					ptPrevOutput = ptCrossing;
 				}
-
-				// Advance one of the indices
 
 				// If A and B overlap and are oppositely oriented
 				//
 				// This means that one edge of the polys meets the edge of the other with the polygons lying on
-				// opposite sides so that this overlap is the entirety of the overlap for the entire polygons
+				// opposite sides so that this overlap is the entirety of the overlap for the polygons.  We've
+				// already returned the points so nothing to do here but quit out.
 				if (code == Geometry.CrossingType.Edge && Geometry.Dot(vecA, vecB) < 0)
 				{
 					yield break;
@@ -113,7 +134,7 @@ namespace DAP.CompGeom
 					// Handle it
 					yield break;
 				}
-					// else if A and B are collinear
+				// else if A and B are collinear
 				if (cross == 0 && bHalfPlaneContainsA == 0 && aHalfPlaneContainsB == 0)
 				{
 					// Advance, but don't output point
@@ -126,47 +147,64 @@ namespace DAP.CompGeom
 						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 				}
-					// else if cross > 0
+				// else if A to B is a CCW turn
 				else if (cross >= 0)
 				{
+					// Is B's head to A's left?
 					if (aHalfPlaneContainsB > 0)
 					{
+						// Is A interior to B?
 						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
 						{
+							// Yeild A's head
 							yield return polyA[aCur];
 							ptPrevOutput = polyA[aCur];
 						}
+						
+						// Advance A
 						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 					else
 					{
+						// Is B interior to A?
 						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
 						{
+							// Yeild B's head
 							yield return polyB[bCur];
 							ptPrevOutput = polyB[bCur];
 						}
+
+						// Advance B
 						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 					}
 				}
-					// else if cross < 0
 				else
 				{
+					// Is A's head to B's right?
 					if (bHalfPlaneContainsA < 0)
 					{
+						// Is A interior to B?
 						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
 						{
+							// Yeild A's head
 							yield return polyA[aCur];
 							ptPrevOutput = polyA[aCur];
 						}
+
+						// Advance A
 						aCur = Advance(aCur, ref cAdvancesA, cPolyAVertices);
 					}
 					else
 					{
+						// Is B interior to A?
 						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
 						{
+							// Yeild B's head
 							yield return polyB[bCur];
 							ptPrevOutput = polyB[bCur];
 						}
+
+						// Advance B
 						bCur = Advance(bCur, ref cAdvancesB, cPolyBVertices);
 					}
 				}
