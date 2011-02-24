@@ -236,104 +236,154 @@ namespace DAP.CompGeom
 			return Area(pt1, pt2, pt3) < Tolerance;
 		}
 
-		public static char SegSegInt(PT seg1Pt1, PT seg1Pt2, PT seg2Pt1, PT seg2Pt2, out PT pPt)
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Values that represent CrossingType for segment to segment intersection. </summary>
+		///
+		/// <remarks>	Darrellp, 2/24/2011. </remarks>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public enum CrossingType
 		{
-			double s, t;
-			double num, denom;
-			char code = '?';
+			/// <summary> Segments overlap and are collinear.  </summary>
+			Edge,
+			/// <summary> The endpoing of one segment lies on the other and they are not collinear.  </summary>
+			Vertex,
+			/// <summary> Normal crossing.  </summary>
+			Normal,
+			/// <summary> Segments are parallel and do not cross.  </summary>
+			Parallel
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Does segment to segment crossings. </summary>
+		///
+		/// <remarks>	
+		/// Based on code from Computational Geometry in C by Joseph O'Rourke.
+		/// 
+		/// Darrellp, 2/24/2011. 
+		/// </remarks>
+		///
+		/// <param name="seg1Pt1">	The first point of the segment 1. </param>
+		/// <param name="seg1Pt2">	The second point of the segment 1. </param>
+		/// <param name="seg2Pt1">	The first point of segment 2. </param>
+		/// <param name="seg2Pt2">	The second point of segment 2. </param>
+		/// <param name="pPt">		[out] The intersection if any. </param>
+		///
+		/// <returns>	A crossing type as outlined above. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static CrossingType SegSegInt(PT seg1Pt1, PT seg1Pt2, PT seg2Pt1, PT seg2Pt2, out PT pPt)
+		{
+			var code = (CrossingType)(-1);
 			pPt = new PT();
 
-			denom =
-				seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
-				seg1Pt2.X*(seg2Pt1.Y - seg2Pt2.Y) +
-				seg2Pt2.X*(seg1Pt2.Y - seg1Pt1.Y) +
-				seg2Pt1.X*(seg1Pt1.Y - seg1Pt2.Y);
+			var denom = seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
+			               seg1Pt2.X*(seg2Pt1.Y - seg2Pt2.Y) +
+			               seg2Pt2.X*(seg1Pt2.Y - seg1Pt1.Y) +
+			               seg2Pt1.X*(seg1Pt1.Y - seg1Pt2.Y);
 
 			if (FNearZero(denom))
 			{
 				return ParallelInt(seg1Pt1, seg1Pt2, seg2Pt1, seg2Pt2, out pPt);
 			}
 
-			num =
-				seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
-				seg2Pt1.X*(seg1Pt1.Y - seg2Pt2.Y) +
-				seg2Pt2.X*(seg2Pt1.Y - seg1Pt1.Y);
+			var num = seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
+			             seg2Pt1.X*(seg1Pt1.Y - seg2Pt2.Y) +
+			             seg2Pt2.X*(seg2Pt1.Y - seg1Pt1.Y);
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
-				code = 'v';
+				code = CrossingType.Vertex;
 			}
-			s = num/denom;
+			var tSeg1 = num/denom;
 
 			num = -(seg1Pt1.X * (seg2Pt1.Y - seg1Pt2.Y) +
 				   seg1Pt2.X * (seg1Pt1.Y - seg2Pt1.Y) +
 				   seg2Pt1.X * (seg1Pt2.Y - seg1Pt1.Y));
-			t = num/denom;
+			var tSeg2 = num/denom;
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
-				code = 'v';
+				code = CrossingType.Vertex;
 			}
 
-			if (0 < s && s < 1 && 0 < t && t < 1)
+			if (0 < tSeg1 && tSeg1 < 1 && 0 < tSeg2 && tSeg2 < 1)
 			{
-				code = '1';
+				code = CrossingType.Normal;
 			}
-			else if (0 > s || s > 1 || 0 > t || t > 1)
+			else if (0 > tSeg1 || tSeg1 > 1 || 0 > tSeg2 || tSeg2 > 1)
 			{
-				code = '0';
+				code = CrossingType.Parallel;
 			}
 
-			pPt.X = seg1Pt1.X + s*(seg1Pt2.X - seg1Pt1.X);
-			pPt.Y = seg1Pt1.Y + s*(seg1Pt2.Y - seg1Pt1.Y);
+			pPt.X = seg1Pt1.X + tSeg1*(seg1Pt2.X - seg1Pt1.X);
+			pPt.Y = seg1Pt1.Y + tSeg1*(seg1Pt2.Y - seg1Pt1.Y);
 
 			return code;
 		}
 
-		public static bool Between(PT aPt, PT bPt, PT cPt)
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Determines if point B lies between points A and C. </summary>
+		///
+		/// <remarks>	
+		/// Based on code from Computational Geometry in C by Joseph O'Rourke.
+		/// 
+		/// Darrellp, 2/24/2011. 
+		/// </remarks>
+		///
+		/// <param name="ptSegEndpoint1">	a point. </param>
+		/// <param name="ptSegmentEndpoint2">	The point. </param>
+		/// <param name="ptTest">	The point. </param>
+		///
+		/// <returns>	true if it succeeds, false if it fails. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static bool Between(PT ptSegEndpoint1, PT ptSegmentEndpoint2, PT ptTest)
 		{
-			if (!FCollinear(aPt, bPt, cPt))
+			if (!FCollinear(ptSegEndpoint1, ptSegmentEndpoint2, ptTest))
 			{
 				return false;
 			}
 
-			if (aPt.X != bPt.X)
-				return aPt.X <= cPt.X && cPt.X <= bPt.X || aPt.X >= cPt.X && cPt.X >= bPt.X;
-			else
+			if (ptSegEndpoint1.X != ptSegmentEndpoint2.X)
 			{
-				return aPt.Y <= cPt.Y && cPt.Y <= bPt.Y || aPt.Y >= cPt.Y && cPt.Y >= bPt.Y;
+				return ptSegEndpoint1.X <= ptTest.X && ptTest.X <= ptSegmentEndpoint2.X ||
+				       ptSegEndpoint1.X >= ptTest.X && ptTest.X >= ptSegmentEndpoint2.X;
 			}
+
+			return ptSegEndpoint1.Y <= ptTest.Y && ptTest.Y <= ptSegmentEndpoint2.Y ||
+			       ptSegEndpoint1.Y >= ptTest.Y && ptTest.Y >= ptSegmentEndpoint2.Y;
 		}
 
-		private static char ParallelInt(PT aPt, PT bPt, PT cPt, PT dPt, out PT pPt)
+		private static CrossingType ParallelInt(PT aPt, PT bPt, PT cPt, PT dPt, out PT pPt)
 		{
 			pPt = new PT();
 			if (!FCollinear(aPt, bPt, cPt))
 			{
-				return '0';
+				return CrossingType.Parallel;
 			}
 
 			if (Between(aPt, bPt, cPt))
 			{
 				pPt = cPt;
-				return 'e';
+				return CrossingType.Edge;
 			}
 			if (Between(aPt, bPt, dPt))
 			{
 				pPt = dPt;
-				return 'e';
+				return CrossingType.Edge;
 			}
 			if (Between(cPt, dPt, aPt))
 			{
 				pPt = aPt;
-				return 'e';
+				return CrossingType.Edge;
 			}
 			if (Between(cPt, dPt, bPt))
 			{
 				pPt = cPt;
-				return 'e';
+				return CrossingType.Edge;
 			}
-			return '0';
+			return CrossingType.Parallel;
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
