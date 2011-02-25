@@ -582,7 +582,13 @@ namespace DAP.CompGeom
 
 		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly)
 		{
-			return !poly.Zip(poly.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).Where(s => s != 1).Any();
+			return !poly.
+				// Calculate Signs on pairs of points
+				Zip(poly.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
+				// They're +1 for points going CCW around the test point
+				Where(s => s != 1).
+				// If any were not 1 then we're not inside.
+				Any();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
