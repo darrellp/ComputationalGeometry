@@ -1,4 +1,5 @@
 #if DOUBLEPRECISION
+using System.Collections.Generic;
 using PT = DAP.CompGeom.PointD;
 using TPT = System.Double;
 #else
@@ -7,6 +8,7 @@ using TPT = System.Single;
 #endif
 
 using System;
+using System.Linq;
 #if NUNIT || DEBUG
 using NUnit.Framework;
 #endif
@@ -564,6 +566,26 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Determines if a point is in the interior of a convex polygon. </summary>
+		///
+		/// <remarks>	
+		/// No check is made for the convexity of the polygon and it must be enumerated in CCW order
+		/// 
+		/// Darrellp, 2/25/2011. 
+		/// </remarks>
+		///
+		/// <param name="ptTest">	Test point. </param>
+		/// <param name="poly">		The points enumerating the polygon in CCW order. </param>
+		///
+		/// <returns>	true if ptTest is in the polygon, false if it fails. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly)
+		{
+			return !poly.Zip(poly.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).Where(s => s != 1).Any();
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// Determine the center of a circle passing through three points in the plane.  Most of this is
 		/// ugly math generated from Mathematica. 
@@ -611,6 +633,20 @@ namespace DAP.CompGeom
 	[TestFixture]
 	public class TestGeometry
 	{
+		[Test]
+		public void TestPointInConvexPoly()
+		{
+			List<PT> poly = new List<PointD>()
+			                	{
+			                		new PointD(-1, -1),
+			                		new PointD(1, -1),
+			                		new PointD(1, 1),
+			                		new PointD(-1, 1)
+			                	};
+			Assert.IsTrue(Geometry.PointInConvexPoly(new PointD(0,0), poly));
+			Assert.IsFalse(Geometry.PointInConvexPoly(new PointD(2, 0), poly));
+		}
+
 		[Test]
 		public void TestCcw()
 		{
