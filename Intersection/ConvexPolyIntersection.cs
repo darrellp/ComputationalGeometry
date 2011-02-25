@@ -78,6 +78,7 @@ namespace DAP.CompGeom
 
 			// Last point we output so we don't repeat points
 			var ptPrevOutput = new PointD();
+			var ptFirstOutput = new PointD();
 
 			// Step through the edges
 			do
@@ -109,6 +110,13 @@ namespace DAP.CompGeom
 					{
 						// Set First Point Found
 						fFoundFirstPoint = true;
+						ptFirstOutput = ptCrossing;
+						cAdvancesA = cAdvancesB = 0;
+					}
+					// Else if we've looped back on ourselves
+					else if (ptCrossing.Equals(ptFirstOutput))
+					{
+						yield break;
 					}
 
 					// update the inflag
@@ -214,7 +222,29 @@ namespace DAP.CompGeom
 				(cAdvancesA < cPolyAVertices || cAdvancesB < cPolyAVertices) &&
 				cAdvancesA < 2*cPolyAVertices && cAdvancesB < 2*cPolyBVertices);
 
-			// TODO: If Inflags is unknown then we never intersected and may have one poly wholly contained in the other.
+			// If Inflags is unknown then we never intersected and may have one poly wholly contained in the other.
+			if (inflag == InflagVals.Unknown)
+			{
+				// If a point of A is in B
+				if (Geometry.PointInConvexPoly(polyA[0], polyB))
+				{
+					// Yield all of A
+					foreach (var pt in polyA)
+					{
+						yield return pt;
+					}
+				}
+				// else if a point of B is in A
+				else if (Geometry.PointInConvexPoly(polyB[0], polyA))
+				{
+					// Yield all of B
+					foreach (var pt in polyB)
+					{
+						yield return pt;
+					}
+				}
+
+			}
 		}
 
 		private static int Advance(int iHead, ref int cAdvances, int cPolyVertices)
@@ -247,13 +277,16 @@ namespace DAP.CompGeom
 	[TestFixture]
 	public class TestConvexIntersect
 	{
-		private static void check(List<PT> poly1, List<PT> poly2, List<PT> res)
+		private static void Check(List<PT> poly1, List<PT> poly2, List<PT> res)
 		{
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
+			int c = 0;
 			foreach (var pt in output)
 			{
+				c++;
 				Assert.IsTrue(res.Contains(pt));
 			}
+			Assert.AreEqual(c, res.Count);
 		}
 
 		[Test]
@@ -280,7 +313,7 @@ namespace DAP.CompGeom
 				                   	new PT(2, 2),
 				                   	new PT(1, 2)
 				                };
-			check(poly1, poly2, res);
+			Check(poly1, poly2, res);
 
 			poly1 = new List<PT>()
 				        {
@@ -307,7 +340,7 @@ namespace DAP.CompGeom
 				        	new PT(0, 3),
 				        	new PT(0, 1),
 				        };
-			check(poly1, poly2, res);
+			Check(poly1, poly2, res);
 
 			poly1 = new List<PT>()
 				        {
@@ -328,7 +361,7 @@ namespace DAP.CompGeom
 				      	new PT(3, 1),
 				      	new PT(3, 2),
 				    };
-			check(poly1, poly2, res);
+			Check(poly1, poly2, res);
 			poly1 = new List<PT>()
 				        {
 				        	new PT(0, 0),
@@ -350,7 +383,29 @@ namespace DAP.CompGeom
 				      	new PT(1, 4),
 				      	new PT(1, 2),
 				    };
-			check(poly1, poly2, res);
+			Check(poly1, poly2, res);
+			poly1 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(3, 0),
+				        	new PT(3, 3),
+				        	new PT(0, 3),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(1, 1),
+				        	new PT(1, 2),
+				        	new PT(2, 2),
+				        	new PT(2, 1),
+				        };
+			res = new List<PT>()
+				    {
+				        new PT(1, 1),
+				        new PT(1, 2),
+				        new PT(2, 2),
+				        new PT(2, 1),
+				    };
+			Check(poly1, poly2, res);
 		}
 	}
 	#endregion
