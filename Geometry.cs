@@ -580,15 +580,17 @@ namespace DAP.CompGeom
 		/// <returns>	true if ptTest is in the polygon, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly)
+		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly, bool fIncludeBorders = false)
 		{
-			return !poly.
-				// Calculate Signs on pairs of points
-				Zip(poly.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
-				// They're +1 for points going CCW around the test point
-				Where(s => s != 1).
-				// If any were not 1 then we're not inside.
-				Any();
+			// We need to check the last vertex with the first, so add the first at the end for a cycle
+			var polyCycle = poly.Concat(new PT[1] {poly.First()});
+			return !polyCycle.
+			        	// Calculate Signs on pairs of points
+			        	Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2) + (fIncludeBorders ? 0.1 : 0))).
+			        	// They're +1 for points going CCW around the test point
+			        	Where(s => s != 1).
+			        	// If any were not 1 then we're not inside.
+			        	Any();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -651,6 +653,15 @@ namespace DAP.CompGeom
 			                	};
 			Assert.IsTrue(Geometry.PointInConvexPoly(new PointD(0,0), poly));
 			Assert.IsFalse(Geometry.PointInConvexPoly(new PointD(2, 0), poly));
+			poly = new List<PointD>()
+			       	{
+			       		new PointD(-1689, 9836),
+			       		new PointD(-6680, 7107),
+			       		new PointD(393.18, 37.905),
+			       		new PointD(394.025, 37.825),
+			       		new PointD(416, 59)
+			       	};
+			Assert.IsFalse(Geometry.PointInConvexPoly(new PointD(423, 68), poly));
 		}
 
 		[Test]
