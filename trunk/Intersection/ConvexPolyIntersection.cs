@@ -31,8 +31,7 @@ namespace DAP.CompGeom
 		/// <summary>	Finds the intersection of two convex polygons. </summary>
 		///
 		/// <remarks>	<para>No check is made for convexity.  The enumerables must yield the points in counterclockwise
-		/// order.  That is opposite to the way they're returned from the code in fortune so put in a Reverse on
-		/// those enumerables.</para>
+		/// order.</para>
 		/// 
 		/// <para>This code works by looking for intersections between the two polygons.  If there is no intersection
 		/// then no points will be returned even if one is wholly contains within the other.  Putting a check in for
@@ -219,7 +218,7 @@ namespace DAP.CompGeom
 			}
 			// both indices have cycled or one has cycled twice
 			while (
-				(cAdvancesA < cPolyAVertices || cAdvancesB < cPolyAVertices) &&
+				(cAdvancesA < cPolyAVertices || cAdvancesB < cPolyBVertices) &&
 				cAdvancesA < 2*cPolyAVertices && cAdvancesB < 2*cPolyBVertices);
 
 			// If Inflags is unknown then we never intersected and may have one poly wholly contained in the other.
@@ -406,6 +405,21 @@ namespace DAP.CompGeom
 				        new PT(2, 1),
 				    };
 			Check(poly1, poly2, res);
+			poly1 = new List<PT>()
+				        {
+				        	new PT(241, 1090),
+				        	new PT(206, 278),
+				        	new PT(290, 242),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(509, 0),
+				        	new PT(509, 312),
+				        	new PT(0, 312),
+				        };
+			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
+			Assert.AreEqual(4, output.Count);
 		}
 	}
 	#endregion
