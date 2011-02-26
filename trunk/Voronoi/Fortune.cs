@@ -198,9 +198,14 @@ namespace DAP.CompGeom
 				var ptsPoly = poly.RealVertices(rayLength);
 
 				// Clip them to our clipping polygon
-				var ptsClipped =
+				var ptsCentroid =
 					ConvexPolyIntersection.FindIntersection(polyClip, ptsPoly);
-				var ptsCentroid = ptsClipped.Any() ? ptsClipped : ptsPoly;
+
+				// If this polygon is outside our bounding box, just skip it
+				if (!ptsCentroid.Any())
+				{
+					continue;
+				}
 
 				// Locals for the centroid calculations
 				var cpts = 0;
