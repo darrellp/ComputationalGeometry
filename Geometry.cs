@@ -569,7 +569,8 @@ namespace DAP.CompGeom
 		/// <summary>	Determines if a point is in the interior of a convex polygon. </summary>
 		///
 		/// <remarks>	
-		/// No check is made for the convexity of the polygon and it must be enumerated in CCW order
+		/// No check is made for the convexity of the polygon and it must be enumerated in CCW order.
+		/// Points on the border are not considered to be in the interior.
 		/// 
 		/// Darrellp, 2/25/2011. 
 		/// </remarks>
@@ -580,13 +581,13 @@ namespace DAP.CompGeom
 		/// <returns>	true if ptTest is in the polygon, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly, bool fIncludeBorders = false)
+		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly)
 		{
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
 			var polyCycle = poly.Concat(new PT[1] {poly.First()});
 			return !polyCycle.
 			        	// Calculate Signs on pairs of points
-			        	Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2) + (fIncludeBorders ? 0.1 : 0))).
+			        	Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
 			        	// They're +1 for points going CCW around the test point
 			        	Where(s => s != 1).
 			        	// If any were not 1 then we're not inside.
