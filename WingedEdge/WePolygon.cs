@@ -168,7 +168,8 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// The standard WingedEdge doesn't directly give the edges around a polygon so this is an enumerator for that. 
+		/// The standard WingedEdge doesn't directly give the edges around a polygon so this is an
+		/// enumerator for that. They are returned in CCW order. 
 		/// </summary>
 		///
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
@@ -236,7 +237,7 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	An enumerator for the vertices of a polygon. </summary>
+		/// <summary>	An enumerator for the edges of a polygon in CCW order. </summary>
 		///
 		/// <remarks>	Darrellp, 2/18/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
