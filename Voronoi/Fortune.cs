@@ -898,7 +898,7 @@ namespace DAP.CompGeom
 			}
 
 			// Create the new infinite vertex and add it to our edge
-			edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection, true);
+			edge.VtxEnd = FortuneVertex.InfiniteVertex(ptProposedDirection);
 			((FortuneVertex)edge.VtxEnd).FortuneEdges.Add(edge);
 		}
 
@@ -920,8 +920,8 @@ namespace DAP.CompGeom
 			var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
 			// Infinite vertices have directions in them rather than locations
-			var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx), true);
-			var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx), true);
+			var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx));
+			var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx));
 
 			// Create the new edge an link it in 
 			edge.VtxStart = new FortuneVertex(ptMid);
