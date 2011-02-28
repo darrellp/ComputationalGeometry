@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using NetTrace;
 #if NUNIT || DEBUG
 using NUnit.Framework;
@@ -37,11 +39,19 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets a list of edges in Clockwise order. </summary>
+		/// <remarks>	
+		/// Sadly, it was after creating and using this variable in numerous places that I found out that
+		/// the "standard" order for keeping edges is in CCW order.  The enumerator at WePolygon was made
+		/// with this convention in mind and thus returns the edges in CCW order so we have the confusion
+		/// that one edge enumerator returns edges in CW order and one in CCW order.  Given that they're
+		/// both used so heavily it would be tough to remove or modify either one.  I've made this one
+		/// internal to avoid confusion externally. 
+		/// </remarks>
 		///
 		/// <value>	The edges in Clockwise order. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public List<FortuneEdge> FortuneEdges { get; protected set; }
+		internal List<FortuneEdge> FortuneEdges { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Adds an edge to the Fortune polygon. </summary>
@@ -51,7 +61,7 @@ namespace DAP.CompGeom
 		/// <param name="edge">	The edge to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddEdge(FortuneEdge edge)
+		internal void AddEdge(FortuneEdge edge)
 		{
 			FortuneEdges.Add(edge);
 		}
@@ -105,6 +115,242 @@ namespace DAP.CompGeom
 		#region Queries
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Return real vertices where this voronoi cell intersects with a passed in bounding box. 
+		/// </summary>
+		///
+		/// <remarks>	
+		/// <para>I'm trying to handle all the exceptional cases.  There is one incredibly exceptional
+		/// case which I'm ignoring.  That is the case where there are two vertices at infinity which are
+		/// at such nearly opposite directions without being completely collinear that we can't push
+		/// their points at infinity out far enough to encompass the rest of the box within the range of
+		/// a double.  If this is important to you, then see the comments below, but it's hard to imagine
+		/// it ever arising.</para>
+		/// 
+		/// <para>Editorial comment - The annoying thing about all of this is that, like in so much of
+		/// computational geometry, the rarer and less significant the exceptional cases are, the more
+		/// difficult they are to handle.  It's both a blessing and a curse - it means that the normal
+		/// cases are generally faster, but it also makes it difficult to get excited about slogging
+		/// through the tedious details of situations that will probably never arise in practice.  Still,
+		/// in order to keep our noses clean, we press on regardless.</para>
+		/// 
+		/// Darrellp, 2/26/2011. 
+		/// </remarks>
+		///
+		/// <param name="ptUL">	The upper left point of the box. </param>
+		/// <param name="ptLR">	The lower right point of the box. </param>
+		///
+		/// <returns>	An enumerable of real points representing the voronoi cell clipped to the box. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<PointD> RealVertices(PT ptUL, PT ptLR)
+		{
+			// If no edges, then it's just the entire box
+			if (!Edges.Any())
+			{
+				foreach (var pt in BoxPoints(ptUL, ptLR))
+				{
+					yield return pt;
+				}
+				yield break;
+			}
+
+			IEnumerable<PT> ptsToBeClipped;
+			var ptsBox = BoxPoints(ptUL, ptLR);
+
+			var fFound = FCheckEasy(out ptsToBeClipped);
+			if (!fFound)
+			{
+				fFound = FCheckParallelLines(ptsBox, out ptsToBeClipped);
+			}
+			if (!fFound)
+			{
+				fFound = FCheckDoublyInfinite(ptsBox, out ptsToBeClipped);
+			}
+			if (!fFound)
+			{
+				ptsToBeClipped = RealVertices(CalcRayLength(ptsBox));
+			}
+
+			foreach (var pt in ConvexPolyIntersection.FindIntersection(ptsToBeClipped, ptsBox))
+			{
+				yield return pt;
+			}
+			yield break;
+		}
+
+		private bool FCheckParallelLines(IEnumerable<PT> ptsBox, out IEnumerable<PT> ptsToBeClipped)
+		{
+			// Do the required initialization of our out parameter
+			ptsToBeClipped = null;
+
+			// See if our cell is made up of two parallel lines.
+			// This is the only case where we will have exactly two lines at
+			// infinity - one connecting each end of the parallel lines.
+			// We will have exactly six edges - it will look like the following:
+			//
+			//      Inf vtx-------------finite vtx 0 -----------------Inf vtx
+			//      |                                                       |
+			//      |<-Edge at infinity                   Edge at infinity->|
+			//      |                                                       |
+			//      Inf vtx-------------finite vtx 1 ------------------Inf vtx
+			//
+			// So that's a total of six edges and two of them at infinity.
+			if (Edges.Where(e => e.FAtInfinity).Count() == 2)
+			{
+				// Retrieve the two finite points
+				var ptsFinite = Vertices.Where(v => !v.FAtInfinity).Select(v => v.Pt).ToArray();
+
+				// Find out the max dist from any finite point to any finite point on the box and double it for good measure
+				var maxDist0 = Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, ptsFinite[0])).Max());
+				var maxDist1 = Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, ptsFinite[1])).Max());
+				var maxDist = 2.0 * Math.Max(maxDist0, maxDist1);
+
+				// Use that as a ray length to get real vertices which will later be clipped to the box
+				ptsToBeClipped = RealVertices(maxDist);
+				return true;
+			}
+			return false;
+		}
+
+		private bool FCheckDoublyInfinite(IEnumerable<PT> ptsBox, out IEnumerable<PT> ptsToBeClipped)
+		{
+			ptsToBeClipped = null;
+
+			// This case will always have exactly three vertices - one finite and two infinite
+			if (Vertices.Count() != 3)
+			{
+				return false;
+			}
+
+			// Get the finite vertex
+			var vtx = Vertices.Where(v => !v.FAtInfinity).First();
+
+			// If it's only got two edges emanating from it (a doubly infinite line)
+			if (vtx.Edges.Count() == 2)
+			{
+				// Figure out a satisfactory distance for our ray length
+				var maxDist = 2.0 * Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, vtx.Pt)).Max());
+				var arRealPts = RealVertices(maxDist).ToArray();
+
+				// For every point in the box
+				//
+				// We have to include the points to the left of the line in our rectangle we want clipped
+				// So find the max distance and extend a rect that length to the side of our line
+				// segment.  We double the offset just to be safe.
+				double maxLineDist = 2 * ptsBox.
+					// Get the distance to our line
+					Select(p => Geometry.PtToLineDistance(p, arRealPts[0], arRealPts[2])).
+					// Keep only the ones to the left of the line
+					Where(d => d > 0).
+					// Find the max distance
+					Max();
+
+				// If there were no points to the left of our line
+				if (maxLineDist == 0)
+				{
+					// return an empty array
+					ptsToBeClipped = new List<PT>();
+				}
+				else
+				{
+					// Return the rectangle formed from our line segment extended out by maxLineDist
+					var vcOffset = (arRealPts[2] - arRealPts[0]).Normalize().Flip90Ccw()*maxLineDist;
+					ptsToBeClipped = new List<PT>
+				                 		{
+				                 			arRealPts[0],
+				                 			arRealPts[2],
+				                 			arRealPts[2] + vcOffset,
+				                 			arRealPts[0] + vcOffset
+				                 		};
+				}
+				return true;
+			}
+			return false;
+		}
+
+		private bool FCheckEasy(out IEnumerable<PT> ptsToBeClipped)
+		{
+			ptsToBeClipped = null;
+			if (!Edges.Where(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity).Any())
+			{
+				ptsToBeClipped = Vertices.Select(v => v.Pt);
+				return true;
+			}
+			return false;
+		}
+
+
+		private TPT CalcRayLength(IEnumerable<PointD> ptsBox)
+		{
+			// Initialize
+			var oes = OrientedEdges.ToArray();
+			var ioeOutgoing = 0;
+
+			// For each oriented edge
+			for (int i = 0; i < oes.Length; i++)
+			{
+				// If it's the outgoing infinite edge
+				if (oes[i].EndVtx.FAtInfinity)
+				{
+					// Set ioeOutgoing to it's index
+					ioeOutgoing = i;
+					break;
+				}
+			}
+
+			// Get the outgoing and incoming infinite edges.
+			//
+			// The incoming edge is always two further away from the outgoing,
+			// separated by the edge at infinity.
+			var oeOut = oes[ioeOutgoing];
+			var oeIn = oes[(ioeOutgoing + 2)%oes.Count()];
+
+			// Make an initial guess for a good ray length
+			double length = CalcInitialGuess(oeIn, oeOut, ptsBox);
+
+			// While the length is still not satisfactory
+			while (!Satisfactory(length, oeIn, oeOut, ptsBox) && length < double.MaxValue / 2.0)
+			{
+				// Double it
+				length *= 2;
+			}
+
+			// Return the final length
+			return length;
+		}
+
+		private static bool Satisfactory(double length, OrientedEdge oeIn, OrientedEdge oeOut, IEnumerable<PointD> ptsBox)
+		{
+			// The length is satisfactory if all the points in the box are on the same side of it
+			var ptRealOut = oeOut.EndVtx.ConvertToReal(oeOut.StartPt, length);
+			var ptRealIn = oeIn.StartVtx.ConvertToReal(oeIn.EndPt, length);
+			return !ptsBox.Where(pt => !Geometry.FLeft(ptRealOut, ptRealIn, pt)).Any();
+		}
+
+		private static double CalcInitialGuess(OrientedEdge oeIn, OrientedEdge oeOut, IEnumerable<PointD> ptsBox)
+		{
+			// Find out the max dist from any finite point to any point on the box and double it for good measure
+			var maxDist0 = Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, oeIn.StartPt)).Max());
+			var maxDist1 = Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, oeOut.StartPt)).Max());
+			return 2.0 * Math.Max(maxDist0, maxDist1);
+
+		}
+
+
+
+		private static IEnumerable<PointD> BoxPoints(PT ptUL, PT ptLR)
+		{
+			return new List<PointD>
+			       	{
+			       		new PointD(ptUL.X, ptLR.Y),
+			       		new PointD(ptLR.X, ptLR.Y),
+			       		new PointD(ptLR.X, ptUL.Y),
+			       		new PointD(ptUL.X, ptUL.Y)
+			       	};
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Return real vertices.  Vertices at infinity will be converted based on the passed ray length. </summary>
 		///
 		/// <remarks>	Darrellp, 2/23/2011. </remarks>
@@ -126,8 +372,8 @@ namespace DAP.CompGeom
 				}
 
 				// Get start and end vertices
-				var vtxStart = oe.Forward ? oe.Edge.VtxStart : oe.Edge.VtxEnd;
-				var vtxEnd = oe.Forward ? oe.Edge.VtxEnd : oe.Edge.VtxStart;
+				var vtxStart = oe.StartVtx;
+				var vtxEnd = oe.EndVtx;
 
 				// If the start vtx is at infinity
 				if (vtxStart.FAtInfinity)
@@ -307,106 +553,6 @@ namespace DAP.CompGeom
 		[TestFixture]
 		public class TestFortunePoly
 		{
-			[Test]
-			public void TestEdgeSort()
-			{
-				//var poly1 = new FortunePoly(new PT(0, 0), 0);
-				//var poly2 = new FortunePoly(new PT(0, 2), 1);
-				//var poly3 = new FortunePoly(new PT(2, 0), 2);
-				//var poly4 = new FortunePoly(new PT(0, -2), 3);
-				//var poly5 = new FortunePoly(new PT(-2, 0), 4);
-				//var vtx1 = new FortuneVertex(new PT(1, 1));
-				//var vtx2 = new FortuneVertex(new PT(1, -1));
-				//var vtx3 = new FortuneVertex(new PT(-1, -1));
-				//var vtx4 = new FortuneVertex(new PT(-1, 1));
-				//FortuneVertex vtx5;
-				//var edge1 = new FortuneEdge();
-				//var edge2 = new FortuneEdge();
-				//var edge3 = new FortuneEdge();
-				//var edge4 = new FortuneEdge();
-				//edge2.SetPolys(poly1, poly2);
-				//edge3.SetPolys(poly1, poly3);
-				//edge4.SetPolys(poly1, poly4);
-				//edge1.SetPolys(poly1, poly5);
-				//edge1.VtxStart = vtx4;
-				//edge1.VtxEnd = vtx1;
-				//edge2.VtxStart = vtx1;
-				//edge2.VtxEnd = vtx2;
-				//edge3.VtxStart = vtx2;
-				//edge3.VtxEnd = vtx3;
-				//edge4.VtxStart = vtx3;
-				//edge4.VtxEnd = vtx4;
-
-				//var polyTest = new FortunePoly(new PT(0, 0), 0);
-				//polyTest.AddEdge(edge1);
-				//polyTest.AddEdge(edge3);
-				//polyTest.AddEdge(edge2);
-				//polyTest.AddEdge(edge4);
-
-				//polyTest.SortEdges();
-
-				//vtx1.Pt = new PT(3, 4);
-				//vtx2.Pt = new PT(4, 3);
-				//vtx3.Pt = new PT(-1, -2);
-				//vtx4.Pt = new PT(-2, -1);
-				//polyTest.EdgesCW.Clear();
-
-				//polyTest.AddEdge(edge4);
-				//polyTest.AddEdge(edge3);
-				//polyTest.AddEdge(edge1);
-				//polyTest.AddEdge(edge2);
-
-				//polyTest.SortEdges();
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-
-				//poly1.VoronoiPoint = new PT(10, 10);
-				//vtx1.Pt = new PT(13, 14);
-				//vtx2.Pt = new PT(14, 13);
-				//vtx3.Pt = new PT(9, 8);
-				//vtx4.Pt = new PT(8, 9);
-				//polyTest.EdgesCW.Clear();
-
-				//polyTest.AddEdge(edge1);
-				//polyTest.AddEdge(edge3);
-				//polyTest.AddEdge(edge2);
-				//polyTest.AddEdge(edge4);
-
-				//polyTest.SortEdges();
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-
-				//poly1.VoronoiPoint = new PT(0, 0);
-				//vtx1 = FortuneVertex.InfiniteVertex(new PT(1, 2), true);
-				//vtx2.Pt = new PT(8, -1);
-				//vtx3.Pt = new PT(0, -3);
-				//vtx4.Pt = new PT(-8, -1);
-				//vtx5 = FortuneVertex.InfiniteVertex(new PT(-1, 2), true);
-				//edge1.VtxStart = vtx2;
-				//edge1.VtxEnd = vtx1;
-				//edge2.VtxStart = vtx2;
-				//edge2.VtxEnd = vtx3;
-				//edge3.VtxStart = vtx3;
-				//edge3.VtxEnd = vtx4;
-				//edge4.VtxStart = vtx4;
-				//edge4.VtxEnd = vtx5;
-				//polyTest.EdgesCW.Clear();
-
-				//polyTest.AddEdge(edge3);
-				//polyTest.AddEdge(edge1);
-				//polyTest.AddEdge(edge2);
-				//polyTest.AddEdge(edge4);
-
-				//polyTest.SortEdges();
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[0], edge1));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[1], edge2));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[2], edge3));
-				//Assert.IsTrue(ReferenceEquals(polyTest.EdgesCW[3], edge4));
-			}
 		}
 #endif
 		#endregion
