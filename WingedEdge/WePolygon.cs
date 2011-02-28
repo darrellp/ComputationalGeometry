@@ -1,12 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -205,7 +198,7 @@ namespace DAP.CompGeom
 			/// <value>	The start point. </value>
 			////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			public PT StartPt
+			public PointD StartPt
 			{
 				get
 				{
@@ -219,7 +212,7 @@ namespace DAP.CompGeom
 			/// <value>	The end point. </value>
 			////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			public PT EndPt
+			public PointD EndPt
 			{
 				get
 				{

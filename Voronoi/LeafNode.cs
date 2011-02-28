@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Text;
 using NetTrace;
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -100,14 +93,14 @@ namespace DAP.CompGeom
 		/// <returns>	The X coordinate of the right breakpoint. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal TPT RightBreak(TPT yScanLine)
+		internal double RightBreak(double yScanLine)
 		{
 			// If we're the leaf furthest to the right...
 			if (RightAdjacentLeaf == null)
 			{
 				// There is no break to the right - return "infinity"
 
-				return TPT.MaxValue;
+				return double.MaxValue;
 			}
 
 			// Calculate where we intersect the parabola to our right
@@ -124,14 +117,14 @@ namespace DAP.CompGeom
 		/// <returns>	The X coordinate of the left breakpoint. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal TPT LeftBreak(TPT yScanLine)
+		internal double LeftBreak(double yScanLine)
 		{
 			// If we're the leaf furthest to the left...
 			if (LeftAdjacentLeaf == null)
 			{
 				// There is no break point to our left - return "minus infinity"
 
-				return TPT.MinValue;
+				return double.MinValue;
 			}
 			// Calculate where we intersect the parabola to our left
 			return Geometry.ParabolicCut(Poly.VoronoiPoint, LeftAdjacentLeaf.Poly.VoronoiPoint, yScanLine);

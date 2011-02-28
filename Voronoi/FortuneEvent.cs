@@ -1,10 +1,3 @@
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 #if NETUNIT || DEBUG
 using NUnit.Framework;
 #endif
@@ -51,7 +44,7 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Constructor
-		internal FortuneEvent(PT pt)
+		internal FortuneEvent(PointD pt)
 		{
 			Pt = pt;
 		}
@@ -134,10 +127,10 @@ namespace DAP.CompGeom
 		/// <returns>	A new circle event. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal static CircleEvent CreateCircleEvent(FortunePoly poly1, FortunePoly poly2, FortunePoly poly3, TPT yScanLine)
+		internal static CircleEvent CreateCircleEvent(FortunePoly poly1, FortunePoly poly2, FortunePoly poly3, double yScanLine)
 		{
 			// Locals
-			PT ptCenter;
+			PointD ptCenter;
 			CircleEvent cevtRet = null;
 
 			// Determine a circumcenter for the sites of poly1/2/3.
@@ -177,9 +170,9 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestICompare()
 			{
-				SiteEvent evtSmaller = new SiteEvent(new FortunePoly(new PT(0, 0), 0));
-				SiteEvent evtLarger = new SiteEvent(new FortunePoly(new PT(-1, 1), 0));
-				SiteEvent evtEqual = new SiteEvent(new FortunePoly(new PT(1, 1), 0));
+				SiteEvent evtSmaller = new SiteEvent(new FortunePoly(new PointD(0, 0), 0));
+				SiteEvent evtLarger = new SiteEvent(new FortunePoly(new PointD(-1, 1), 0));
+				SiteEvent evtEqual = new SiteEvent(new FortunePoly(new PointD(1, 1), 0));
 
 				Assert.IsTrue(((IComparable)evtSmaller).CompareTo(evtLarger) < 0);
 			}
@@ -262,8 +255,8 @@ namespace DAP.CompGeom
 	internal class CircleEvent : FortuneEvent
 	{
 		#region Private Variables
-		private readonly TPT _radius;						// Radius of the circle
-		private readonly TPT _radiusSq;						// Square of circle radius
+		private readonly double _radius;						// Radius of the circle
+		private readonly double _radiusSq;						// Square of circle radius
 
 		#endregion
 
@@ -273,17 +266,17 @@ namespace DAP.CompGeom
 
 		internal LeafNode LfnEliminated { get; set; }
 
-		internal PT VoronoiVertex
+		internal PointD VoronoiVertex
 		{
 			get
 			{
-				return new PT(Pt.X, Pt.Y + _radius);
+				return new PointD(Pt.X, Pt.Y + _radius);
 			}
 		}
 		#endregion
 
 		#region Constructor
-		internal CircleEvent(PT pt, TPT radius) : base(pt)
+		internal CircleEvent(PointD pt, double radius) : base(pt)
 		{
 			_radius = radius;
 			_radiusSq = radius*radius;
@@ -353,7 +346,7 @@ namespace DAP.CompGeom
 		/// <returns>	True if its contained in the circle, else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal bool Contains(PT pt)
+		internal bool Contains(PointD pt)
 		{
 			return Geometry.DistanceSq(pt, Pt) <= _radiusSq;
 		}

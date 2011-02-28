@@ -5,13 +5,6 @@ using NetTrace;
 #if NUNIT || DEBUG
 using NUnit.Framework;
 #endif
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -101,7 +94,7 @@ namespace DAP.CompGeom
 		/// <value>	The point in the original set of data points. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public PT VoronoiPoint { get; set; }
+		public PointD VoronoiPoint { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	A generic index to identify this polygon for debugging purposes.. </summary>
@@ -143,7 +136,7 @@ namespace DAP.CompGeom
 		/// <returns>	An enumerable of real points representing the voronoi cell clipped to the box. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public IEnumerable<PointD> RealVertices(PT ptUL, PT ptLR)
+		public IEnumerable<PointD> RealVertices(PointD ptUL, PointD ptLR)
 		{
 			// If no edges, then it's just the entire box
 			if (!Edges.Any())
@@ -155,7 +148,7 @@ namespace DAP.CompGeom
 				yield break;
 			}
 
-			IEnumerable<PT> ptsToBeClipped;
+			IEnumerable<PointD> ptsToBeClipped;
 			var ptsBox = BoxPoints(ptUL, ptLR);
 
 			var fFound = FCheckEasy(out ptsToBeClipped);
@@ -179,7 +172,7 @@ namespace DAP.CompGeom
 			yield break;
 		}
 
-		private bool FCheckParallelLines(IEnumerable<PT> ptsBox, out IEnumerable<PT> ptsToBeClipped)
+		private bool FCheckParallelLines(IEnumerable<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
 		{
 			// Do the required initialization of our out parameter
 			ptsToBeClipped = null;
@@ -213,7 +206,7 @@ namespace DAP.CompGeom
 			return false;
 		}
 
-		private bool FCheckDoublyInfinite(IEnumerable<PT> ptsBox, out IEnumerable<PT> ptsToBeClipped)
+		private bool FCheckDoublyInfinite(IEnumerable<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
 		{
 			ptsToBeClipped = null;
 
@@ -250,13 +243,13 @@ namespace DAP.CompGeom
 				if (maxLineDist == 0)
 				{
 					// return an empty array
-					ptsToBeClipped = new List<PT>();
+					ptsToBeClipped = new List<PointD>();
 				}
 				else
 				{
 					// Return the rectangle formed from our line segment extended out by maxLineDist
 					var vcOffset = (arRealPts[2] - arRealPts[0]).Normalize().Flip90Ccw()*maxLineDist;
-					ptsToBeClipped = new List<PT>
+					ptsToBeClipped = new List<PointD>
 				                 		{
 				                 			arRealPts[0],
 				                 			arRealPts[2],
@@ -269,7 +262,7 @@ namespace DAP.CompGeom
 			return false;
 		}
 
-		private bool FCheckEasy(out IEnumerable<PT> ptsToBeClipped)
+		private bool FCheckEasy(out IEnumerable<PointD> ptsToBeClipped)
 		{
 			ptsToBeClipped = null;
 			if (!Edges.Where(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity).Any())
@@ -281,7 +274,7 @@ namespace DAP.CompGeom
 		}
 
 
-		private TPT CalcRayLength(IEnumerable<PointD> ptsBox)
+		private double CalcRayLength(IEnumerable<PointD> ptsBox)
 		{
 			// Initialize
 			var oes = OrientedEdges.ToArray();
@@ -317,7 +310,7 @@ namespace DAP.CompGeom
 			}
 
 			// Return the final length
-			return length;
+			return (double)length;
 		}
 
 		private static bool Satisfactory(double length, OrientedEdge oeIn, OrientedEdge oeOut, IEnumerable<PointD> ptsBox)
@@ -339,7 +332,7 @@ namespace DAP.CompGeom
 
 
 
-		private static IEnumerable<PointD> BoxPoints(PT ptUL, PT ptLR)
+		private static IEnumerable<PointD> BoxPoints(PointD ptUL, PointD ptLR)
 		{
 			return new List<PointD>
 			       	{
@@ -408,7 +401,7 @@ namespace DAP.CompGeom
 		/// <param name="index">	The index to identiry this polygon. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal FortunePoly(PT pt, int index)
+		internal FortunePoly(PointD pt, int index)
 		{
 			FZeroLengthEdge = false;
 			FAtInfinity = false;

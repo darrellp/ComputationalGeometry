@@ -1,11 +1,3 @@
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -37,7 +29,7 @@ namespace FortuneTest
 		#endregion
 
 		#region Private Variables
-		List<PT> _lstPt = new List<PT>();
+		List<PointD> _lstPt = new List<PointD>();
 		List<FortunePoly> _lstPoly = null;
 		Matrix _mtxFromWorld;
 		Matrix _mtxToWorld;
@@ -62,19 +54,19 @@ namespace FortuneTest
 		#endregion
 
 		#region Graphic space conversions
-		Point PtFromPtf(PT ptf)
+		Point PtFromPtf(PointD ptf)
 		{
 			return new Point((int)ptf.X + pnlDraw.Width / 2, pnlDraw.Height / 2 - (int)ptf.Y);
 		}
 
-		PT PtfFromPt(Point pt)
+		PointD PtfFromPt(Point pt)
 		{
-			return new PT(pt.X - pnlDraw.Width / 2, pnlDraw.Height / 2 - pt.Y);
+			return new PointD(pt.X - pnlDraw.Width / 2, pnlDraw.Height / 2 - pt.Y);
 		}
 		#endregion
 
 		#region Drawing
-		void DrawPoint(Graphics g, PT ptf, bool fSelected)
+		void DrawPoint(Graphics g, PointD ptf, bool fSelected)
 		{
 			Point pt = PtFromPtf(ptf);
 
@@ -112,7 +104,7 @@ namespace FortuneTest
 								continue;
 							}
 							string[] arstr = str.Split(new char[] { ',' });
-							PT ptNew = new PT(TPT.Parse(arstr[0]), TPT.Parse(arstr[1]));
+							PointD ptNew = new PointD(double.Parse(arstr[0]), double.Parse(arstr[1]));
 							_lstPt.Add(ptNew);
 						}
 						pnlDraw.Invalidate();
@@ -129,7 +121,7 @@ namespace FortuneTest
 				{
 					using (StreamWriter sw = new StreamWriter(fs, Encoding.UTF8))
 					{
-						foreach (PT pt in _lstPt)
+						foreach (PointD pt in _lstPt)
 						{
 							sw.WriteLine(string.Format("{0},{1}", pt.X, pt.Y));
 						}
@@ -143,7 +135,7 @@ namespace FortuneTest
 		#region Event handlers
 		private void panel1_Paint(object sender, PaintEventArgs e)
 		{
-			foreach (PT ptf in _lstPt)
+			foreach (PointD ptf in _lstPt)
 			{
 				DrawPoint(e.Graphics, ptf, false);
 			}
@@ -162,7 +154,7 @@ namespace FortuneTest
 				// We can't just use the width/height of the drawing surface - that would work if
 				// one of the vertices was guaranteed to be on the drawing surface but that's
 				// not necessarily the case.
-				TPT infiniteLength = (TPT)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
+				double infiniteLength = (double)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
 				foreach (FortunePoly poly in _lstPoly)
 				{
 					foreach (FortuneEdge edge in poly.Edges)
@@ -200,52 +192,52 @@ namespace FortuneTest
 
 		private void btnSinglePoint_Click(object sender, EventArgs e)
 		{
-			_lstPt.Add(new PT(0, 0));
+			_lstPt.Add(new PointD(0, 0));
 			pnlDraw.Invalidate();
 		}
 
 		private void btnVTriangle_Click(object sender, EventArgs e)
 		{
-			_lstPt.Add(new PT(0, 0));
-			_lstPt.Add(new PT(100, 100));
-			_lstPt.Add(new PT(100, -100));
+			_lstPt.Add(new PointD(0, 0));
+			_lstPt.Add(new PointD(100, 100));
+			_lstPt.Add(new PointD(100, -100));
 			pnlDraw.Invalidate();
 		}
 
 		private void btnHTriangle_Click(object sender, EventArgs e)
 		{
-			//_lstPt.Add(new PT(0, 0));
-			_lstPt.Add(new PT(50, 0));
-			_lstPt.Add(new PT(30, 40));
-			_lstPt.Add(new PT(40, 30));
-			_lstPt.Add(new PT(0, 50));
-			_lstPt.Add(new PT(-30, 40));
-			_lstPt.Add(new PT(-40, 30));
-			_lstPt.Add(new PT(-50, 0));
-			_lstPt.Add(new PT(-40, -30));
-			_lstPt.Add(new PT(-30, -40));
-			_lstPt.Add(new PT(0, -50));
-			_lstPt.Add(new PT(30, -40));
-			_lstPt.Add(new PT(40, -30));
+			//_lstPt.Add(new PointD(0, 0));
+			_lstPt.Add(new PointD(50, 0));
+			_lstPt.Add(new PointD(30, 40));
+			_lstPt.Add(new PointD(40, 30));
+			_lstPt.Add(new PointD(0, 50));
+			_lstPt.Add(new PointD(-30, 40));
+			_lstPt.Add(new PointD(-40, 30));
+			_lstPt.Add(new PointD(-50, 0));
+			_lstPt.Add(new PointD(-40, -30));
+			_lstPt.Add(new PointD(-30, -40));
+			_lstPt.Add(new PointD(0, -50));
+			_lstPt.Add(new PointD(30, -40));
+			_lstPt.Add(new PointD(40, -30));
 			pnlDraw.Invalidate();
 		}
 
 		private void btnCHTriangle_Click(object sender, EventArgs e)
 		{
-			_lstPt.Add(new PT(0, 0));
-			_lstPt.Add(new PT(0, 100));
-			_lstPt.Add(new PT(-100, -100));
-			_lstPt.Add(new PT(100, -100));
+			_lstPt.Add(new PointD(0, 0));
+			_lstPt.Add(new PointD(0, 100));
+			_lstPt.Add(new PointD(-100, -100));
+			_lstPt.Add(new PointD(100, -100));
 			pnlDraw.Invalidate();
 		}
 
 
 		private void btnRectangle_Click(object sender, EventArgs e)
 		{
-			_lstPt.Add(new PT(-50, -100));
-			_lstPt.Add(new PT(50, -100));
-			_lstPt.Add(new PT(-50, 100));
-			_lstPt.Add(new PT(50, 100));
+			_lstPt.Add(new PointD(-50, -100));
+			_lstPt.Add(new PointD(50, -100));
+			_lstPt.Add(new PointD(-50, 100));
+			_lstPt.Add(new PointD(50, 100));
 			pnlDraw.Invalidate();
 		}
 
@@ -279,13 +271,13 @@ namespace FortuneTest
 
 		private void pnlDraw_MouseMove(object sender, MouseEventArgs e)
 		{
-			TPT distMin = TPT.MaxValue;
-			TPT distCur;
+			double distMin = double.MaxValue;
+			double distCur;
 			int iptSelected = -1;
 
 			if ((Control.ModifierKeys & Keys.Alt) != 0)
 			{
-				PT ptMouse = PtfFromPt(new Point(e.X, e.Y));
+				PointD ptMouse = PtfFromPt(new Point(e.X, e.Y));
 				for (int ipt = 0; ipt < _lstPt.Count; ipt++)
 				{
 					if ((distCur = Geometry.Distance(ptMouse, _lstPt[ipt])) < distMin && distCur <= radSelectPt)

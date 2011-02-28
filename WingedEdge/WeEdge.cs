@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using NetTrace;
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -264,7 +257,7 @@ namespace DAP.CompGeom
 		/// <returns>	true if it succeeds, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public bool FLeftOf(PT pt)
+		public bool FLeftOf(PointD pt)
 		{
 			// We should never have a start vertex at infinity
 			//
@@ -350,7 +343,7 @@ namespace DAP.CompGeom
 		public void Draw(Graphics g, Pen pen, Single infiniteLineLength)
 		{
 			// Declare the two points we're going to draw a segment on
-			PT pt1, pt2;
+			PointD pt1, pt2;
 
 			// If both vertices are at infinity, there's nothing to draw
 			if (VtxStart.FAtInfinity && VtxEnd.FAtInfinity)

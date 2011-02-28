@@ -3,13 +3,6 @@ using System.Text;
 using NetTrace;
 using NUnit.Framework;
 #endif
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -98,7 +91,7 @@ namespace DAP.CompGeom
 		/// <returns>	X coordinate where our edge crosses the scan line. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal TPT CurrentEdgeXPos(TPT yScanLine)
+		internal double CurrentEdgeXPos(double yScanLine)
 		{
 			return Geometry.ParabolicCut(PolyRight.VoronoiPoint, PolyLeft.VoronoiPoint, yScanLine);
 		}
@@ -158,8 +151,8 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestParabolicCut()
 			{
-				FortunePoly poly1 = new FortunePoly(new PT(0, 0), 0);
-				FortunePoly poly2 = new FortunePoly(new PT(8, 4), 1);
+				FortunePoly poly1 = new FortunePoly(new PointD(0, 0), 0);
+				FortunePoly poly2 = new FortunePoly(new PointD(8, 4), 1);
 
 				InternalNode inn = new InternalNode(poly1, poly2);
 				InternalNode innReverse = new InternalNode(poly2, poly1);
