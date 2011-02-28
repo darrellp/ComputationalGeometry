@@ -251,7 +251,7 @@ namespace DAP.CompGeom
 		/// <returns>	The vertex at infinity. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal static FortuneVertex InfiniteVertex(PT ptDirection, bool fNormalize)
+		internal static FortuneVertex InfiniteVertex(PT ptDirection, bool fNormalize = true)
 		{
 			var vtx = new FortuneVertex(ptDirection);
 			vtx.SetInfinite(ptDirection, fNormalize);
