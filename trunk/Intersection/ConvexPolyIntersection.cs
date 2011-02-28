@@ -120,8 +120,11 @@ namespace DAP.CompGeom
 
 					// update the inflag
 					inflag = InOut(inflag, bHalfPlaneContainsA, aHalfPlaneContainsB);
-					yield return ptCrossing;
-					ptPrevOutput = ptCrossing;
+					if (!ptCrossing.Equals(ptPrevOutput))
+					{
+						yield return ptCrossing;
+						ptPrevOutput = ptCrossing;
+					}
 				}
 
 				// If A and B overlap and are oppositely oriented
@@ -161,7 +164,7 @@ namespace DAP.CompGeom
 					if (aHalfPlaneContainsB > 0)
 					{
 						// Is A interior to B?
-						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
+						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput) && !polyA[aCur].Equals(ptFirstOutput))
 						{
 							// Yeild A's head
 							yield return polyA[aCur];
@@ -174,7 +177,7 @@ namespace DAP.CompGeom
 					else
 					{
 						// Is B interior to A?
-						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
+						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput) && !polyB[bCur].Equals(ptFirstOutput))
 						{
 							// Yeild B's head
 							yield return polyB[bCur];
@@ -191,7 +194,7 @@ namespace DAP.CompGeom
 					if (bHalfPlaneContainsA < 0)
 					{
 						// Is A interior to B?
-						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput))
+						if (inflag == InflagVals.AInterior && !polyA[aCur].Equals(ptPrevOutput) && !polyA[aCur].Equals(ptFirstOutput))
 						{
 							// Yeild A's head
 							yield return polyA[aCur];
@@ -204,7 +207,7 @@ namespace DAP.CompGeom
 					else
 					{
 						// Is B interior to A?
-						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput))
+						if (inflag == InflagVals.BInterior && !polyB[bCur].Equals(ptPrevOutput) && !polyB[bCur].Equals(ptFirstOutput))
 						{
 							// Yeild B's head
 							yield return polyB[bCur];
@@ -279,13 +282,11 @@ namespace DAP.CompGeom
 		private static void Check(List<PT> poly1, List<PT> poly2, List<PT> res)
 		{
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
-			int c = 0;
 			foreach (var pt in output)
 			{
-				c++;
 				Assert.IsTrue(res.Contains(pt));
 			}
-			Assert.AreEqual(c, res.Count);
+			Assert.AreEqual(output.Count(), res.Count);
 		}
 
 		[Test]
@@ -312,6 +313,52 @@ namespace DAP.CompGeom
 				                   	new PT(2, 2),
 				                   	new PT(1, 2)
 				                };
+			Check(poly1, poly2, res);
+			poly1 = new List<PT>()
+				        {
+				        	new PT(1, 0),
+				        	new PT(3, 0),
+				        	new PT(3, 2),
+				        	new PT(1, 2),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(0, 1),
+				        	new PT(1, 0),
+				        	new PT(2, 0),
+				        	new PT(2, 1),
+				        };
+			res = new List<PT>()
+				        {
+				        	new PT(1, 0),
+				        	new PT(2, 0),
+				        	new PT(2, 1),
+				        	new PT(1, 1),
+				        };
+			Check(poly1, poly2, res);
+			poly1 = new List<PT>()
+				        {
+				        	new PT(0, 0),
+				        	new PT(509, 0),
+				        	new PT(509, 312),
+				        	new PT(0, 312),
+				        };
+			poly2 = new List<PT>()
+				        {
+				        	new PT(53, 213),
+				        	new PT(110, 240),
+				        	new PT(89, 312),
+				        	new PT(0, 312),
+				        	new PT(0, 233),
+				        };
+			res = new List<PT>()
+				        {
+				        	new PT(53, 213),
+				        	new PT(110, 240),
+				        	new PT(89, 312),
+				        	new PT(0, 312),
+				        	new PT(0, 233),
+				        };
 			Check(poly1, poly2, res);
 
 			poly1 = new List<PT>()
