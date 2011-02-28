@@ -1,12 +1,3 @@
-#if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using System.Collections.Generic;
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
-
 using System;
 using System.Diagnostics;
 using NetTrace;
@@ -66,7 +57,7 @@ namespace DAP.CompGeom
 		/// <returns>	Leaf node for parabola covering xSite. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		private LeafNode LfnSearchNode( TPT xSite, TPT yScanLine)
+		private LeafNode LfnSearchNode( double xSite, double yScanLine)
 		{
 			// Initialize
 			LeafNode ndRet;
@@ -142,7 +133,7 @@ namespace DAP.CompGeom
 		/// <param name="evq">				Event queue. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal void RemoveNodeAndInsertVertex(CircleEvent cevt, LeafNode lfnEliminated, PT voronoiVertex, EventQueue evq)
+		internal void RemoveNodeAndInsertVertex(CircleEvent cevt, LeafNode lfnEliminated, PointD voronoiVertex, EventQueue evq)
 		{
 			// Initialize
 			Tracer.Assert(t.Assertion, NdRoot != null, "Trying to delete from a null tree");
@@ -407,7 +398,7 @@ namespace DAP.CompGeom
 		/// <returns>	Acceptable if less than or equal to zero, else rejected. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal static int ICcwVoronoi(PT pt1, PT pt2, PT pt3)
+		internal static int ICcwVoronoi(PointD pt1, PointD pt2, PointD pt3)
 		{
 			// Do the geometry to see if they're clockwise
 			var iSign = Geometry.ICcw(pt1, pt2, pt3);
@@ -448,7 +439,7 @@ namespace DAP.CompGeom
 			LeafNode lfnLeft,
 			LeafNode lfnCenter,
 			LeafNode lfnRight,
-			TPT yScanLine,
+			double yScanLine,
 			EventQueue evq)
 		{
 			// This happens if we're the farthest right or left parabola...
@@ -687,7 +678,7 @@ namespace DAP.CompGeom
 		static void CreateCircleEventsFromSiteEvent(
 			LeafNode lfnLeft,
 			LeafNode lfnRight,
-			TPT yScanLine,
+			double yScanLine,
 			EventQueue evq)
 		{
 			if (lfnLeft != null && lfnLeft.RightAdjacentLeaf != null)
@@ -795,7 +786,7 @@ namespace DAP.CompGeom
 		}
 
 		[Conditional("DEBUG")]
-		internal void TraceBeachline(TPT yScanLine)
+		internal void TraceBeachline(double yScanLine)
 		{
 			Tracer.Trace(tv.Beachline, "Current beachline (scanline = {0}:", yScanLine);
 			if (NdRoot == null)

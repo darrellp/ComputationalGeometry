@@ -1,8 +1,8 @@
 #if DOUBLEPRECISION
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
+using PointD = DAP.CompGeom.PointD;
+using double = System.Double;
 #else
-using PT = System.Drawing.PointF;
+using PointD = System.Drawing.PointF;
 #endif
 using System.Linq;
 using System.Collections.Generic;
@@ -245,18 +245,18 @@ namespace DAP.CompGeom
 			#endregion
 
 			#region Vertices
-			vertices[0].Pt = new PT(1, 3);
-			vertices[1].Pt = new PT(2, 3);
-			vertices[2].Pt = new PT(0, 2);
-			vertices[3].Pt = new PT(1, 2);
-			vertices[4].Pt = new PT(2, 2);
-			vertices[5].Pt = new PT(3, 2);
-			vertices[6].Pt = new PT(0, 1);
-			vertices[7].Pt = new PT(1, 1);
-			vertices[8].Pt = new PT(2, 1);
-			vertices[9].Pt = new PT(3, 1);
-			vertices[10].Pt = new PT(1, 0);
-			vertices[11].Pt = new PT(2, 0);
+			vertices[0].Pt = new PointD(1, 3);
+			vertices[1].Pt = new PointD(2, 3);
+			vertices[2].Pt = new PointD(0, 2);
+			vertices[3].Pt = new PointD(1, 2);
+			vertices[4].Pt = new PointD(2, 2);
+			vertices[5].Pt = new PointD(3, 2);
+			vertices[6].Pt = new PointD(0, 1);
+			vertices[7].Pt = new PointD(1, 1);
+			vertices[8].Pt = new PointD(2, 1);
+			vertices[9].Pt = new PointD(3, 1);
+			vertices[10].Pt = new PointD(1, 0);
+			vertices[11].Pt = new PointD(2, 0);
 
 			vertices[0].FirstEdge = edges[0];
 			vertices[1].FirstEdge = edges[0];

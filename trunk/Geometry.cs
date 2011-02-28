@@ -1,12 +1,4 @@
-#if DOUBLEPRECISION
 using System.Collections.Generic;
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
-
 using System;
 using System.Linq;
 #if NUNIT || DEBUG
@@ -24,7 +16,7 @@ namespace DAP.CompGeom
 	public static class Geometry
 	{
 		/// Tolerance we use in "near enough" calculations
-		public const TPT Tolerance = 1e-10;
+		public const double Tolerance = 1e-10;
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	True if two values are "essentially" equal (i.e., equal within tolerance). </summary>
@@ -37,7 +29,7 @@ namespace DAP.CompGeom
 		/// <returns>	True if values are essentially equal, else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FCloseEnough(TPT a, TPT b)
+		public static bool FCloseEnough(double a, double b)
 		{
 			return Math.Abs(a - b) < Tolerance;
 		}
@@ -53,7 +45,7 @@ namespace DAP.CompGeom
 		/// <returns>	True if they're "equal", else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FCloseEnough(PT pt1, PT pt2)
+		public static bool FCloseEnough(PointD pt1, PointD pt2)
 		{
 			return FNearZero(ManhattanDistance(pt1, pt2));
 		}
@@ -68,7 +60,7 @@ namespace DAP.CompGeom
 		/// <returns>	True if it's near zero, else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FNearZero(TPT val)
+		public static bool FNearZero(double val)
 		{
 			return Math.Abs(val) < Tolerance;
 		}
@@ -84,11 +76,34 @@ namespace DAP.CompGeom
 		/// <returns>	Dot product. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT Dot(PT pt1, PT pt2)
+		public static double Dot(PointD pt1, PointD pt2)
 		{
 			return pt1.X * pt2.X + pt1.Y * pt2.Y;
 		}
 
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	Point to line distance. </summary>
+		///
+		/// <remarks>	
+		/// This is a SIGNED distance - positive if ptTest is the lefts of the line looking from ptLine1
+		/// to ptLine2, negative if it's on the right side.
+		/// 
+		/// Darrellp, 2/27/2011. 
+		/// </remarks>
+		///
+		/// <param name="ptTest">	Test point that we measure the distance from. </param>
+		/// <param name="ptLine1">	One point on the line. </param>
+		/// <param name="ptLine2">	Another point on the line. </param>
+		///
+		/// <returns>	Distance from the point to the line. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public static double PtToLineDistance(PointD ptTest, PointD ptLine1, PointD ptLine2)
+		{
+			var ptVec12 = (ptLine1 - ptLine1).Flip90Ccw().Normalize();
+			var ptRel = ptTest - ptLine1;
+			return Dot(ptRel, ptVec12);
+		}
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
 		/// Gives an index for the quad a point appears in as follows: 
@@ -104,7 +119,7 @@ namespace DAP.CompGeom
 		/// <returns>	Quadrant index. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static int IQuad(PT pt)
+		public static int IQuad(PointD pt)
 		{
 			var iRet = 0;
 			if (pt.X < 0)
@@ -136,9 +151,9 @@ namespace DAP.CompGeom
 		/// <returns>	Midpoint. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static PT MidPoint(PT pt1, PT pt2)
+		public static PointD MidPoint(PointD pt1, PointD pt2)
 		{
-			return new PT(
+			return new PointD(
 				(pt1.X + pt2.X) / 2,
 				(pt1.Y + pt2.Y) / 2);
 		}
@@ -159,7 +174,7 @@ namespace DAP.CompGeom
 		/// <returns>	Signed area of the triangle. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT SignedArea(PT pt1, PT pt2, PT pt3)
+		public static double SignedArea(PointD pt1, PointD pt2, PointD pt3)
 		{
 			return (pt2.X - pt1.X) * (pt3.Y - pt1.Y) -
 				(pt3.X - pt1.X) * (pt2.Y - pt1.Y);
@@ -177,7 +192,7 @@ namespace DAP.CompGeom
 		/// <returns>	1 if they appear in CCW order, -1 if CW order and 0 if they're linear. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static int ICcw(PT pt1, PT pt2, PT pt3)
+		public static int ICcw(PointD pt1, PointD pt2, PointD pt3)
 		{
 			return Math.Sign(SignedArea(pt1, pt2, pt3));
 		}
@@ -194,11 +209,9 @@ namespace DAP.CompGeom
 		/// <returns>	triangle area. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT Area(PT pt1, PT pt2, PT pt3)
+		public static double Area(PointD pt1, PointD pt2, PointD pt3)
 		{
-			// ReSharper disable RedundantCast
-			return (TPT)Math.Abs(SignedArea(pt1, pt2, pt3));
-			// ReSharper restore RedundantCast
+			return Math.Abs(SignedArea(pt1, pt2, pt3));
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +229,7 @@ namespace DAP.CompGeom
 		/// <returns>	true if test point is to the left of the line segment, else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FLeft(PT ptSegmentStart, PT ptSegmentEnd, PT ptTest)
+		public static bool FLeft(PointD ptSegmentStart, PointD ptSegmentEnd, PointD ptTest)
 		{
 			return SignedArea(ptSegmentStart, ptSegmentEnd, ptTest) > 0;
 		}
@@ -233,7 +246,7 @@ namespace DAP.CompGeom
 		/// <returns>	True if points are (essentially) collinear, else false. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FCollinear(PT pt1, PT pt2, PT pt3)
+		public static bool FCollinear(PointD pt1, PointD pt2, PointD pt3)
 		{
 			return Area(pt1, pt2, pt3) < Tolerance;
 		}
@@ -274,10 +287,10 @@ namespace DAP.CompGeom
 		/// <returns>	A crossing type as outlined above. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static CrossingType SegSegInt(PT seg1Pt1, PT seg1Pt2, PT seg2Pt1, PT seg2Pt2, out PT pPt)
+		public static CrossingType SegSegInt(PointD seg1Pt1, PointD seg1Pt2, PointD seg2Pt1, PointD seg2Pt2, out PointD pPt)
 		{
 			var code = (CrossingType)(-1);
-			pPt = new PT();
+			pPt = new PointD();
 
 			var denom = seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
 			               seg1Pt2.X*(seg2Pt1.Y - seg2Pt2.Y) +
@@ -340,7 +353,7 @@ namespace DAP.CompGeom
 		/// <returns>	true if it succeeds, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool Between(PT ptSegEndpoint1, PT ptSegmentEndpoint2, PT ptTest)
+		public static bool Between(PointD ptSegEndpoint1, PointD ptSegmentEndpoint2, PointD ptTest)
 		{
 			if (!FCollinear(ptSegEndpoint1, ptSegmentEndpoint2, ptTest))
 			{
@@ -357,9 +370,9 @@ namespace DAP.CompGeom
 			       ptSegEndpoint1.Y >= ptTest.Y && ptTest.Y >= ptSegmentEndpoint2.Y;
 		}
 
-		private static CrossingType ParallelInt(PT aPt, PT bPt, PT cPt, PT dPt, out PT pPt)
+		private static CrossingType ParallelInt(PointD aPt, PointD bPt, PointD cPt, PointD dPt, out PointD pPt)
 		{
-			pPt = new PT();
+			pPt = new PointD();
 			if (!FCollinear(aPt, bPt, cPt))
 			{
 				return CrossingType.NonCrossing;
@@ -399,7 +412,7 @@ namespace DAP.CompGeom
 		/// <returns>	Distance between the two points. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT Distance(PT pt1, PT pt2)
+		public static double Distance(PointD pt1, PointD pt2)
 		{
 			var dx = pt1.X - pt2.X;
 			var dy = pt1.Y - pt2.Y;
@@ -418,7 +431,7 @@ namespace DAP.CompGeom
 		/// <returns>	Distance between the two points. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT DistanceSq(PT pt1, PT pt2)
+		public static double DistanceSq(PointD pt1, PointD pt2)
 		{
 			var dx = pt1.X - pt2.X;
 			var dy = pt1.Y - pt2.Y;
@@ -440,7 +453,7 @@ namespace DAP.CompGeom
 		/// <returns>	Manhattan distance. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static TPT ManhattanDistance(PT pt1, PT pt2)
+		public static double ManhattanDistance(PointD pt1, PointD pt2)
 		{
 			var dx = pt1.X - pt2.X;
 			var dy = pt1.Y - pt2.Y;
@@ -466,7 +479,7 @@ namespace DAP.CompGeom
 		/// <returns>	X coordinate of the intersection of the two parabolas. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal static TPT ParabolicCut(PT pt1, PT pt2, TPT ys)
+		internal static double ParabolicCut(PointD pt1, PointD pt2, double ys)
 		{
 			// If the foci are identical
 			if(FCloseEnough(pt1.X, pt2.X) && FCloseEnough(pt1.Y, pt2.Y))
@@ -544,11 +557,11 @@ namespace DAP.CompGeom
 		/// <returns>	Comparison of absolute angle. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static int ICompareCw(PT ptCenter, PT pt1, PT pt2)
+		public static int ICompareCw(PointD ptCenter, PointD pt1, PointD pt2)
 		{
 			// Get values relative to the Center of rotation
-			var pt1Rel = new PT(pt1.X - ptCenter.X, pt1.Y - ptCenter.Y);
-			var pt2Rel = new PT(pt2.X - ptCenter.X, pt2.Y - ptCenter.Y);
+			var pt1Rel = new PointD(pt1.X - ptCenter.X, pt1.Y - ptCenter.Y);
+			var pt2Rel = new PointD(pt2.X - ptCenter.X, pt2.Y - ptCenter.Y);
 
 			// Determine quadrants of each point
 			var iQuad1 = IQuad(pt1Rel);
@@ -581,10 +594,12 @@ namespace DAP.CompGeom
 		/// <returns>	true if ptTest is in the polygon, false if it fails. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool PointInConvexPoly(PT ptTest, IEnumerable<PT> poly)
+		public static bool PointInConvexPoly(PointD ptTest, IEnumerable<PointD> poly)
 		{
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
-			var polyCycle = poly.Concat(new PT[1] {poly.First()});
+			var polyCycle = poly.Concat(new[] {poly.First()});
+			var l1 = polyCycle.
+				Zip(polyCycle.Skip(1), (pt1, pt2) => SignedArea(ptTest, pt1, pt2));
 			return !polyCycle.
 			        	// Calculate Signs on pairs of points
 			        	Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
@@ -613,10 +628,10 @@ namespace DAP.CompGeom
 		/// </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static bool FFindCircumcenter(PT pt1, PT pt2, PT pt3, out PT ptCenter)
+		public static bool FFindCircumcenter(PointD pt1, PointD pt2, PointD pt3, out PointD ptCenter)
 		{
 			// Initialize for ugly math to follow
-			ptCenter = new PT();
+			ptCenter = new PointD();
 			var d = (pt1.X - pt3.X) * (pt2.Y - pt3.Y) - (pt2.X - pt3.X) * (pt1.Y - pt3.Y);
 
 			// If we've got some points identical to others
@@ -645,7 +660,7 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestPointInConvexPoly()
 		{
-			List<PT> poly = new List<PointD>()
+			List<PointD> poly = new List<PointD>()
 			                	{
 			                		new PointD(-1, -1),
 			                		new PointD(1, -1),
@@ -668,9 +683,9 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestCcw()
 		{
-			var pt1 = new PT(1, 0);
-			var pt2 = new PT(0, 0);
-			var pt3 = new PT(1, 1);
+			var pt1 = new PointD(1, 0);
+			var pt2 = new PointD(0, 0);
+			var pt3 = new PointD(1, 1);
 
 			Assert.Less(Geometry.ICcw(pt1, pt2, pt3), 0);
 			Assert.Greater(Geometry.ICcw(pt3, pt2, pt1), 0);
@@ -679,11 +694,11 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestCircumcenter()
 		{
-			var pt1 = new PT(0, 0);
-			var pt2 = new PT(1, 1);
-			var pt3 = new PT(1, -1);
-			var pt4 = new PT(2, 2);
-			PT ptOut;
+			var pt1 = new PointD(0, 0);
+			var pt2 = new PointD(1, 1);
+			var pt3 = new PointD(1, -1);
+			var pt4 = new PointD(2, 2);
+			PointD ptOut;
 
 			Assert.IsTrue(Geometry.FFindCircumcenter(pt1, pt2, pt3, out ptOut));
 			Assert.IsTrue(Geometry.FCloseEnough(ptOut.X, 1));
@@ -698,13 +713,13 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestParabolicCut()
 		{
-			var pt1 = new PT(0, 0);
-			var pt2 = new PT(1, 1);
+			var pt1 = new PointD(0, 0);
+			var pt2 = new PointD(1, 1);
 			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt1, pt2, -1), -3));
 			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt2, pt1, -1), 1));
 
-			pt1 = new PT(0, 0);
-			pt2 = new PT(8, 4);
+			pt1 = new PointD(0, 0);
+			pt2 = new PointD(8, 4);
 			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt1, pt2, -1), -7));
 			Assert.IsTrue(Geometry.FCloseEnough(Geometry.ParabolicCut(pt2, pt1, -1), 3));
 		}

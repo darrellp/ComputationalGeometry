@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-#if DOUBLEPRECISION
 using NUnit.Framework;
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -100,7 +94,7 @@ namespace DAP.CompGeom
 				var aHalfPlaneContainsB = Math.Sign(Geometry.SignedArea(polyA[aPrev], polyA[aCur], polyB[bCur]));
 
 				// if A & B intersect
-				PT ptCrossing;
+				PointD ptCrossing;
 				var code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out ptCrossing);
 				if (code == Geometry.CrossingType.Normal || code == Geometry.CrossingType.Vertex)
 				{
@@ -270,6 +264,8 @@ namespace DAP.CompGeom
 	}
 	
 	#region NUNIT
+	#if NUNIT || DEBUG
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>	Test convex polygon intersection. </summary>
 	///
@@ -279,7 +275,7 @@ namespace DAP.CompGeom
 	[TestFixture]
 	public class TestConvexIntersect
 	{
-		private static void Check(List<PT> poly1, List<PT> poly2, List<PT> res)
+		private static void Check(List<PointD> poly1, List<PointD> poly2, List<PointD> res)
 		{
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
 			foreach (var pt in output)
@@ -292,182 +288,183 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestGeneratorAdds()
 		{
-			var poly1 = new List<PT>()
+			var poly1 = new List<PointD>()
 				                    {
-				                     	new PT(0, 0),
-				                     	new PT(2, 0),
-				                     	new PT(2, 3),
-				                     	new PT(0, 3)
+				                     	new PointD(0, 0),
+				                     	new PointD(2, 0),
+				                     	new PointD(2, 3),
+				                     	new PointD(0, 3)
 				                    };
-			var poly2 = new List<PT>()
+			var poly2 = new List<PointD>()
 				                    {
-				                     	new PT(1, 1),
-										new PT(2, 1),
-										new PT(2, 2),
-										new PT(1, 2)
+				                     	new PointD(1, 1),
+										new PointD(2, 1),
+										new PointD(2, 2),
+										new PointD(1, 2)
 				                    };
-			var res = new List<PT>()
+			var res = new List<PointD>()
 				                {
-				                   	new PT(1, 1),
-				                   	new PT(2, 1),
-				                   	new PT(2, 2),
-				                   	new PT(1, 2)
+				                   	new PointD(1, 1),
+				                   	new PointD(2, 1),
+				                   	new PointD(2, 2),
+				                   	new PointD(1, 2)
 				                };
 			Check(poly1, poly2, res);
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(1, 0),
-				        	new PT(3, 0),
-				        	new PT(3, 2),
-				        	new PT(1, 2),
+				        	new PointD(1, 0),
+				        	new PointD(3, 0),
+				        	new PointD(3, 2),
+				        	new PointD(1, 2),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(0, 1),
-				        	new PT(1, 0),
-				        	new PT(2, 0),
-				        	new PT(2, 1),
+				        	new PointD(0, 1),
+				        	new PointD(1, 0),
+				        	new PointD(2, 0),
+				        	new PointD(2, 1),
 				        };
-			res = new List<PT>()
+			res = new List<PointD>()
 				        {
-				        	new PT(1, 0),
-				        	new PT(2, 0),
-				        	new PT(2, 1),
-				        	new PT(1, 1),
-				        };
-			Check(poly1, poly2, res);
-			poly1 = new List<PT>()
-				        {
-				        	new PT(0, 0),
-				        	new PT(509, 0),
-				        	new PT(509, 312),
-				        	new PT(0, 312),
-				        };
-			poly2 = new List<PT>()
-				        {
-				        	new PT(53, 213),
-				        	new PT(110, 240),
-				        	new PT(89, 312),
-				        	new PT(0, 312),
-				        	new PT(0, 233),
-				        };
-			res = new List<PT>()
-				        {
-				        	new PT(53, 213),
-				        	new PT(110, 240),
-				        	new PT(89, 312),
-				        	new PT(0, 312),
-				        	new PT(0, 233),
+				        	new PointD(1, 0),
+				        	new PointD(2, 0),
+				        	new PointD(2, 1),
+				        	new PointD(1, 1),
 				        };
 			Check(poly1, poly2, res);
-
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(0, 0),
-				        	new PT(4, 0),
-				        	new PT(4, 4),
-				        	new PT(0, 4),
+				        	new PointD(0, 0),
+				        	new PointD(509, 0),
+				        	new PointD(509, 312),
+				        	new PointD(0, 312),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(2, -1),
-				        	new PT(5, 2),
-				        	new PT(2, 5),
-				        	new PT(-1, 2),
+				        	new PointD(53, 213),
+				        	new PointD(110, 240),
+				        	new PointD(89, 312),
+				        	new PointD(0, 312),
+				        	new PointD(0, 233),
 				        };
-			res = new List<PT>()
+			res = new List<PointD>()
 				        {
-				        	new PT(1, 0),
-				        	new PT(3, 0),
-				        	new PT(4, 1),
-				        	new PT(4, 3),
-				        	new PT(3, 4),
-				        	new PT(1, 4),
-				        	new PT(0, 3),
-				        	new PT(0, 1),
+				        	new PointD(53, 213),
+				        	new PointD(110, 240),
+				        	new PointD(89, 312),
+				        	new PointD(0, 312),
+				        	new PointD(0, 233),
 				        };
 			Check(poly1, poly2, res);
 
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(0, 0),
-				        	new PT(3, 0),
-				        	new PT(3, 3),
-				        	new PT(0, 3),
+				        	new PointD(0, 0),
+				        	new PointD(4, 0),
+				        	new PointD(4, 4),
+				        	new PointD(0, 4),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(3, 1),
-				        	new PT(4, 1),
-				        	new PT(4, 2),
-				        	new PT(3, 2),
+				        	new PointD(2, -1),
+				        	new PointD(5, 2),
+				        	new PointD(2, 5),
+				        	new PointD(-1, 2),
 				        };
-			res = new List<PT>()
+			res = new List<PointD>()
+				        {
+				        	new PointD(1, 0),
+				        	new PointD(3, 0),
+				        	new PointD(4, 1),
+				        	new PointD(4, 3),
+				        	new PointD(3, 4),
+				        	new PointD(1, 4),
+				        	new PointD(0, 3),
+				        	new PointD(0, 1),
+				        };
+			Check(poly1, poly2, res);
+
+			poly1 = new List<PointD>()
+				        {
+				        	new PointD(0, 0),
+				        	new PointD(3, 0),
+				        	new PointD(3, 3),
+				        	new PointD(0, 3),
+				        };
+			poly2 = new List<PointD>()
+				        {
+				        	new PointD(3, 1),
+				        	new PointD(4, 1),
+				        	new PointD(4, 2),
+				        	new PointD(3, 2),
+				        };
+			res = new List<PointD>()
 				    {
-				      	new PT(3, 1),
-				      	new PT(3, 2),
+				      	new PointD(3, 1),
+				      	new PointD(3, 2),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(0, 0),
-				        	new PT(2, 0),
-				        	new PT(2, 5),
-				        	new PT(0, 5),
+				        	new PointD(0, 0),
+				        	new PointD(2, 0),
+				        	new PointD(2, 5),
+				        	new PointD(0, 5),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(4, 1),
-				        	new PT(1, 4),
-				        	new PT(1, 2),
-				        	new PT(3, 0),
+				        	new PointD(4, 1),
+				        	new PointD(1, 4),
+				        	new PointD(1, 2),
+				        	new PointD(3, 0),
 				        };
-			res = new List<PT>()
+			res = new List<PointD>()
 				    {
-				      	new PT(2, 1),
-				      	new PT(2, 3),
-				      	new PT(1, 4),
-				      	new PT(1, 2),
+				      	new PointD(2, 1),
+				      	new PointD(2, 3),
+				      	new PointD(1, 4),
+				      	new PointD(1, 2),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(0, 0),
-				        	new PT(3, 0),
-				        	new PT(3, 3),
-				        	new PT(0, 3),
+				        	new PointD(0, 0),
+				        	new PointD(3, 0),
+				        	new PointD(3, 3),
+				        	new PointD(0, 3),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(1, 1),
-				        	new PT(1, 2),
-				        	new PT(2, 2),
-				        	new PT(2, 1),
+				        	new PointD(1, 1),
+				        	new PointD(1, 2),
+				        	new PointD(2, 2),
+				        	new PointD(2, 1),
 				        };
-			res = new List<PT>()
+			res = new List<PointD>()
 				    {
-				        new PT(1, 1),
-				        new PT(1, 2),
-				        new PT(2, 2),
-				        new PT(2, 1),
+				        new PointD(1, 1),
+				        new PointD(1, 2),
+				        new PointD(2, 2),
+				        new PointD(2, 1),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PT>()
+			poly1 = new List<PointD>()
 				        {
-				        	new PT(241, 1090),
-				        	new PT(206, 278),
-				        	new PT(290, 242),
+				        	new PointD(241, 1090),
+				        	new PointD(206, 278),
+				        	new PointD(290, 242),
 				        };
-			poly2 = new List<PT>()
+			poly2 = new List<PointD>()
 				        {
-				        	new PT(0, 0),
-				        	new PT(509, 0),
-				        	new PT(509, 312),
-				        	new PT(0, 312),
+				        	new PointD(0, 0),
+				        	new PointD(509, 0),
+				        	new PointD(509, 312),
+				        	new PointD(0, 312),
 				        };
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
 			Assert.AreEqual(4, output.Count);
 		}
 	}
+	#endif
 	#endregion
 }

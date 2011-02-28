@@ -1,14 +1,7 @@
 #define NEW
 using System;
 using System.Diagnostics;
-#if DOUBLEPRECISION
 using System.Linq;
-using PT = DAP.CompGeom.PointD;
-using TPT = System.Double;
-#else
-using PT = System.Drawing.PointF;
-using TPT = System.Single;
-#endif
 
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -67,7 +60,7 @@ namespace DAP.CompGeom
 		/// <param name="points">	Points whose Voronoi diagram will be calculated. If the library is
 		/// 						built for double precision, these should be PointD, else PointF. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		private Fortune(IEnumerable<PT> points)
+		private Fortune(IEnumerable<PointD> points)
 		{
 			Bchl = new Beachline();
 			QevEvents = new EventQueue();
@@ -93,7 +86,7 @@ namespace DAP.CompGeom
 		/// <returns>	The polygon produced. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		FortunePoly InsertPoly(PT pt)
+		FortunePoly InsertPoly(PointD pt)
 		{
 			Tracer.Trace(tv.GeneratorList, "Generator {0}: ({1}, {2})",
 				Polygons.Count, pt.X, pt.Y);
@@ -144,7 +137,7 @@ namespace DAP.CompGeom
 		/// <returns>	The calculated voronoi diagram. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static WE ComputeVoronoi(IEnumerable<PT> pts)
+		public static WE ComputeVoronoi(IEnumerable<PointD> pts)
 		{
 			var f = new Fortune(pts);
 			f.Voronoi();
@@ -180,7 +173,7 @@ namespace DAP.CompGeom
 		/// <returns>	The relaxed Winged Edge structure. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public static WE LloydRelax(WE we, double rayLength, IEnumerable<PT> polyClip, double strength = 1)
+		public static WE LloydRelax(WE we, double rayLength, IEnumerable<PointD> polyClip, double strength = 1)
 		{
 			// Locals
 			var ptsRelaxed = new List<PointD>();
@@ -381,7 +374,7 @@ namespace DAP.CompGeom
 				              "Two edged polygon without both edges at infinity");
 				// If we run clockwise from the origin through edge 0 through edge 1
 				// ReSharper disable ConvertIfStatementToConditionalTernaryExpression
-				if (Geometry.ICcw(new PT(0, 0), polyInfinityStart.FortuneEdges[0].VtxEnd.Pt, polyInfinityStart.FortuneEdges[1].VtxEnd.Pt) > 0)
+				if (Geometry.ICcw(new PointD(0, 0), polyInfinityStart.FortuneEdges[0].VtxEnd.Pt, polyInfinityStart.FortuneEdges[1].VtxEnd.Pt) > 0)
 				// ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 				{
 					// Edge 1 is our leading edge
@@ -520,7 +513,7 @@ namespace DAP.CompGeom
 			int iLeadingEdgeNext;
 
 			// Create the infamous polygon at infinity...
-			var polyAtInfinity = new FortunePoly(new PT(0, 0), -1);
+			var polyAtInfinity = new FortunePoly(new PointD(0, 0), -1);
 			FortuneEdge edgePreviousAtInfinity = null;
 
 			// Declare this the official polygon at infinity
@@ -715,7 +708,7 @@ namespace DAP.CompGeom
 		private void ProcessEvents()
 		{
 			// Create an impossible fictional "previous event"
-			FortuneEvent evtPrev = new CircleEvent(new PT(TPT.MaxValue, TPT.MaxValue), 0);
+			FortuneEvent evtPrev = new CircleEvent(new PointD(Single.MaxValue, Single.MaxValue), 0);
 
 			// While there are events in the queue
 			while (QevEvents.Count > 0)
@@ -871,7 +864,7 @@ namespace DAP.CompGeom
 			// Replace the null vertex with an infinite vertex
 			var pt1 = edge.Poly1.VoronoiPoint;
 			var pt2 = edge.Poly2.VoronoiPoint;
-			var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
+			var ptMid = new PointD((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
 			// Point the ray in the proper direction
 			//
@@ -885,8 +878,8 @@ namespace DAP.CompGeom
 			var fThirdOnLeft = Geometry.FLeft(pt1, pt2, polyThird.VoronoiPoint);
 			var dx = pt2.X - pt1.X;
 			var dy = pt2.Y - pt1.Y;
-			var ptProposedDirection = new PT(dy, -dx);
-			var ptInProposedDirection = new PT(ptMid.X + dy, ptMid.Y - dx);
+			var ptProposedDirection = new PointD(dy, -dx);
+			var ptInProposedDirection = new PointD(ptMid.X + dy, ptMid.Y - dx);
 			var fProposedOnLeft = Geometry.FLeft(pt1, pt2, ptInProposedDirection);
 
 			// Do we need to reverse orientation?
@@ -917,11 +910,11 @@ namespace DAP.CompGeom
 			var pt2 = edge.Poly2.VoronoiPoint;
 			var dx = pt2.X - pt1.X;
 			var dy = pt2.Y - pt1.Y;
-			var ptMid = new PT((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
+			var ptMid = new PointD((pt1.X + pt2.X) / 2, (pt1.Y + pt2.Y) / 2);
 
 			// Infinite vertices have directions in them rather than locations
-			var vtx1 = FortuneVertex.InfiniteVertex(new PT(-dy, dx));
-			var vtx2 = FortuneVertex.InfiniteVertex(new PT(dy, -dx));
+			var vtx1 = FortuneVertex.InfiniteVertex(new PointD(-dy, dx));
+			var vtx2 = FortuneVertex.InfiniteVertex(new PointD(dy, -dx));
 
 			// Create the new edge an link it in 
 			edge.VtxStart = new FortuneVertex(ptMid);
@@ -974,9 +967,9 @@ namespace DAP.CompGeom
 			static Fortune Example()
 			{
 				var pts = new[] {
-					new PT(0, 0),
-					new PT(1, 1),
-					new PT(1, -1)
+					new PointD(0, 0),
+					new PointD(1, 1),
+					new PointD(1, -1)
 				};
 				return new Fortune(pts);
 			}
@@ -1004,11 +997,11 @@ namespace DAP.CompGeom
 			public void TestPerf()
 			{
 				var rnd = new Random();
-				var pts = new List<PT>();
+				var pts = new List<PointD>();
 				for (var i = 0; i < 10000; i++)
 
 				{
-					pts.Add(new PT(rnd.NextDouble(), rnd.NextDouble()));
+					pts.Add(new PointD((Single)rnd.NextDouble(), (Single)rnd.NextDouble()));
 				}
 				var sw = Stopwatch.StartNew();
 				ComputeVoronoi(pts);
