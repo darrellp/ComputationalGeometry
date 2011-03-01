@@ -100,7 +100,7 @@ namespace DAP.CompGeom
 
 		public static double PtToLineDistance(PointD ptTest, PointD ptLine1, PointD ptLine2)
 		{
-			var ptVec12 = (ptLine1 - ptLine1).Flip90Ccw().Normalize();
+			var ptVec12 = (ptLine2 - ptLine1).Flip90Ccw().Normalize();
 			var ptRel = ptTest - ptLine1;
 			return Dot(ptRel, ptVec12);
 		}
@@ -596,6 +596,10 @@ namespace DAP.CompGeom
 
 		public static bool PointInConvexPoly(PointD ptTest, IEnumerable<PointD> poly)
 		{
+			if (!poly.Any())
+			{
+				return false;
+			}
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
 			var polyCycle = poly.Concat(new[] {poly.First()});
 			var l1 = polyCycle.
