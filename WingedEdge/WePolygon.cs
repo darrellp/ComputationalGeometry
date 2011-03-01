@@ -113,27 +113,40 @@ namespace DAP.CompGeom
 
 		internal bool FValidateEdgesInOrder()
 		{
+			// If it's a single infinite polygon
+			if (!Edges.Any())
+			{
+				// There are no edges so skip this check
+				return true;
+			}
 			// Declarations
 			var fFirstTimeThroughLoop = true;
 			var edgePrev = new WeEdge();
 			var edgeFirst = new WeEdge();
 
+			// For each edge in the polygon
 			foreach (var edgeCur in Edges)
 			{
 				if (fFirstTimeThroughLoop)
 				{
+					// Initialize
 					fFirstTimeThroughLoop = false;
 					edgePrev = edgeFirst = edgeCur;
 				}
 				else
 				{
+					// If this edge doesn't connect to the previous one
 					if (!edgeCur.FConnectsToEdge(edgePrev))
 					{
+						// there is a problem
 						return Failure();
 					}
+				
 					edgePrev = edgeCur;
 				}
 			}
+			
+			// Make sure the last edge cycles back to the first one
 			return edgePrev.FConnectsToEdge(edgeFirst) || Failure();
 		}
 		#endregion
