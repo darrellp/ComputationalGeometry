@@ -1,9 +1,3 @@
-#if DOUBLEPRECISION
-using PointD = DAP.CompGeom.PointD;
-using double = System.Double;
-#else
-using PointD = System.Drawing.PointF;
-#endif
 using System.Linq;
 using System.Collections.Generic;
 #if NUNIT || DEBUG
