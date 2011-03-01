@@ -1,27 +1,104 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DAP.CompGeom;
+using WpfTest;
 
 namespace Tesselation
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
-	public partial class MainWindow : Window
+	public partial class MainWindow
 	{
+		readonly Random _rnd = new Random();
 		public MainWindow()
 		{
 			InitializeComponent();
+			rcMain.Fill = CreateTile(100, 100);
+		}
+
+		internal class SiteMarker
+		{
+			public int SiteIndex;
+			public Color Clr;
+			public SiteMarker(int iSiteIndex, Color clr)
+			{
+				SiteIndex = iSiteIndex;
+				Clr = clr;
+			}
+		}
+
+		Brush CreateTile(int width, int height)
+		{
+			var grd = new Gradient();
+			grd.SetStart(Colors.SkyBlue);
+			grd.AddStop(0.5, Colors.Green);
+			grd.SetEnd(Colors.DarkRed);
+			var grdBuffer = new Canvas {Width = width, Height = height};
+
+			var lstPts = new List<PointD>();
+			for (var iPt = 0; iPt < 10; iPt++)
+			{
+				var pt = new PointD(
+					_rnd.NextDouble(), 
+					_rnd.NextDouble(), 
+					new SiteMarker(iPt, grd.GetRandomColor()));
+				lstPts.Add(pt);
+				pt.X += 1;
+				lstPts.Add(pt);
+				pt.Y += 1;
+				lstPts.Add(pt);
+				pt.X -= 1;
+				lstPts.Add(pt);
+				pt.X -= 1;
+				lstPts.Add(pt);
+				pt.Y -= 1;
+				lstPts.Add(pt);
+				pt.Y -= 1;
+				lstPts.Add(pt);
+				pt.X += 1;
+				lstPts.Add(pt);
+				pt.X += 1;
+				lstPts.Add(pt);
+			}
+			var ptUL = new PointD(-0.5, 1.5);
+			var ptLR = new PointD(1.5, -0.5);
+			var we = Fortune.ComputeVoronoi(lstPts);
+
+			foreach (var polygon in we.LstPolygons.Where(p => !p.FAtInfinity))
+			{
+				var ptSite = polygon.VoronoiPoint;
+				var sm = (SiteMarker) (ptSite.Cookie);
+
+				var polyWpf = new Polygon
+				              	{
+				              		Points = new PointCollection(polygon.BoxVertices(ptUL, ptLR).Select(p => new Point(p.X * width, p.Y * height))),
+				              		Fill = new SolidColorBrush(sm.Clr),
+				              		Stroke = new SolidColorBrush(Colors.Black),
+				              		StrokeThickness = 2
+				              	};
+				grdBuffer.Children.Add(polyWpf);
+			}
+			return new VisualBrush
+			         	{
+			         		Visual = grdBuffer,
+			         		Stretch = Stretch.None,
+			         		TileMode = TileMode.Tile,
+			         		Viewbox = new Rect(0, 0, width, height),
+			         		ViewboxUnits = BrushMappingMode.Absolute,
+			         		Viewport = new Rect(0, 0, width, height),
+			         		ViewportUnits = BrushMappingMode.Absolute
+			         	};
+		}
+
+		private void rcMain_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			rcMain.Fill = CreateTile(100, 100);
 		}
 	}
 }
