@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Computational Geometry", "C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FortuneTest", "FortuneTest\FortuneTest.csproj", "{08A5E1F3-2CD7-4B5D-9D78-9C08F6EF0340}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfTest", "..\WpfTest\WpfTest.csproj", "{DF604268-7327-4DC5-B36C-535B751A079E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfTest", "WpfTest\WpfTest.csproj", "{DF604268-7327-4DC5-B36C-535B751A079E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
