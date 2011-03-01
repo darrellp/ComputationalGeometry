@@ -44,6 +44,26 @@ namespace DAP.CompGeom
 
 		public static IEnumerable<PointD> FindIntersection(IEnumerable<PointD> poly1Enum, IEnumerable<PointD> poly2Enum)
 		{
+			// If poly1 is empty, return poly2
+			if (!poly1Enum.Any())
+			{
+				foreach (var poly in poly2Enum)
+				{
+					yield return poly;
+				}
+				yield break;
+			}
+
+			// If poly2 is empty, return poly1
+			if (!poly2Enum.Any())
+			{
+				foreach (var poly in poly1Enum)
+				{
+					yield return poly;
+				}
+				yield break;
+			}
+
 			// Initialize
 
 			// Put the two polygons into arrays
@@ -286,7 +306,7 @@ namespace DAP.CompGeom
 		}
 
 		[Test]
-		public void TestGeneratorAdds()
+		public void TestIntersection()
 		{
 			var poly1 = new List<PointD>()
 				                    {
@@ -310,6 +330,22 @@ namespace DAP.CompGeom
 				                   	new PointD(1, 2)
 				                };
 			Check(poly1, poly2, res);
+			poly1 = new List<PointD>()
+				        {
+				        	new PointD(107,176),
+				        	new PointD(128,370),
+				        	new PointD(47,379),
+				        	new PointD(26,185),
+				        };
+			poly2 = new List<PointD>()
+				        {
+				        	new PointD(-1,257),
+				        	new PointD(73,257),
+				        	new PointD(73,313),
+				        	new PointD(-1,313),
+				        };
+			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
+			Assert.AreEqual(4, output.Count);
 			poly1 = new List<PointD>()
 				        {
 				        	new PointD(1, 0),
@@ -461,7 +497,7 @@ namespace DAP.CompGeom
 				        	new PointD(509, 312),
 				        	new PointD(0, 312),
 				        };
-			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
+			output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
 			Assert.AreEqual(4, output.Count);
 		}
 	}
