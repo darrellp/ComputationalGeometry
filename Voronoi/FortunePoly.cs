@@ -136,7 +136,7 @@ namespace DAP.CompGeom
 		/// <returns>	An enumerable of real points representing the voronoi cell clipped to the box. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public IEnumerable<PointD> RealVertices(PointD ptUL, PointD ptLR)
+		public IEnumerable<PointD> BoxVertices(PointD ptUL, PointD ptLR)
 		{
 			// If no edges, then it's just the entire box
 			if (!Edges.Any())
@@ -164,7 +164,6 @@ namespace DAP.CompGeom
 			{
 				ptsToBeClipped = RealVertices(CalcRayLength(ptsBox));
 			}
-
 			foreach (var pt in ConvexPolyIntersection.FindIntersection(ptsToBeClipped, ptsBox))
 			{
 				yield return pt;
@@ -217,46 +216,61 @@ namespace DAP.CompGeom
 			}
 
 			// Get the finite vertex
-			var vtx = Vertices.Where(v => !v.FAtInfinity).First();
+			WeVertex vtx = null;
+			var vtxs = Vertices.ToArray();
+			var ptTailDir = new PointD(0, 0);
+			var ptHeadDir = new PointD(0, 0);
+			for (var ivtx = 0; ivtx < 3; ivtx++)
+			{
+				if (!vtxs[ivtx].FAtInfinity)
+				{
+					ptTailDir = vtxs[(ivtx + 1) % 3].Pt;
+					ptHeadDir = vtxs[(ivtx + 2) % 3].Pt;
+					vtx = vtxs[ivtx];
+					break;
+				}
+			}
 
 			// If it's only got two edges emanating from it (a doubly infinite line)
 			if (vtx.Edges.Count() == 2)
 			{
 				// Figure out a satisfactory distance for our ray length
 				var maxDist = 2.0 * Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, vtx.Pt)).Max());
-				var arRealPts = RealVertices(maxDist).ToArray();
+				var ptTail = vtx.Pt + ptTailDir*maxDist;
+				var ptHead = vtx.Pt + ptHeadDir*maxDist;
 
 				// For every point in the box
 				//
 				// We have to include the points to the left of the line in our rectangle we want clipped
 				// So find the max distance and extend a rect that length to the side of our line
 				// segment.  We double the offset just to be safe.
-				double maxLineDist = 2 * ptsBox.
-					// Get the distance to our line
-					Select(p => Geometry.PtToLineDistance(p, arRealPts[0], arRealPts[2])).
-					// Keep only the ones to the left of the line
-					Where(d => d > 0).
-					// Find the max distance
-					Max();
 
-				// If there were no points to the left of our line
-				if (maxLineDist == 0)
+				var leftDistances = ptsBox.
+					// Get the distance to our line
+					Select(p => Geometry.PtToLineDistance(p, ptHead, ptTail)).
+					// Keep only the ones to the left of the line
+					Where(d => d > 0);
+
+				// If there were no points to the left
+				if (!leftDistances.Any())
 				{
 					// return an empty array
 					ptsToBeClipped = new List<PointD>();
+					return true;
 				}
-				else
-				{
-					// Return the rectangle formed from our line segment extended out by maxLineDist
-					var vcOffset = (arRealPts[2] - arRealPts[0]).Normalize().Flip90Ccw()*maxLineDist;
-					ptsToBeClipped = new List<PointD>
-				                 		{
-				                 			arRealPts[0],
-				                 			arRealPts[2],
-				                 			arRealPts[2] + vcOffset,
-				                 			arRealPts[0] + vcOffset
-				                 		};
-				}
+				
+				// Our rect width will be twice the largest of the left distances
+				var maxLineDist = 2 * leftDistances.Max();
+
+				// Return the rectangle formed from our line segment extended out by maxLineDist
+				var vcOffset = (ptHead - ptTail).Normalize().Flip90Ccw()*maxLineDist;
+				ptsToBeClipped = new List<PointD>
+				                 	{
+				                 		ptHead,
+				                 		ptTail,
+				                 		ptTail + vcOffset,
+				                 		ptHead + vcOffset
+				                 	};
 				return true;
 			}
 			return false;
@@ -310,7 +324,7 @@ namespace DAP.CompGeom
 			}
 
 			// Return the final length
-			return (double)length;
+			return length;
 		}
 
 		private static bool Satisfactory(double length, OrientedEdge oeIn, OrientedEdge oeOut, IEnumerable<PointD> ptsBox)
@@ -330,8 +344,6 @@ namespace DAP.CompGeom
 
 		}
 
-
-
 		private static IEnumerable<PointD> BoxPoints(PointD ptUL, PointD ptLR)
 		{
 			return new List<PointD>
@@ -341,6 +353,47 @@ namespace DAP.CompGeom
 			       		new PointD(ptLR.X, ptUL.Y),
 			       		new PointD(ptUL.X, ptUL.Y)
 			       	};
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Identical to BoxVertices if there are any infinite polygons/vertices involved.  In the case
+		/// of a purely finite polygon, we return it unaltered. 
+		/// </summary>
+		///
+		/// <remarks>This just ensures that all vertices are finite in a foolproof way.  The overload of
+		/// RealVertices that takes a double as a raylength relies on the caller guessing as to a sufficient
+		/// ray length to ensure that our rays extend outside of whatever area they're interested in.  That's
+		/// usually not possible to do in a foolproof way.  Also, it has problems with doubly infinite lines
+		/// when the return value is interpreted as a polygon.  This routine doesn't necessarily clip to the
+		/// box in question, but does guarantee that the finite polygon returned will properly cover it's
+		/// assigned area in the box passed in.  On interior cells, it avoids the overhead of a clipping
+		/// operation which is liable to happen outside of this call anyway.
+		/// 
+		/// Darrellp, 2/28/2011. </remarks>
+		///
+		/// <param name="ptUL">	The upper left point of the box. </param>
+		/// <param name="ptLR">	The lower right point of the box. </param>
+		///
+		/// <returns>	An enumerable of real points representing the polygon. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<PointD> RealVertices(PointD ptUL, PointD ptLR)
+		{
+			if (!Edges.Any(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity))
+			{
+				foreach (var pt in Vertices.Select(v => v.Pt))
+				{
+					yield return pt;
+				}
+			}
+			else
+			{
+				foreach (var pt in BoxVertices(ptUL, ptLR))
+				{
+					yield return pt;
+				}
+			}
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
