@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -19,7 +20,7 @@ namespace WpfTest
 			InitializeComponent();
 		}
 
-		readonly Random _rnd = new Random(23);
+		Random _rnd = new Random();
 
 		private IEnumerable<PointD> PolyCanvasExp()
 		{
@@ -117,24 +118,19 @@ namespace WpfTest
 				we = Fortune.LloydRelax(we, 10000, poly, 1.0);
 			}
 
+			var lstPoly = new List<Polygon>();
+
 			foreach (var subPoly in we.LstPolygons.Where(p => !p.FAtInfinity))
 			{
-				var testing = subPoly.RealVertices(ptUL, ptLR).ToArray();
-				var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(ptUL, ptLR), poly);
-				//var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(10000), poly);
-				if (Geometry.PointInConvexPoly(new PointD(1, 311), ptsClipped))
-				{
-					if (ptUL.X == 1000.3)
-						Console.WriteLine(testing.ToString());
-				}
+				var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(10000, ptUL, ptLR), poly);
 				var clrFill = info.GrdFill.GetRandomColor();
 				clrFill.A = info.Alpha;
 				var subPolyWpf = new Polygon
-				    {
-				        Points = new PointCollection(ptsClipped.Select(p => new Point(p.X, p.Y))),
+					{
+						Points = new PointCollection(ptsClipped.Select(p => new Point(p.X, p.Y))),
 						Fill = new SolidColorBrush(clrFill),
-				        Stroke = new SolidColorBrush(Colors.Black),
-				        StrokeThickness = info.StrokeThickness
+						Stroke = new SolidColorBrush(Colors.Black),
+						StrokeThickness = info.StrokeThickness
 					};
 				SubVoronoi(ptsClipped, ienInfo.Skip(1));
 				cvsMain.Children.Add(subPolyWpf);
@@ -145,23 +141,16 @@ namespace WpfTest
 		{
 			cvsMain.Children.Clear();
 			var grd = new Gradient();
-			grd.SetStart(Colors.Lavender);
-			grd.AddStop(0.5, Colors.Purple);
-			grd.SetEnd(Colors.SkyBlue);
-
-			var grd2 = new Gradient();
 			grd.SetStart(Colors.Red);
+			grd.AddStop(0.45, Colors.Purple);
+			grd.AddStop(0.95, Colors.Green);
 			grd.SetEnd(Colors.Green);
-			//grd.SetStart(Colors.Red);
-			//grd.SetEnd(Colors.Red);
 			var li = new List<LevelInfo>
 			         	{
-										new LevelInfo(grd, 4, 0.4, 0, 2),
-										new LevelInfo(grd, 2, 1, 255, 0),
-										//new LevelInfo(grd, 5, 0.2, 50, 2),
-										//new LevelInfo(grd, 2, 3, 90, 1),
-										//new LevelInfo(grd, 1, 15, 150, 0),
-										//new LevelInfo(grd2, .5, 60, 255, 0)
+										new LevelInfo(grd, 4, 0.2, 70, 2),
+										new LevelInfo(grd, 2, 3, 90, 1),
+										new LevelInfo(grd, 1, 15, 150, 0),
+										new LevelInfo(grd, .5, 60, 255, 0)
 			                     	};
 			SubVoronoi(PolyCanvasExp(), li);
 			return;
