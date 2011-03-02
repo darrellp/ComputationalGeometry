@@ -33,12 +33,19 @@ namespace Tesselation
 			}
 		}
 
+		Color RandomColor()
+		{
+			var rgb = new byte[3];
+			_rnd.NextBytes(rgb);
+			return Color.FromRgb(rgb[0], rgb[1], rgb[2]);
+		}
+
 		Brush CreateTile(int width, int height)
 		{
 			var grd = new Gradient();
-			grd.SetStart(Colors.SkyBlue);
-			grd.AddStop(0.5, Colors.Green);
-			grd.SetEnd(Colors.DarkRed);
+			grd.SetStart(RandomColor());
+			grd.AddStop(0.5, RandomColor());
+			grd.SetEnd(RandomColor());
 			var grdBuffer = new Canvas {Width = width, Height = height};
 
 			var lstPts = new List<PointD>();
