@@ -109,7 +109,7 @@ namespace DAP.CompGeom
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	
-		/// Return real vertices where this voronoi cell intersects with a passed in bounding box. 
+		/// Clip this voronoi cell with a passed in bounding box. 
 		/// </summary>
 		///
 		/// <remarks>	
@@ -234,6 +234,8 @@ namespace DAP.CompGeom
 			// If it's only got two edges emanating from it (a doubly infinite line)
 			if (vtx.Edges.Count() == 2)
 			{
+				// TODO: We should probably do this manually rather than relying on ConvexPolyIntersection
+
 				// Figure out a satisfactory distance for our ray length
 				var maxDist = 2.0 * Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, vtx.Pt)).Max());
 				var ptTail = vtx.Pt + ptTailDir*maxDist;
@@ -263,7 +265,8 @@ namespace DAP.CompGeom
 				var maxLineDist = 2 * leftDistances.Max();
 
 				// Return the rectangle formed from our line segment extended out by maxLineDist
-				var vcOffset = (ptHead - ptTail).Normalize().Flip90Ccw()*maxLineDist;
+				var vcOffset = (ptTail - ptHead).Normalize().Flip90Ccw()*maxLineDist;
+				//var vcOffset = (ptHead - ptTail).Normalize().Flip90Ccw() * maxLineDist;
 				ptsToBeClipped = new List<PointD>
 				                 	{
 				                 		ptHead,
@@ -361,16 +364,19 @@ namespace DAP.CompGeom
 		/// of a purely finite polygon, we return it unaltered. 
 		/// </summary>
 		///
-		/// <remarks>This just ensures that all vertices are finite in a foolproof way.  The overload of
-		/// RealVertices that takes a double as a raylength relies on the caller guessing as to a sufficient
-		/// ray length to ensure that our rays extend outside of whatever area they're interested in.  That's
-		/// usually not possible to do in a foolproof way.  Also, it has problems with doubly infinite lines
-		/// when the return value is interpreted as a polygon.  This routine doesn't necessarily clip to the
-		/// box in question, but does guarantee that the finite polygon returned will properly cover it's
-		/// assigned area in the box passed in.  On interior cells, it avoids the overhead of a clipping
-		/// operation which is liable to happen outside of this call anyway.
+		/// <remarks>	
+		/// This overload of RealVertices ensures that all vertices are finite in a foolproof way.  The
+		/// overload of RealVertices that takes a double as a raylength relies on the caller guessing as
+		/// to a sufficient ray length to ensure that our rays extend outside of whatever area they're
+		/// interested in.  That's usually not possible to do in a foolproof way.  Also, it has problems
+		/// with doubly infinite lines when the return value is interpreted as a polygon.  This routine
+		/// doesn't necessarily clip to the box in question, but does guarantee that the finite polygon
+		/// returned will properly cover it's assigned area in the box passed in.  On interior cells, it
+		/// avoids the overhead of a clipping operation which is liable to happen outside of this call
+		/// anyway.  This is the safest way of covering a box without necessarily clipping to it.
 		/// 
-		/// Darrellp, 2/28/2011. </remarks>
+		/// Darrellp, 2/28/2011. 
+		/// </remarks>
 		///
 		/// <param name="ptUL">	The upper left point of the box. </param>
 		/// <param name="ptLR">	The lower right point of the box. </param>
@@ -397,9 +403,77 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Return real vertices.  Vertices at infinity will be converted based on the passed ray length. </summary>
+		/// <summary>	Converts vertices to real vertices. </summary>
 		///
-		/// <remarks>	Darrellp, 2/23/2011. </remarks>
+		/// <remarks>	
+		/// This routine does nothing for polygons with no infinite vertices.  If there are no doubly
+		/// infinite lines, it uses raylength to extend the rays.  If there are doubly infinite lines it
+		/// uses the machinery above to produce a region.  No clipping is done but it's guaranteed is
+		/// that the resultant polygon is finite and covers the polygon's portion which intersects the
+		/// passed in box (assuming that rayLength is long enough).  This routine is fairly fast, works
+		/// with doubly infinite lines but could fail for infinite regions in which rayLength is of
+		/// insufficient size.  If you feel like raylength will handle all non-doubly infinite lines but
+		/// you still have to deal with the doubly infinite case, this is a good choice - especially if
+		/// perfomance is an issue.
+		/// 
+		/// Darrellp, 3/1/2011. 
+		/// </remarks>
+		///
+		/// <param name="rayLength">	Length of the ray. </param>
+		/// <param name="ptUL">			The upper left point of the box. </param>
+		/// <param name="ptLR">			The lower right point of the box. </param>
+		///
+		/// <returns>	An enumerable of real points representing the polygon. </returns>
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		public IEnumerable<PointD> RealVertices(double rayLength, PointD ptUL, PointD ptLR)
+		{
+			if (!Edges.Any(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity))
+			{
+				foreach (var pt in Vertices.Select(v => v.Pt))
+				{
+					yield return pt;
+				}
+			}
+			else
+			{
+				IEnumerable<PointD> points;
+				var ptsBox = BoxPoints(ptUL, ptLR);
+
+				if (!FCheckParallelLines(ptsBox, out points))
+				{
+					if (!FCheckDoublyInfinite(ptsBox, out points))
+					{
+						points = RealVertices(rayLength);
+					}
+				}
+				foreach (var pt in points)
+				{
+					yield return pt;
+				}
+			}
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// <summary>	
+		/// Return real vertices.  All vertices at infinity will be converted based on the passed ray
+		/// length. 
+		/// </summary>
+		///
+		/// <remarks>	
+		/// There are a bewildering number of overloads and variations on RealVertices.  They are all
+		/// meant to convert infinite vertices to finite ones and return a list of those finite vertices.
+		/// This one is the simplest and fastest but also the most unreliable.  It takes a rayLength and
+		/// simply extends each infinite line out to the length passed in.  Depending on what is desired,
+		/// this may be sufficient, however if the ray length is not chosen properly the rays may not
+		/// extend far enough.  Also, if the points returned are looked at as a polygon to be filled,
+		/// doubly infinite lines will return empty polygons since they will just exted out in opposite
+		/// directions making a line segmennts.  In some situations, doubly infinite lines are not a
+		/// concern and often in those cases, this is the overload of choice.  Otherwise you'll have to
+		/// continue on to one of the other overloads.
+		/// 
+		/// Darrellp, 2/23/2011. 
+		/// </remarks>
 		///
 		/// <param name="rayLength">	Length of the ray. </param>
 		///
