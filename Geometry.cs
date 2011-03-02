@@ -601,16 +601,14 @@ namespace DAP.CompGeom
 				return false;
 			}
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
-			var polyCycle = poly.Concat(new[] {poly.First()});
-			var l1 = polyCycle.
-				Zip(polyCycle.Skip(1), (pt1, pt2) => SignedArea(ptTest, pt1, pt2));
+			var polyCycle = poly.Concat(new[] { poly.First() });
 			return !polyCycle.
-			        	// Calculate Signs on pairs of points
-			        	Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
-			        	// They're +1 for points going CCW around the test point
-			        	Where(s => s != 1).
-			        	// If any were not 1 then we're not inside.
-			        	Any();
+				// Calculate Signs on pairs of points
+				Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
+				// They're +1 for points going CCW around the test point
+				Where(s => s != 1).
+				// If any were not 1 then we're not inside.
+				Any();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
