@@ -426,31 +426,38 @@ namespace DAP.CompGeom
 		/// <returns>	An enumerable of real points representing the polygon. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		// TODO: share code between this and BoxVertices
 		public IEnumerable<PointD> RealVertices(double rayLength, PointD ptUL, PointD ptLR)
 		{
-			if (!Edges.Any(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity))
+			// If no edges, then it's just the entire box
+			if (!Edges.Any())
 			{
-				foreach (var pt in Vertices.Select(v => v.Pt))
+				foreach (var pt in BoxPoints(ptUL, ptLR))
 				{
 					yield return pt;
 				}
+				yield break;
 			}
-			else
-			{
-				IEnumerable<PointD> points;
-				var ptsBox = BoxPoints(ptUL, ptLR);
 
-				if (!FCheckParallelLines(ptsBox, out points))
-				{
-					if (!FCheckDoublyInfinite(ptsBox, out points))
-					{
-						points = RealVertices(rayLength);
-					}
-				}
-				foreach (var pt in points)
-				{
-					yield return pt;
-				}
+			IEnumerable<PointD> points;
+			var ptsBox = BoxPoints(ptUL, ptLR);
+
+			var fFound = FCheckEasy(out points);
+			if (!fFound)
+			{
+				fFound = FCheckParallelLines(ptsBox, out points);
+			}
+			if (!fFound)
+			{
+				fFound = FCheckDoublyInfinite(ptsBox, out points);
+			}
+			if (!fFound)
+			{
+				points = RealVertices(rayLength);
+			}
+			foreach (var pt in points)
+			{
+				yield return pt;
 			}
 		}
 
