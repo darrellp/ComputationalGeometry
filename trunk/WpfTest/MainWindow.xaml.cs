@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -20,17 +19,17 @@ namespace WpfTest
 			InitializeComponent();
 		}
 
-		Random _rnd = new Random();
+		readonly Random _rnd = new Random();
 
 		private IEnumerable<PointD> PolyCanvasExp()
 		{
 			return new List<PointD>
 			       	{
-			                         		new PointD(0, 0),
-			                         		new PointD(cvsMain.ActualWidth, 0),
-			                         		new PointD(cvsMain.ActualWidth, cvsMain.ActualHeight),
-			                         		new PointD(0, cvsMain.ActualHeight)
-			                         	};
+			            new PointD(0, 0),
+			            new PointD(cvsMain.ActualWidth, 0),
+			            new PointD(cvsMain.ActualWidth, cvsMain.ActualHeight),
+			            new PointD(0, cvsMain.ActualHeight)
+			        };
 		}
 
 		private struct LevelInfo
@@ -118,11 +117,9 @@ namespace WpfTest
 				we = Fortune.LloydRelax(we, 10000, poly, 1.0);
 			}
 
-			var lstPoly = new List<Polygon>();
-
 			foreach (var subPoly in we.LstPolygons.Where(p => !p.FAtInfinity))
 			{
-				var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(10000, ptUL, ptLR), poly);
+				var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(500000, ptUL, ptLR), poly);
 				var clrFill = info.GrdFill.GetRandomColor();
 				clrFill.A = info.Alpha;
 				var subPolyWpf = new Polygon
@@ -147,10 +144,10 @@ namespace WpfTest
 			grd.SetEnd(Colors.Green);
 			var li = new List<LevelInfo>
 			         	{
-										new LevelInfo(grd, 4, 0.2, 70, 2),
-										new LevelInfo(grd, 2, 3, 90, 1),
-										new LevelInfo(grd, 1, 15, 150, 0),
-										new LevelInfo(grd, .5, 60, 255, 0)
+										new LevelInfo(grd, 5, 0.2, 70, 0),
+										new LevelInfo(grd, 3, 3, 90, 0),
+										new LevelInfo(grd, 2, 15, 150, 0),
+										new LevelInfo(grd, 1, 60, 255, 0)
 			                     	};
 			SubVoronoi(PolyCanvasExp(), li);
 			return;
@@ -167,7 +164,9 @@ namespace WpfTest
 			}
 		}
 
+		// ReSharper disable InconsistentNaming
 		private void cvsMain_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		// ReSharper restore InconsistentNaming
 		{
 			NewDesign();
 		}
