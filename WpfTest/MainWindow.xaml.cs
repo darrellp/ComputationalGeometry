@@ -96,9 +96,9 @@ namespace WpfTest
 			var lstPoints = new List<PointD>();
 			for (var i = 0; i < cPts ; i++)
 			{
-				var ptCand = new PointD(
+				lstPoints.Add(new PointD(
 					_rnd.NextDouble() * bbWidth + pxLeft,
-					_rnd.NextDouble() * bbHeight + pxBottom);
+					_rnd.NextDouble() * bbHeight + pxBottom));
 			}
 			if (lstPoints.Count == 0)
 			{
@@ -129,18 +129,29 @@ namespace WpfTest
 			}
 		}
 
+		Color RandomColor()
+		{
+			var rgb = new byte[3];
+			_rnd.NextBytes(rgb);
+			return Color.FromRgb(rgb[0], rgb[1], rgb[2]);
+		}
+
 		private void NewDesign()
 		{
 			cvsMain.Children.Clear();
 			var grd = new Gradient();
-			grd.SetStart(Colors.Red);
-			grd.AddStop(0.45, Colors.Purple);
-			grd.AddStop(0.95, Colors.Green);
-			grd.SetEnd(Colors.Green);
+			grd.SetStart(RandomColor());
+			grd.AddStop(0.33, RandomColor());
+			grd.AddStop(0.66, RandomColor());
+			grd.SetEnd(RandomColor());
+			//grd.SetStart(Colors.Red);
+			//grd.AddStop(0.45, Colors.Purple);
+			//grd.AddStop(0.95, Colors.Green);
+			//grd.SetEnd(Colors.Green);
 			var li = new List<LevelInfo>
 			         	{
-										new LevelInfo(grd, 5, 0.2, 70, 0),
-										new LevelInfo(grd, 3, 3, 90, 0),
+										new LevelInfo(grd, 5, 0.2, 70, 2),
+										new LevelInfo(grd, 3, 3, 90, 2),
 										new LevelInfo(grd, 2, 15, 150, 0),
 										new LevelInfo(grd, 1, 60, 255, 0)
 			                     	};
