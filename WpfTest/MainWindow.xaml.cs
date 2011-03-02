@@ -94,16 +94,11 @@ namespace WpfTest
 			var ptLR = new PointD(pxRight, pxBottom);
 			var cPts = (int)(bbWidth * bbHeight * info.Density * 100 / (cvsMain.ActualWidth * cvsMain.ActualHeight));
 			var lstPoints = new List<PointD>();
-
 			for (var i = 0; i < cPts ; i++)
 			{
 				var ptCand = new PointD(
 					_rnd.NextDouble() * bbWidth + pxLeft,
 					_rnd.NextDouble() * bbHeight + pxBottom);
-				if (Geometry.PointInConvexPoly(ptCand, poly))
-				{
-					lstPoints.Add(ptCand);
-				}
 			}
 			if (lstPoints.Count == 0)
 			{
