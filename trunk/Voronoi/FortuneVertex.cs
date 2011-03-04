@@ -161,7 +161,7 @@ namespace DAP.CompGeom
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Reset the ordered flag so we get ordered in the next call to Order() </summary>
+		/// <summary>	Reset the ordered flag so we get ordered in the next call to OrderEdges() </summary>
 		///
 		/// <remarks>	Darrellp, 2/19/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +196,7 @@ namespace DAP.CompGeom
 		/// <remarks>	Darrellp, 2/19/2011. </remarks>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal void Order()
+		internal void OrderEdges()
 		{
 			// If this vertex has already been ordered or is a vertex at infinity
 			if (_fAlreadyOrdered || FAtInfinity)
