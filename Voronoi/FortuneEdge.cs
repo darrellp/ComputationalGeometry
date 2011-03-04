@@ -33,11 +33,14 @@ namespace DAP.CompGeom
 		public bool FSplit { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// Return a point suitable for testing angle around the generator so that we can order the edges
-		/// of polygons in postprocessing.  This is used in the CompareToVirtual() to effect that
-		/// ordering. 
-		/// </summary>
+		/// <summary>	Return a point suitable for testing angle around the generator. </summary>
+		/// 
+		/// <remarks>	
+		/// When we order the edges in CW or CCW order, we need to get representative points on each edge
+		/// so that we can compare the angle they make with the vertex being tested.  This means they
+		/// have to be on the edge but not at either vertex so that we can order the edges of polygons in
+		/// postprocessing.  This is used in the CompareToVirtual() to effect that ordering. 
+		/// </remarks>
 		///
 		/// <value>	The polygon ordering test point. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,6 +65,9 @@ namespace DAP.CompGeom
 				}
 
 				// Take care of an edge at infinity
+				//
+				// We use the midpoint of the two starting points of the rays on
+				// each side of the edge at infinity
 				return Geometry.MidPoint(
 					EdgeCCWSuccessor.VtxStart.Pt,
 					EdgeCWPredecessor.VtxStart.Pt);
@@ -221,10 +227,14 @@ namespace DAP.CompGeom
 		private void RelabelEndVerticesToStart()
 		{
 			// For each edge emanating at the end vertex
-			foreach (FortuneEdge edgeCur in VtxEnd.Edges)
+			//
+			// We HAVE to use FortuneEdges here since the WeVertex.Edges enumeration depends on
+			// CW and CCW predecessors which we're in the process of messing around with - a
+			// recipe for disaster!
+			foreach (var edgeCur in ((FortuneVertex)VtxEnd).FortuneEdges)
 			{
 				// If it's not the zero length edge
-				if (edgeCur != this)
+				if (!ReferenceEquals(edgeCur, this))
 				{
 					// If it connects with it's Start vertex
 					if (edgeCur.VtxStart == VtxEnd)
@@ -537,7 +547,7 @@ namespace DAP.CompGeom
 			//
 			// We can't keep edges sorted during the sweepline processing so we do it here in
 			// postprocessing
-			((FortuneVertex)VtxStart).Order();
+			((FortuneVertex)VtxStart).OrderEdges();
 
 			// Get our predecessor edges
 			GetSuccessorEdgesFromVertex(
@@ -554,7 +564,7 @@ namespace DAP.CompGeom
 			if (!VtxEnd.FAtInfinity)
 			{
 				// Order our end vertices
-				((FortuneVertex)VtxEnd).Order();
+				((FortuneVertex)VtxEnd).OrderEdges();
 
 				// Get our successor edges
 				GetSuccessorEdgesFromVertex(
@@ -569,14 +579,25 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Add a poly to the edge and the edge to the winged edge data structure. </summary>
 		///
-		/// <remarks>	Darrellp, 2/18/2011. </remarks>
+		/// <remarks>	
+		/// This is where we set up the CW and CCW successor and predecessor edges, the polygons on each
+		/// side of the edge, it's start and end vertices.  Also, the edge is added to to start and end
+		/// vertices' edge list and it's actually added to the winged edge structure itself
+		/// 
+		/// Darrellp, 2/18/2011. 
+		/// </remarks>
 		///
 		/// <param name="poly">	Polygon to add. </param>
 		/// <param name="we">	Winged edge structure to add edge to. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal void Process(FortunePoly poly, WE we)
+		internal void HookToWingedEdge(FortunePoly poly, WE we)
 		{
+			// TODO: Remove this
+			if (_arPoly[0].Index == 10 && _arPoly[1].Index == 5)
+			{
+				int i = 1;
+			}
 			// Put the poly properly to the left or right of this edge
 			SetOrderedPoly(poly);
 
