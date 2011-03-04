@@ -452,7 +452,9 @@ namespace DAP.CompGeom
 				Tracer.Trace(tv.FinalEdges, edge.ToString());
 
 				// Incorporate the edge into the winged edge
-				edge.Process(poly, we);
+				//
+				// Set up it's CW and CCW successor and predecessor, etc.
+				edge.HookToWingedEdge(poly, we);
 
 				// If this is an infinite polygon and we've not located any infinite polygons before
 				if (polyInfinityStart == null && edge.VtxEnd.FAtInfinity && edgeNextCW.VtxEnd.FAtInfinity)
@@ -463,7 +465,9 @@ namespace DAP.CompGeom
 					// explicitly locate this first one - after that, we can locate the leading edge
 					// for the next polygon to the right as the edge which follows the current poly's
 					// leading edge.  As we work our way around the outside in AddPolygonAtInfinity we can
-					// therefore easily set leading edges on successive polygons.
+					// therefore easily set leading edges on successive polygons.  It should be noted that
+					// after AddPolygonAtInfinity there will be an edge at infinite between these two
+					// infinite edges to maintain proper Winged Edge structure.
 					iLeadingInfiniteEdgeCw = iEdge;
 					polyInfinityStart = poly;
 				}
@@ -972,6 +976,46 @@ namespace DAP.CompGeom
 					new PointD(1, -1)
 				};
 				return new Fortune(pts);
+			}
+
+			static readonly double sqrt3 = Math.Sqrt(3);
+			static PointD Rot60(PointD pt)
+			{
+				return new PointD(sqrt3 * pt.X + pt.Y, -pt.X + sqrt3 * pt.Y) * 0.5;
+			}
+
+			static void AddNextPts(ref PointD ptBase, ref PointD ptNegBase, List<PointD> lstPts)
+			{
+				ptBase = Rot60(ptBase);
+				ptNegBase = Rot60(ptNegBase);
+				lstPts.Add(ptBase);
+				lstPts.Add(ptNegBase);
+			}
+			[Test]
+			public void TestHex()
+			{
+				var lstPtsCur = new List<PointD>();
+				var ptBase = new PointD(0.1, 0.5);
+				if (ptBase.Y < sqrt3 * ptBase.X)
+				{
+					ptBase = new PointD(0.5, sqrt3 / 2) - ptBase;
+				}
+				var ptNegBase = new PointD(-ptBase.X, ptBase.Y);
+
+				lstPtsCur.Add(ptBase);
+				lstPtsCur.Add(ptNegBase);
+				AddNextPts(ref ptBase, ref ptNegBase, lstPtsCur);
+				AddNextPts(ref ptBase, ref ptNegBase, lstPtsCur);
+				AddNextPts(ref ptBase, ref ptNegBase, lstPtsCur);
+				AddNextPts(ref ptBase, ref ptNegBase, lstPtsCur);
+				AddNextPts(ref ptBase, ref ptNegBase, lstPtsCur);
+				lstPtsCur = lstPtsCur.
+					Select(p => new PointD(
+									100 * p.X,
+									100 * p.Y)).
+					ToList();
+				var we = Fortune.ComputeVoronoi(lstPtsCur);
+				Assert.NotNull(we);
 			}
 
 			[Test]
