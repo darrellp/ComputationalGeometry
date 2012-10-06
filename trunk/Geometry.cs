@@ -292,19 +292,17 @@ namespace DAP.CompGeom
 			var code = (CrossingType)(-1);
 			pPt = new PointD();
 
-			var denom = seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
-			               seg1Pt2.X*(seg2Pt1.Y - seg2Pt2.Y) +
-			               seg2Pt2.X*(seg1Pt2.Y - seg1Pt1.Y) +
-			               seg2Pt1.X*(seg1Pt1.Y - seg1Pt2.Y);
+			var denom = (seg1Pt1.X - seg1Pt2.X)* (seg2Pt2.Y - seg2Pt1.Y) +
+						   (seg2Pt2.X - seg2Pt1.X) * (seg1Pt2.Y - seg1Pt1.Y);
 
 			if (FNearZero(denom))
 			{
 				return ParallelInt(seg1Pt1, seg1Pt2, seg2Pt1, seg2Pt2, out pPt);
 			}
 
-			var num = seg1Pt1.X*(seg2Pt2.Y - seg2Pt1.Y) +
-			             seg2Pt1.X*(seg1Pt1.Y - seg2Pt2.Y) +
-			             seg2Pt2.X*(seg2Pt1.Y - seg1Pt1.Y);
+			var num = seg1Pt1.X * (seg2Pt2.Y - seg2Pt1.Y) +
+						 seg2Pt1.X * (seg1Pt1.Y - seg2Pt2.Y) +
+						 seg2Pt2.X * (seg2Pt1.Y - seg1Pt1.Y);
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
@@ -312,21 +310,27 @@ namespace DAP.CompGeom
 			}
 			var tSeg1 = num/denom;
 
+			if (tSeg1 < 0 || tSeg1 > 1)
+			{
+				return CrossingType.NonCrossing;
+			}
+
 			num = -(seg1Pt1.X * (seg2Pt1.Y - seg1Pt2.Y) +
 				   seg1Pt2.X * (seg1Pt1.Y - seg2Pt1.Y) +
 				   seg2Pt1.X * (seg1Pt2.Y - seg1Pt1.Y));
-			var tSeg2 = num/denom;
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
 				code = CrossingType.Vertex;
 			}
+			var tSeg2 = num/denom;
 
-			if (0 < tSeg1 && tSeg1 < 1 && 0 < tSeg2 && tSeg2 < 1)
+
+			if (0 < tSeg2 && tSeg2 < 1)
 			{
 				code = CrossingType.Normal;
 			}
-			else if (0 > tSeg1 || tSeg1 > 1 || 0 > tSeg2 || tSeg2 > 1)
+			else
 			{
 				code = CrossingType.NonCrossing;
 			}
@@ -601,7 +605,8 @@ namespace DAP.CompGeom
 				return false;
 			}
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
-			var polyCycle = poly.Concat(new[] { poly.First() });
+			var polyCycle = poly.ToList();
+			polyCycle.Add(polyCycle[0]);
 			return !polyCycle.
 				// Calculate Signs on pairs of points
 				Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
