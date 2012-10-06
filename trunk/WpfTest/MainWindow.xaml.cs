@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using DAP.CompGeom;
-using Geometry = DAP.CompGeom.Geometry;
 
 namespace WpfTest
 {
@@ -55,6 +54,7 @@ namespace WpfTest
 			}
 		}
 
+// ReSharper disable PossibleMultipleEnumeration
 		private void SubVoronoi(IEnumerable<PointD> poly, IEnumerable<LevelInfo> ienInfo)
 		{
 			if (!ienInfo.Any() || !poly.Any())
@@ -109,7 +109,7 @@ namespace WpfTest
 			var we = Fortune.ComputeVoronoi(lstPoints);
 			for (var iRelax = 0; iRelax < info.Relaxations; iRelax++)
 			{
-				we = Fortune.LloydRelax(we, 10000, poly, 1.0);
+				we = Fortune.LloydRelax(we, 10000, poly);
 			}
 
 			foreach (var subPoly in we.LstPolygons.Where(p => !p.FAtInfinity))
@@ -117,17 +117,19 @@ namespace WpfTest
 				var ptsClipped = ConvexPolyIntersection.FindIntersection(subPoly.RealVertices(500000, ptUL, ptLR), poly);
 				var clrFill = info.GrdFill.GetRandomColor();
 				clrFill.A = info.Alpha;
+				var pointArray = ptsClipped.ToArray();
 				var subPolyWpf = new Polygon
 					{
-						Points = new PointCollection(ptsClipped.Select(p => new Point(p.X, p.Y))),
+						Points = new PointCollection(pointArray.Select(p => new Point(p.X, p.Y))),
 						Fill = new SolidColorBrush(clrFill),
 						Stroke = new SolidColorBrush(Colors.Black),
 						StrokeThickness = info.StrokeThickness
 					};
-				SubVoronoi(ptsClipped, ienInfo.Skip(1));
+				SubVoronoi(pointArray, ienInfo.Skip(1));
 				cvsMain.Children.Add(subPolyWpf);
 			}
 		}
+// ReSharper restore PossibleMultipleEnumeration
 
 		Color RandomColor()
 		{
@@ -141,22 +143,21 @@ namespace WpfTest
 			cvsMain.Children.Clear();
 			var grd = new Gradient();
 			grd.SetStart(RandomColor());
+			grd.AddStop(0.2, RandomColor());
 			grd.AddStop(0.33, RandomColor());
+			grd.AddStop(0.5, RandomColor());
 			grd.AddStop(0.66, RandomColor());
+			grd.AddStop(0.8, RandomColor());
 			grd.SetEnd(RandomColor());
-			//grd.SetStart(Colors.Red);
-			//grd.AddStop(0.45, Colors.Purple);
-			//grd.AddStop(0.95, Colors.Green);
-			//grd.SetEnd(Colors.Green);
 			var li = new List<LevelInfo>
 			         	{
-										new LevelInfo(grd, 5, 0.2, 70, 2),
+										//new LevelInfo(grd, 5, 0.2, 70, 2),
+										new LevelInfo(grd, 5, 0.2, 80, 2),
 										new LevelInfo(grd, 3, 3, 90, 2),
 										new LevelInfo(grd, 2, 15, 150, 0),
 										new LevelInfo(grd, 1, 60, 255, 0)
 			                     	};
 			SubVoronoi(PolyCanvasExp(), li);
-			return;
 		}
 
 		private bool _fSizedOnce;
