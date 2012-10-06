@@ -593,11 +593,6 @@ namespace DAP.CompGeom
 
 		internal void HookToWingedEdge(FortunePoly poly, WE we)
 		{
-			// TODO: Remove this
-			if (_arPoly[0].Index == 10 && _arPoly[1].Index == 5)
-			{
-				int i = 1;
-			}
 			// Put the poly properly to the left or right of this edge
 			SetOrderedPoly(poly);
 
