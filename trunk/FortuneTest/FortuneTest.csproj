@@ -36,9 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NetTrace, Version=1.0.4658.14368, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Net Trace\trunk\bin\Release\NetTrace.dll</HintPath>
+    <Reference Include="NetTrace">
+      <HintPath>..\..\..\NetTrace\trunk\bin\Debug\NetTrace.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
