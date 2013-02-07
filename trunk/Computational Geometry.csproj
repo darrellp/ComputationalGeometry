@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NetTrace">
-      <HintPath>..\..\NetTrace\trunk\bin\Debug\NetTrace.dll</HintPath>
+      <HintPath>..\..\NetTrace\trunk\bin\Release\NetTrace.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>packages\NUnit.2.6.2\lib\nunit.framework.dll</HintPath>
