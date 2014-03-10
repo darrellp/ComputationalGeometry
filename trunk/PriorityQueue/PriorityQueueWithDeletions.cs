@@ -15,7 +15,7 @@ namespace DAP.CompGeom
 	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public class PriorityQueueWithDeletions<T> : PriorityQueue<T> where T : IPriorityQueueElement
+	public class PriorityQueueWithDeletions<TPQ> : PriorityQueue<TPQ> where TPQ : IPriorityQueueElement
 	{
 		#region Public overrides
 
@@ -27,7 +27,7 @@ namespace DAP.CompGeom
 		/// <returns>	The previous largest object. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public override T Pop()
+		public override TPQ Pop()
 		{
 			var valRet = base.Pop();
 
@@ -44,7 +44,7 @@ namespace DAP.CompGeom
 		/// <param name="val">	Value to remove. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void Delete(T val)
+		public void Delete(TPQ val)
 		{
 			// Retrieve the item's index
 			var i = val.Index;
@@ -113,7 +113,7 @@ namespace DAP.CompGeom
 		/// <param name="val">	The value. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected override void TraceElement(int iPos, T val)
+		protected override void TraceElement(int iPos, TPQ val)
 		{
 			Tracer.Trace(t.PqTrees,
 			             "Pos " + iPos + (val.Index < 0 ? "<DEL>" : "" + ":") + StrIndent + val);
@@ -131,7 +131,7 @@ namespace DAP.CompGeom
 		/// <param name="val">	The value. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected override void SetAt(int i, T val)
+		protected override void SetAt(int i, TPQ val)
 		{
 			base.SetAt(i, val);
 			val.SetIndex(i);
