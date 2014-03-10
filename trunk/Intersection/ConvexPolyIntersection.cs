@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using NUnit.Framework;
 
@@ -44,10 +43,14 @@ namespace DAP.CompGeom
 
 		public static IEnumerable<PointD> FindIntersection(IEnumerable<PointD> poly1Enum, IEnumerable<PointD> poly2Enum)
 		{
+			// Put the two polygons into arrays
+			var polyA = poly1Enum.ToArray();
+			var polyB = poly2Enum.ToArray();
+
 			// If poly1 is empty, return poly2
-			if (!poly1Enum.Any())
+			if (!polyA.Any())
 			{
-				foreach (var poly in poly2Enum)
+				foreach (var poly in polyB)
 				{
 					yield return poly;
 				}
@@ -55,9 +58,9 @@ namespace DAP.CompGeom
 			}
 
 			// If poly2 is empty, return poly1
-			if (!poly2Enum.Any())
+			if (!polyB.Any())
 			{
-				foreach (var poly in poly1Enum)
+				foreach (var poly in polyA)
 				{
 					yield return poly;
 				}
@@ -65,10 +68,6 @@ namespace DAP.CompGeom
 			}
 
 			// Initialize
-
-			// Put the two polygons into arrays
-			var polyA = poly1Enum.ToArray();
-			var polyB = poly2Enum.ToArray();
 
 			// Index of the heads that chase each other around the polygon
 			var aCur = 0;
@@ -295,7 +294,7 @@ namespace DAP.CompGeom
 	[TestFixture]
 	public class TestConvexIntersect
 	{
-		private static void Check(List<PointD> poly1, List<PointD> poly2, List<PointD> res)
+		private static void Check(IEnumerable<PointD> poly1, IEnumerable<PointD> poly2, ICollection<PointD> res)
 		{
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToArray();
 			foreach (var pt in output)
@@ -305,24 +304,27 @@ namespace DAP.CompGeom
 			Assert.AreEqual(output.Count(), res.Count);
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
 		[Test]
 		public void TestIntersection()
 		{
-			var poly1 = new List<PointD>()
-				                    {
+			var poly1 = new List<PointD>
+			{
 				                     	new PointD(0, 0),
 				                     	new PointD(2, 0),
 				                     	new PointD(2, 3),
 				                     	new PointD(0, 3)
 				                    };
-			var poly2 = new List<PointD>()
-				                    {
+			var poly2 = new List<PointD>
+			{
 				                     	new PointD(1, 1),
 										new PointD(2, 1),
 										new PointD(2, 2),
 										new PointD(1, 2)
 				                    };
-			var res = new List<PointD>()
+			var res = new List<PointD>
 				                {
 				                   	new PointD(1, 1),
 				                   	new PointD(2, 1),
@@ -330,14 +332,14 @@ namespace DAP.CompGeom
 				                   	new PointD(1, 2)
 				                };
 			Check(poly1, poly2, res);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(107,176),
 				        	new PointD(128,370),
 				        	new PointD(47,379),
 				        	new PointD(26,185),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(-1,257),
 				        	new PointD(73,257),
@@ -346,21 +348,21 @@ namespace DAP.CompGeom
 				        };
 			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToList();
 			Assert.AreEqual(4, output.Count);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(1, 0),
 				        	new PointD(3, 0),
 				        	new PointD(3, 2),
 				        	new PointD(1, 2),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(0, 1),
 				        	new PointD(1, 0),
 				        	new PointD(2, 0),
 				        	new PointD(2, 1),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				        {
 				        	new PointD(1, 0),
 				        	new PointD(2, 0),
@@ -368,14 +370,14 @@ namespace DAP.CompGeom
 				        	new PointD(1, 1),
 				        };
 			Check(poly1, poly2, res);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(509, 0),
 				        	new PointD(509, 312),
 				        	new PointD(0, 312),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(53, 213),
 				        	new PointD(110, 240),
@@ -383,7 +385,7 @@ namespace DAP.CompGeom
 				        	new PointD(0, 312),
 				        	new PointD(0, 233),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				        {
 				        	new PointD(53, 213),
 				        	new PointD(110, 240),
@@ -393,21 +395,21 @@ namespace DAP.CompGeom
 				        };
 			Check(poly1, poly2, res);
 
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(4, 0),
 				        	new PointD(4, 4),
 				        	new PointD(0, 4),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(2, -1),
 				        	new PointD(5, 2),
 				        	new PointD(2, 5),
 				        	new PointD(-1, 2),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				        {
 				        	new PointD(1, 0),
 				        	new PointD(3, 0),
@@ -420,41 +422,41 @@ namespace DAP.CompGeom
 				        };
 			Check(poly1, poly2, res);
 
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(3, 0),
 				        	new PointD(3, 3),
 				        	new PointD(0, 3),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(3, 1),
 				        	new PointD(4, 1),
 				        	new PointD(4, 2),
 				        	new PointD(3, 2),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				    {
 				      	new PointD(3, 1),
 				      	new PointD(3, 2),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(2, 0),
 				        	new PointD(2, 5),
 				        	new PointD(0, 5),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(4, 1),
 				        	new PointD(1, 4),
 				        	new PointD(1, 2),
 				        	new PointD(3, 0),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				    {
 				      	new PointD(2, 1),
 				      	new PointD(2, 3),
@@ -462,21 +464,21 @@ namespace DAP.CompGeom
 				      	new PointD(1, 2),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(3, 0),
 				        	new PointD(3, 3),
 				        	new PointD(0, 3),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(1, 1),
 				        	new PointD(1, 2),
 				        	new PointD(2, 2),
 				        	new PointD(2, 1),
 				        };
-			res = new List<PointD>()
+			res = new List<PointD>
 				    {
 				        new PointD(1, 1),
 				        new PointD(1, 2),
@@ -484,13 +486,13 @@ namespace DAP.CompGeom
 				        new PointD(2, 1),
 				    };
 			Check(poly1, poly2, res);
-			poly1 = new List<PointD>()
+			poly1 = new List<PointD>
 				        {
 				        	new PointD(241, 1090),
 				        	new PointD(206, 278),
 				        	new PointD(290, 242),
 				        };
-			poly2 = new List<PointD>()
+			poly2 = new List<PointD>
 				        {
 				        	new PointD(0, 0),
 				        	new PointD(509, 0),
