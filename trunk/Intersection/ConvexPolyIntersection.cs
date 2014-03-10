@@ -297,7 +297,7 @@ namespace DAP.CompGeom
 	{
 		private static void Check(List<PointD> poly1, List<PointD> poly2, List<PointD> res)
 		{
-			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2);
+			var output = ConvexPolyIntersection.FindIntersection(poly1, poly2).ToArray();
 			foreach (var pt in output)
 			{
 				Assert.IsTrue(res.Contains(pt));
