@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using NetTrace;
 #if DEBUG || NUNIT
 using NUnit.Framework;
@@ -14,7 +15,7 @@ namespace DAP.CompGeom
 	/// <remarks>	Darrellp, 2/17/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public class PriorityQueue<T> : IEnumerable<T> where T : IComparable
+	public class PriorityQueue<TPQ> : IEnumerable<TPQ> where TPQ : IComparable
 	{
 		#region Private Variables
 		/// <summary>
@@ -22,14 +23,14 @@ namespace DAP.CompGeom
 		/// to everything I learned about the terms "array" and "list", but that's nonetheless the way
 		/// they're implemented in the CLR Framework.
 		/// </summary>
-		protected List<T> LstHeap = new List<T>();
+		protected readonly List<TPQ> LstHeap = new List<TPQ>();
 		#endregion
 
 		#region Properties
 		///<summary>
 		/// Count of items in the priority queue
 		///</summary>
-		public virtual int Count
+		public int Count
 		{
 			get { return LstHeap.Count; }
 		}
@@ -45,7 +46,7 @@ namespace DAP.CompGeom
 		/// <param name="val">	Value to insert. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public virtual void Add(T val)
+		public void Add(TPQ val)
 		{
 			// Tracing
 			Tracer.Trace(t.PqInserts, "Adding {0}...", val.ToString());
@@ -72,7 +73,7 @@ namespace DAP.CompGeom
 		/// <returns>	Maximal element in the queue. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public virtual T Peek()
+		public TPQ Peek()
 		{
 			// If there are no elements to peek
 			if (LstHeap.Count == 0)
@@ -96,7 +97,7 @@ namespace DAP.CompGeom
 		/// <returns>	Maximal element. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public virtual T Pop()
+		public virtual TPQ Pop()
 		{
 			// If There's nothing to pop
 			if (LstHeap.Count == 0)
@@ -149,7 +150,7 @@ namespace DAP.CompGeom
 		/// <param name="val">	The value to be set. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected virtual void SetAt(int i, T val)
+		protected virtual void SetAt(int i, TPQ val)
 		{
 			LstHeap[i] = val;
 		}
@@ -242,7 +243,7 @@ namespace DAP.CompGeom
 		/// <returns>	Array value at i. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected T ArrayVal(int i)
+		protected TPQ ArrayVal(int i)
 		{
 			return LstHeap[i];
 		}
@@ -257,7 +258,7 @@ namespace DAP.CompGeom
 		/// <returns>	The parent. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected T Parent(int i)
+		protected TPQ Parent(int i)
 		{
 			return LstHeap[ParentIndex(i)];
 		}
@@ -272,7 +273,7 @@ namespace DAP.CompGeom
 		/// <returns>	The left child. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected T Left(int i)
+		protected TPQ Left(int i)
 		{
 			return LstHeap[LeftChildIndex(i)];
 		}
@@ -287,7 +288,7 @@ namespace DAP.CompGeom
 		/// <returns>	The right child. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected T Right(int i)
+		protected TPQ Right(int i)
 		{
 			return LstHeap[RightChildIndex(i)];
 		}
@@ -395,7 +396,7 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		[Conditional("DEBUG")]
-		virtual protected void TraceElement(int iPos, T val)
+		virtual protected void TraceElement(int iPos, TPQ val)
 		{
 			Tracer.Trace(t.PqTrees, "Pos " + iPos + ":" + StrIndent + val);
 		}
@@ -511,12 +512,12 @@ namespace DAP.CompGeom
 		/// <returns>	The enumerator. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected virtual IEnumerator<T> GetEnumerator()
+		protected IEnumerator<TPQ> GetEnumerator()
 		{
 			return LstHeap.GetEnumerator();
 		}
 
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		IEnumerator<TPQ> IEnumerable<TPQ>.GetEnumerator()
 		{
 			return GetEnumerator();
 		}
@@ -532,10 +533,14 @@ namespace DAP.CompGeom
 
 	#region NUnit
 #if DEBUG || NUNIT
+	/// <summary>
+	/// 
+	/// </summary>
 	[TestFixture]
 	public class TestPriorityQueue
 	{
 		[SetUp]
+// ReSharper disable CSharpWarnings::CS1591
 		public void Setup()
 		{
 		}
@@ -563,6 +568,7 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestPq()
 		{
+// ReSharper disable once UseObjectOrCollectionInitializer
 			var pq = new PriorityQueue<int>();
 
 			pq.Add(80);
@@ -594,16 +600,16 @@ namespace DAP.CompGeom
 		[Test]
 		public void TestPQWithDeletions()
 		{
-			PriorityQueueWithDeletions<PQWDElement> priorityQueue = new PriorityQueueWithDeletions<PQWDElement>();
+			var priorityQueue = new PriorityQueueWithDeletions<PQWDElement>();
 
-			PQWDElement pq80 = new PQWDElement(80);
-			PQWDElement pq90 = new PQWDElement(90);
-			PQWDElement pq30 = new PQWDElement(30);
-			PQWDElement pq85 = new PQWDElement(85);
-			PQWDElement pq20 = new PQWDElement(20);
-			PQWDElement pq40 = new PQWDElement(40);
-			PQWDElement pq50 = new PQWDElement(50);
-			PQWDElement pq35 = new PQWDElement(35);
+			var pq80 = new PQWDElement(80);
+			var pq90 = new PQWDElement(90);
+			var pq30 = new PQWDElement(30);
+			var pq85 = new PQWDElement(85);
+			var pq20 = new PQWDElement(20);
+			var pq40 = new PQWDElement(40);
+			var pq50 = new PQWDElement(50);
+			var pq35 = new PQWDElement(35);
 
 			priorityQueue.Add(pq40);
 			priorityQueue.Add(pq90);
@@ -615,11 +621,7 @@ namespace DAP.CompGeom
 			priorityQueue.Delete(pq30);
 			Assert.IsTrue(priorityQueue.FValidate());
 			Assert.AreEqual(6, priorityQueue.Count);
-			int cEnums = 0;
-			foreach (IPriorityQueueElement pqe in priorityQueue)
-			{
-				cEnums++;
-			}
+			int cEnums = priorityQueue.Cast<IPriorityQueueElement>().Count();
 			Assert.AreEqual(6, cEnums);
 			priorityQueue.Pop();
 			priorityQueue.Pop();
@@ -677,30 +679,22 @@ namespace DAP.CompGeom
 			Assert.AreEqual(pq20, priorityQueue.Pop());
 			Assert.AreEqual(0, priorityQueue.Count);
 		}
+		// ReSharper restore CSharpWarnings::CS1591
 
 		class PQWDElement : IPriorityQueueElement
 		{
 			#region Private Variables
 			int _i = -1;
-			int _val;
+
 			#endregion
 
-			public int Val
-			{
-				get
-				{
-					return _val;
-				}
-				set
-				{
-					_val = value;
-				}
-			}
+			// ReSharper disable once MemberCanBePrivate.Local
+			public int Val { get; set; }
 
 			#region Constructor
 			public PQWDElement(int val)
 			{
-				_val = val;
+				Val = val;
 			}
 			#endregion
 
@@ -726,7 +720,7 @@ namespace DAP.CompGeom
 				{
 					return 1;
 				}
-				else if (Val < ((PQWDElement)obj).Val)
+				if (Val < ((PQWDElement)obj).Val)
 				{
 					return -1;
 				}
