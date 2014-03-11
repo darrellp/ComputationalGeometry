@@ -9,6 +9,7 @@ namespace DAP.CompGeom
 	{
 		#region Graham Scan
 
+		// ReSharper disable once ReturnTypeCanBeEnumerable.Global
 		public static List<int> GrahamScan(IEnumerable<PointD> points)
 		{
 			// Ultimately we care about the indices so set up tuples with the index as first value
@@ -81,17 +82,20 @@ namespace DAP.CompGeom
 	public class TestGrahamHull
 	{
 // ReSharper disable CSharpWarnings::CS1591
-		private static void Check(IEnumerable<PointD> Points, List<int> expected)
+// ReSharper disable once UnusedParameter.Local
+		private static void Check(IEnumerable<PointD> points, List<int> expected)
 		{
-			var output = ConvexHull2D.GrahamScan(Points);
+			var output = ConvexHull2D.GrahamScan(points);
 			Assert.IsTrue(output.Zip(expected, (i1, i2) => i1 == i2).All(t => t));
 		}
 
 		[Test]
 		public void TestIntersection()
 		{
+// ReSharper disable JoinDeclarationAndInitializer
 			List<PointD> points;
 			List<int> expected;
+// ReSharper restore JoinDeclarationAndInitializer
 
 			points = new List<PointD>
 			{
