@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace DAP.CompGeom
 {
@@ -106,15 +107,13 @@ namespace DAP.CompGeom
 		#region Infinite Vertices
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	Make this a vertex at infinity. </summary>
-		///
-		/// <remarks>	Darrellp, 2/19/2011. </remarks>
-		///
-		/// <param name="ptDirection">	The point direction. </param>
+		///  <summary>	Make this a vertex at infinity. </summary>
+		/// 
+		///  <remarks>	Darrellp, 2/19/2011. </remarks>
 		/// <param name="fNormalize">	true to normalize. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		protected void SetInfinite(PointD ptDirection, bool fNormalize)
+		protected void SetInfinite(bool fNormalize)
 		{
 			FAtInfinity = true;
 			if (fNormalize)
@@ -142,8 +141,8 @@ namespace DAP.CompGeom
 		public PointD ConvertToReal(PointD ptStart, Double rayLength)
 		{
 			return new PointD(
-				(double)(Pt.X * rayLength + ptStart.X),
-				(double)(Pt.Y * rayLength + ptStart.Y));
+				Pt.X * rayLength + ptStart.X,
+				Pt.Y * rayLength + ptStart.Y);
 		}
 		#endregion
 

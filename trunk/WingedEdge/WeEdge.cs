@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using NetTrace;
-
+// ReSharper disable MemberCanBeProtected.Global
+// 
 namespace DAP.CompGeom
 {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
