@@ -700,6 +700,7 @@ namespace DAP.CompGeom
 			}
 
 			// Return the "clockwisedness" of the generator and points on the two edges.
+			// ReSharper disable once PossibleNullReferenceException
 			return Geometry.ICompareCw(PolyCommon(edge).VoronoiPoint, PolyOrderingTestPoint, edge.PolyOrderingTestPoint);
 		}
 		#endregion

@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using NetTrace;
-#if NUNIT || DEBUG
-using NUnit.Framework;
-#endif
 
 namespace DAP.CompGeom
 {
@@ -168,10 +165,9 @@ namespace DAP.CompGeom
 			{
 				yield return pt;
 			}
-			yield break;
 		}
 
-		private bool FCheckParallelLines(IEnumerable<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
+		private bool FCheckParallelLines(List<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
 		{
 			// Do the required initialization of our out parameter
 			ptsToBeClipped = null;
@@ -188,7 +184,7 @@ namespace DAP.CompGeom
 			//      Inf vtx-------------finite vtx 1 ------------------Inf vtx
 			//
 			// So that's a total of six edges and two of them at infinity.
-			if (Edges.Where(e => e.FAtInfinity).Count() == 2)
+			if (Edges.Count(e => e.FAtInfinity) == 2)
 			{
 				// Retrieve the two finite points
 				var ptsFinite = Vertices.Where(v => !v.FAtInfinity).Select(v => v.Pt).ToArray();
@@ -205,7 +201,7 @@ namespace DAP.CompGeom
 			return false;
 		}
 
-		private bool FCheckDoublyInfinite(IEnumerable<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
+		private bool FCheckDoublyInfinite(List<PointD> ptsBox, out IEnumerable<PointD> ptsToBeClipped)
 		{
 			ptsToBeClipped = null;
 
@@ -222,16 +218,18 @@ namespace DAP.CompGeom
 			var ptHeadDir = new PointD(0, 0);
 			for (var ivtx = 0; ivtx < 3; ivtx++)
 			{
-				if (!vtxs[ivtx].FAtInfinity)
+				if (vtxs[ivtx].FAtInfinity)
 				{
-					ptTailDir = vtxs[(ivtx + 1) % 3].Pt;
-					ptHeadDir = vtxs[(ivtx + 2) % 3].Pt;
-					vtx = vtxs[ivtx];
-					break;
+					continue;
 				}
+				ptTailDir = vtxs[(ivtx + 1) % 3].Pt;
+				ptHeadDir = vtxs[(ivtx + 2) % 3].Pt;
+				vtx = vtxs[ivtx];
+				break;
 			}
 
 			// If it's only got two edges emanating from it (a doubly infinite line)
+			// ReSharper disable once PossibleNullReferenceException
 			if (vtx.Edges.Count() == 2)
 			{
 				// TODO: We should probably do this manually rather than relying on ConvexPolyIntersection
@@ -282,7 +280,7 @@ namespace DAP.CompGeom
 		private bool FCheckEasy(out IEnumerable<PointD> ptsToBeClipped)
 		{
 			ptsToBeClipped = null;
-			if (!Edges.Where(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity).Any())
+			if (!Edges.Any(e => e.VtxStart.FAtInfinity || e.VtxEnd.FAtInfinity))
 			{
 				ptsToBeClipped = Vertices.Select(v => v.Pt);
 				return true;
@@ -291,7 +289,7 @@ namespace DAP.CompGeom
 		}
 
 
-		private double CalcRayLength(IEnumerable<PointD> ptsBox)
+		private double CalcRayLength(List<PointD> ptsBox)
 		{
 			// Initialize
 			var oes = OrientedEdges.ToArray();
@@ -335,10 +333,10 @@ namespace DAP.CompGeom
 			// The length is satisfactory if all the points in the box are on the same side of it
 			var ptRealOut = oeOut.EndVtx.ConvertToReal(oeOut.StartPt, length);
 			var ptRealIn = oeIn.StartVtx.ConvertToReal(oeIn.EndPt, length);
-			return !ptsBox.Where(pt => !Geometry.FLeft(ptRealOut, ptRealIn, pt)).Any();
+			return ptsBox.All(pt => Geometry.FLeft(ptRealOut, ptRealIn, pt));
 		}
 
-		private static double CalcInitialGuess(OrientedEdge oeIn, OrientedEdge oeOut, IEnumerable<PointD> ptsBox)
+		private static double CalcInitialGuess(OrientedEdge oeIn, OrientedEdge oeOut, List<PointD> ptsBox)
 		{
 			// Find out the max dist from any finite point to any point on the box and double it for good measure
 			var maxDist0 = Math.Sqrt(ptsBox.Select(pt => Geometry.DistanceSq(pt, oeIn.StartPt)).Max());
@@ -347,7 +345,7 @@ namespace DAP.CompGeom
 
 		}
 
-		private static IEnumerable<PointD> BoxPoints(PointD ptUL, PointD ptLR)
+		private static List<PointD> BoxPoints(PointD ptUL, PointD ptLR)
 		{
 			return new List<PointD>
 			       	{
@@ -673,15 +671,6 @@ namespace DAP.CompGeom
 				}
 			}
 		}
-		#endregion
-
-		#region NUnit
-#if NUNIT || DEBUG
-		[TestFixture]
-		public class TestFortunePoly
-		{
-		}
-#endif
 		#endregion
 	}
 }

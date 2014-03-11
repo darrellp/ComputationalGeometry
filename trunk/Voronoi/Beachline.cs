@@ -98,6 +98,8 @@ namespace DAP.CompGeom
 				ndCur = edgeXPos < xSite ? ndCur.RightChild : ndCur.LeftChild;
 			}
 
+			// ReSharper disable once PossibleNullReferenceException
+			// 
 			// Return the node we located
 			Tracer.Trace(tv.Search, "Located node at {0}", ndRet.ToString());
 			return ndRet;
@@ -398,6 +400,7 @@ namespace DAP.CompGeom
 		/// <returns>	Acceptable if less than or equal to zero, else rejected. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
+		// ReSharper disable once InconsistentNaming
 		internal static int ICcwVoronoi(PointD pt1, PointD pt2, PointD pt3)
 		{
 			// Do the geometry to see if they're clockwise
@@ -764,12 +767,6 @@ namespace DAP.CompGeom
 
 			// Create any circle events which this site causes
 			CreateCircleEventsFromSiteEvent(lfnLeft, lfnRight, evt.Pt.Y, evq);
-		}
-
-		// TODO: Implement rebalancing
-		private void Rebalance(InternalNode innSubRoot)
-		{
-			throw new Exception("The method or operation is not implemented.");
 		}
 		#endregion
 

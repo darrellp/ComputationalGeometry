@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using NetTrace;
 
 namespace DAP.CompGeom
@@ -66,7 +65,7 @@ namespace DAP.CompGeom
 #if DEBUG || NETTRACE
 		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
 		{
-			StringBuilder sbIndent = new StringBuilder();
+			var sbIndent = new StringBuilder();
 
 			// *SURELY* there is a better way to repeat a single character into a string, but I can't
 			// seem to locate it for the life of me.
@@ -76,7 +75,7 @@ namespace DAP.CompGeom
 				sbIndent.Append("|  ");
 			}
 
-			Tracer.Trace(traceEnumElement, sbIndent.ToString() + ToString());
+			Tracer.Trace(traceEnumElement, sbIndent + ToString());
 		}
 #endif
 		#endregion

@@ -151,11 +151,11 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestParabolicCut()
 			{
-				FortunePoly poly1 = new FortunePoly(new PointD(0, 0), 0);
-				FortunePoly poly2 = new FortunePoly(new PointD(8, 4), 1);
+				var poly1 = new FortunePoly(new PointD(0, 0), 0);
+				var poly2 = new FortunePoly(new PointD(8, 4), 1);
 
-				InternalNode inn = new InternalNode(poly1, poly2);
-				InternalNode innReverse = new InternalNode(poly2, poly1);
+				var inn = new InternalNode(poly1, poly2);
+				var innReverse = new InternalNode(poly2, poly1);
 
 				Assert.AreEqual(-7, inn.CurrentEdgeXPos(-1));
 				Assert.AreEqual(3, innReverse.CurrentEdgeXPos(-1));
