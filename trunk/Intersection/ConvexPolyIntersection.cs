@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+#if NUNIT || DEBUG
 using NUnit.Framework;
+#endif
 
 namespace DAP.CompGeom
 {
