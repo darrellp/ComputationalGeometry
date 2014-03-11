@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace DAP.CompGeom
 {
@@ -173,10 +174,10 @@ namespace DAP.CompGeom
 
 			/// <summary> True if the edge travels from the StartVertex to the EndVertex.  If false
 			/// then we should traverse the edge from the EndVertex to the StartVertex. </summary>
-			public bool Forward;
+			public readonly bool Forward;
 
 			/// <summary> The edge in question </summary>
-			public WeEdge Edge;
+			public readonly WeEdge Edge;
 
 			////////////////////////////////////////////////////////////////////////////////////////////////////
 			/// <summary>	Gets the start vertex. </summary>

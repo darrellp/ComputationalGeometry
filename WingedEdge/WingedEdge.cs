@@ -34,10 +34,10 @@ namespace DAP.CompGeom
 	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public class WingedEdge<P, E, V>
-		where P:WePolygon
-		where E:WeEdge
-		where V:WeVertex
+	public class WingedEdge<TPoly, TEdge, TVtx>
+		where TPoly:WePolygon
+		where TEdge:WeEdge
+		where TVtx:WeVertex
 	{
 		#region Constructor
 
@@ -49,9 +49,9 @@ namespace DAP.CompGeom
 
 		public WingedEdge()
 		{
-			LstVertices = new List<V>();
-			LstEdges = new List<E>();
-			LstPolygons = new List<P>();
+			LstVertices = new List<TVtx>();
+			LstEdges = new List<TEdge>();
+			LstPolygons = new List<TPoly>();
 		}
 
 		#endregion
@@ -63,21 +63,21 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The list of contained polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<P> LstPolygons { get; set; }
+		public List<TPoly> LstPolygons { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the list of contained edges. </summary>
 		///
 		/// <value>	The list of contained edges. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<E> LstEdges { get; set; }
+		public List<TEdge> LstEdges { get; set; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the list of contained vertices. </summary>
 		///
 		/// <value>	The list of contained vertices. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		public List<V> LstVertices { get; set; }
+		public List<TVtx> LstVertices { get; set; }
 
 		#endregion
 
@@ -133,7 +133,7 @@ namespace DAP.CompGeom
 		/// <param name="edge">	The edge to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddEdge(E edge)
+		public void AddEdge(TEdge edge)
 		{
 			LstEdges.Add(edge);
 		}
@@ -146,7 +146,7 @@ namespace DAP.CompGeom
 		/// <param name="polygon">	The polygon to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddPoly(P polygon)
+		public void AddPoly(TPoly polygon)
 		{
 			LstPolygons.Add(polygon);
 		}
@@ -159,7 +159,7 @@ namespace DAP.CompGeom
 		/// <param name="vertex">	The vertex to be added. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public void AddVertex(V vertex)
+		public void AddVertex(TVtx vertex)
 		{
 			LstVertices.Add(vertex);
 		}
@@ -170,6 +170,7 @@ namespace DAP.CompGeom
 	#region NUnit
 #if DEBUG || NUNIT
 	[TestFixture]
+// ReSharper disable CSharpWarnings::CS1591
 	public class TestWingedEdge
 	{
 		#region Private Variables
@@ -492,6 +493,7 @@ namespace DAP.CompGeom
 			Assert.IsTrue(lstplyAroundVertex8.Contains(_we.LstPolygons[3]));
 			Assert.IsTrue(lstplyAroundVertex8.Contains(_we.LstPolygons[4]));
 		}
+		// ReSharper restore CSharpWarnings::CS1591
 	}
 #endif
 		#endregion
