@@ -170,9 +170,8 @@ namespace DAP.CompGeom
 			[Test]
 			public void TestICompare()
 			{
-				SiteEvent evtSmaller = new SiteEvent(new FortunePoly(new PointD(0, 0), 0));
-				SiteEvent evtLarger = new SiteEvent(new FortunePoly(new PointD(-1, 1), 0));
-				SiteEvent evtEqual = new SiteEvent(new FortunePoly(new PointD(1, 1), 0));
+				var evtSmaller = new SiteEvent(new FortunePoly(new PointD(0, 0), 0));
+				var evtLarger = new SiteEvent(new FortunePoly(new PointD(-1, 1), 0));
 
 				Assert.IsTrue(((IComparable)evtSmaller).CompareTo(evtLarger) < 0);
 			}

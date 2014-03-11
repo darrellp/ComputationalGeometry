@@ -191,6 +191,7 @@ namespace DAP.CompGeom
 				var ptsPoly = poly.RealVertices(rayLength);
 
 				// Clip them to our clipping polygon
+				// ReSharper disable PossibleMultipleEnumeration
 				var ptsCentroid =
 					ConvexPolyIntersection.FindIntersection(polyClip, ptsPoly);
 
@@ -211,11 +212,13 @@ namespace DAP.CompGeom
 					ptCentroid += pt;
 					cpts++;
 				}
+				// ReSharper restore PossibleMultipleEnumeration
 
 				// Determine the centroid
 				var ctrd = new PointD(ptCentroid.X / cpts, ptCentroid.Y / cpts);
 
 				// If strength is the default -1, just take our centroid
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
 				if (strength == 1)
 				{
 					// Calculate the new centroid and add it to our list of points
@@ -482,7 +485,6 @@ namespace DAP.CompGeom
 			// practice so isn't a performance hit.
 			poly.HandleZeroLengthEdges();
 			Tracer.Unindent();
-			return;
 		}
 
 		#endregion
@@ -601,6 +603,7 @@ namespace DAP.CompGeom
 			polyNextCcw = edgeLeadingCw.PolyLeft as FortunePoly;
 
 			// Diagnostics
+			// ReSharper disable once PossibleNullReferenceException
 			Tracer.Assert(t.Assertion, polyNextCcw.Index != poly.Index,
 				"Next polygon in AddEdgeAtInfinity is the same as the current poly");
 			
@@ -758,11 +761,14 @@ namespace DAP.CompGeom
 						// for those points come together to a point.  Since we only allow for vertices
 						// of order three during voronoi processing, we create "zero length" edges for the
 						// polygons which meet at that common point. These will be removed later in postprocessing.
+						// 
+						// ReSharper disable PossibleNullReferenceException
 						if (Geometry.FCloseEnough(cevt.VoronoiVertex, cevtPrev.VoronoiVertex))
 						{
 							// We're going to create a zero length edge.
 							cevt.FZeroLength = true;
 						}
+						// ReSharper restore PossibleNullReferenceException
 					}
 				}
 
@@ -814,6 +820,7 @@ namespace DAP.CompGeom
 					Tracer.Assert(t.Assertion, edge != null, "Non-FortuneEdge in FortunePoly list");
 
 					// Is this an infinite edge?
+					// ReSharper disable once PossibleNullReferenceException
 					if (edge.VtxStart == null || edge.VtxEnd == null)
 					{
 						// Are both vertices infinite/null?
@@ -937,6 +944,7 @@ namespace DAP.CompGeom
 			//
 			// We have to be very picky about how we set up the left and right
 			// polygons for our new rays.
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (dx == 0 || dx * dy > 0) // dy == 0 case needs to fall through...
 			{
 				// Set up left and right polygons one way
@@ -978,10 +986,10 @@ namespace DAP.CompGeom
 				return new Fortune(pts);
 			}
 
-			static readonly double sqrt3 = Math.Sqrt(3);
+			static readonly double Sqrt3 = Math.Sqrt(3);
 			static PointD Rot60(PointD pt)
 			{
-				return new PointD(sqrt3 * pt.X + pt.Y, -pt.X + sqrt3 * pt.Y) * 0.5;
+				return new PointD(Sqrt3 * pt.X + pt.Y, -pt.X + Sqrt3 * pt.Y) * 0.5;
 			}
 
 			static void AddNextPts(ref PointD ptBase, ref PointD ptNegBase, List<PointD> lstPts)
@@ -991,14 +999,17 @@ namespace DAP.CompGeom
 				lstPts.Add(ptBase);
 				lstPts.Add(ptNegBase);
 			}
+			/// <summary>
+			/// 
+			/// </summary>
 			[Test]
 			public void TestHex()
 			{
 				var lstPtsCur = new List<PointD>();
 				var ptBase = new PointD(0.1, 0.5);
-				if (ptBase.Y < sqrt3 * ptBase.X)
+				if (ptBase.Y < Sqrt3 * ptBase.X)
 				{
-					ptBase = new PointD(0.5, sqrt3 / 2) - ptBase;
+					ptBase = new PointD(0.5, Sqrt3 / 2) - ptBase;
 				}
 				var ptNegBase = new PointD(-ptBase.X, ptBase.Y);
 
@@ -1014,16 +1025,22 @@ namespace DAP.CompGeom
 									100 * p.X,
 									100 * p.Y)).
 					ToList();
-				var we = Fortune.ComputeVoronoi(lstPtsCur);
+				var we = ComputeVoronoi(lstPtsCur);
 				Assert.NotNull(we);
 			}
 
+			/// <summary>
+			/// 
+			/// </summary>
 			[Test]
 			public void TestGeneratorAdds()
 			{
 				Assert.AreEqual(3, Example().Polygons.Count);
 			}
 
+			/// <summary>
+			/// 
+			/// </summary>
 			[Test]
 			public void TestProcessEvents()
 			{

@@ -10,7 +10,7 @@ namespace DAP.CompGeom
 	/// <remarks>	Darrellp, 2/18/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public class FortuneVertex : WeVertex
+	public sealed class FortuneVertex : WeVertex
 	{
 		#region Private variables
 		bool _fAlreadyOrdered;			// True after this vertex has had its edges ordered in post processing
@@ -126,7 +126,7 @@ namespace DAP.CompGeom
 		/// <param name="edge">	Next clockwise edge to add. </param>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public virtual void Add(FortuneEdge edge)
+		public void Add(FortuneEdge edge)
 		{
 			FortuneEdges.Add(edge);
 		}
