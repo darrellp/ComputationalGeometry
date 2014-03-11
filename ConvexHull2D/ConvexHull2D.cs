@@ -47,15 +47,25 @@ namespace DAP.CompGeom
 				// ReSharper restore CompareOfFloatsByEqualityOperator
 			});
 
+			// Heart of the Graham algorithm - walk through the points in order of the angle they form with
+			// the pivot point, three at a time and see if they form a right or left hand turn.  Right hand
+			// turns mean add the middle point to the convex hull.  Left hand means discard them.  We
+			// specifically skip collinear points so that points on a line of the convex hull are discarded.
 			for (var iPt = 0; iPt < sortedPoints.Count - 1; iPt++)
 			{
+				// Indexed point we'll be checking
 				var iptCur = sortedPoints[iPt];
+				// Last point located on the hull
 				var ptOnHull = indexedPoints[indices[indices.Count - 1]].Item2;
+				// Point to be tested
 				var ptTest = indexedPoints[iptCur.Item1].Item2;
+				// Point after the test point
 				var ptNext = indexedPoints[sortedPoints[iPt + 1].Item1].Item2;
 
+				// If it's a right hand turn
 				if (Geometry.ICcw(ptOnHull, ptTest, ptNext) == -1)
 				{
+					// ...then it gets added to the convex hull
 					indices.Add(iptCur.Item1);
 				}
 			}
