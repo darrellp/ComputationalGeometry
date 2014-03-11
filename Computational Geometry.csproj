@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConvexHull2D\ConvexHull2D.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Intersection\ConvexPolyIntersection.cs" />
