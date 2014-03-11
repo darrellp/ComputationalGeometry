@@ -248,7 +248,7 @@ namespace DAP.CompGeom
 		internal static FortuneVertex InfiniteVertex(PointD ptDirection, bool fNormalize = true)
 		{
 			var vtx = new FortuneVertex(ptDirection);
-			vtx.SetInfinite(ptDirection, fNormalize);
+			vtx.SetInfinite(fNormalize);
 			return vtx;
 		}
 		#endregion
