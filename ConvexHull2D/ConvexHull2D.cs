@@ -18,7 +18,7 @@ namespace DAP.CompGeom
 			var indices = new List<int>();
 
 			// Get our lower right which everything pivots on
-			var iptPivot = LowerRight(indexedPoints);
+			var iptPivot = indexedPoints.LowerRight();
 			var ptPivot = iptPivot.Item2;
 			var iPivot = iptPivot.Item1;
 
@@ -32,14 +32,22 @@ namespace DAP.CompGeom
 				var dpt1 = ipt1.Item2 - ptPivot;
 				var dpt2 = ipt2.Item2 - ptPivot;
 				// ReSharper disable CompareOfFloatsByEqualityOperator
-				var cmp1 = dpt1.Y == 0 ? double.MaxValue * Math.Sign(dpt1.X) : dpt1.X / dpt1.Y;
-				var cmp2 = dpt2.Y == 0 ? double.MaxValue * Math.Sign(dpt2.X) : dpt2.X / dpt2.Y;
+
+				// Note that when the Y coordinate is 0, the point is always to the
+				// left of the pivot point which is described as the righmost of all
+				// bottom points so it should be given a value of double.MinValue;
+				var cmp1 = dpt1.Y == 0 ? double.MinValue : dpt1.X / dpt1.Y;
+				var cmp2 = dpt2.Y == 0 ? double.MinValue : dpt2.X / dpt2.Y;
+
+				return cmp1 == cmp2 ? 
+					// If they're at the same angle, then order them by distance from the pivot point -
+					// we'll pick the last one in the loop below.
+					Math.Abs(dpt1.X).CompareTo(Math.Abs(dpt2.X)) : 
+					cmp1.CompareTo(cmp2);
 				// ReSharper restore CompareOfFloatsByEqualityOperator
-				return cmp1.CompareTo(cmp2);
 			});
 
-			indices.Add(sortedPoints[0].Item1);
-			for (var iPt = 1; iPt < sortedPoints.Count - 1; iPt++)
+			for (var iPt = 0; iPt < sortedPoints.Count - 1; iPt++)
 			{
 				var iptCur = sortedPoints[iPt];
 				var ptOnHull = indexedPoints[indices[indices.Count - 1]].Item2;
@@ -55,7 +63,7 @@ namespace DAP.CompGeom
 			return indices;
 		}
 
-		private static Tuple<int, PointD> LowerRight(IEnumerable<Tuple<int, PointD>> points)
+		private static Tuple<int, PointD> LowerRight(this IEnumerable<Tuple<int, PointD>> points)
 		{
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			return points.Aggregate(new Tuple<int, PointD>(0, new PointD(double.MinValue, double.MaxValue)),
@@ -96,6 +104,19 @@ namespace DAP.CompGeom
 			List<PointD> points;
 			List<int> expected;
 // ReSharper restore JoinDeclarationAndInitializer
+
+			points = new List<PointD>
+			{
+				new PointD(0, 0),	//0
+				new PointD(0, 2),	//1
+				new PointD(1, 0),	//2
+				new PointD(3, 4),	//3
+				new PointD(2, 0),	//4
+				new PointD(-1, 3),	//5
+				new PointD(-2, 4),	//6
+			};
+			expected = new List<int> { 4, 0, 6, 3 };
+			Check(points, expected);
 
 			points = new List<PointD>
 			{
