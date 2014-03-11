@@ -4,6 +4,7 @@ using System.Linq;
 #if NUNIT || DEBUG
 using NUnit.Framework;
 #endif
+// ReSharper disable InconsistentNaming
 
 namespace DAP.CompGeom
 {
@@ -289,6 +290,7 @@ namespace DAP.CompGeom
 
 		public static CrossingType SegSegInt(PointD seg1Pt1, PointD seg1Pt2, PointD seg2Pt1, PointD seg2Pt2, out PointD pPt)
 		{
+			// ReSharper disable once RedundantAssignment
 			var code = (CrossingType)(-1);
 			pPt = new PointD();
 
@@ -306,6 +308,8 @@ namespace DAP.CompGeom
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
+				// TODO: Figure out why Resharper complains about the following...
+				// ReSharper disable once RedundantAssignment
 				code = CrossingType.Vertex;
 			}
 			var tSeg1 = num/denom;
@@ -321,6 +325,8 @@ namespace DAP.CompGeom
 
 			if (FNearZero(num) || FCloseEnough(num, denom))
 			{
+				// TODO: Figure out why Resharper complains about the following...
+				// ReSharper disable once RedundantAssignment
 				code = CrossingType.Vertex;
 			}
 			var tSeg2 = num/denom;
@@ -364,6 +370,7 @@ namespace DAP.CompGeom
 				return false;
 			}
 
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			if (ptSegEndpoint1.X != ptSegmentEndpoint2.X)
 			{
 				return ptSegEndpoint1.X <= ptTest.X && ptTest.X <= ptSegmentEndpoint2.X ||
@@ -600,20 +607,18 @@ namespace DAP.CompGeom
 
 		public static bool PointInConvexPoly(PointD ptTest, IEnumerable<PointD> poly)
 		{
-			if (!poly.Any())
+			var polyCycle = poly.ToList();
+			if (polyCycle.Count == 0)
 			{
 				return false;
 			}
 			// We need to check the last vertex with the first, so add the first at the end for a cycle
-			var polyCycle = poly.ToList();
 			polyCycle.Add(polyCycle[0]);
-			return !polyCycle.
+			return polyCycle.
 				// Calculate Signs on pairs of points
 				Zip(polyCycle.Skip(1), (pt1, pt2) => Math.Sign(SignedArea(ptTest, pt1, pt2))).
 				// They're +1 for points going CCW around the test point
-				Where(s => s != 1).
-				// If any were not 1 then we're not inside.
-				Any();
+				All(s => s == 1);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
