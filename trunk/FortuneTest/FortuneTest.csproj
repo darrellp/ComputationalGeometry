@@ -36,9 +36,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NetTrace, Version=1.0.4968.21554, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\NetTrace\trunk\bin\Release\NetTrace.dll</HintPath>
+    <Reference Include="NetTrace">
+      <HintPath>..\..\..\NetTrace\trunk\bin\Debug\NetTrace.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
