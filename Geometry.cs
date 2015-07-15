@@ -336,7 +336,7 @@ namespace DAP.CompGeom
 			{
 				code = CrossingType.Normal;
 			}
-			else
+			else if (code != CrossingType.Vertex)
 			{
 				code = CrossingType.NonCrossing;
 			}
