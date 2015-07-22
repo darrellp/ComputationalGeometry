@@ -17,6 +17,7 @@ namespace Tesselation
 	public partial class MainWindow
 	{
 		readonly Random _rnd = new Random();
+		private const int cRndPoints = 1;
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -50,29 +51,15 @@ namespace Tesselation
 			var grdBuffer = new Canvas {Width = width, Height = height};
 
 			var lstPts = new List<PointD>();
-			for (var iPt = 0; iPt < 10; iPt++)
+			for (var iPt = 0; iPt < cRndPoints; iPt++)
 			{
 				var pt = new PointD(
 					_rnd.NextDouble(), 
 					_rnd.NextDouble(), 
 					new SiteMarker(iPt, grd.GetRandomColor()));
-				lstPts.Add(pt);
-				pt.X += 1;
-				lstPts.Add(pt);
-				pt.Y += 1;
-				lstPts.Add(pt);
-				pt.X -= 1;
-				lstPts.Add(pt);
-				pt.X -= 1;
-				lstPts.Add(pt);
-				pt.Y -= 1;
-				lstPts.Add(pt);
-				pt.Y -= 1;
-				lstPts.Add(pt);
-				pt.X += 1;
-				lstPts.Add(pt);
-				pt.X += 1;
-				lstPts.Add(pt);
+				SetSymmetricPoints(lstPts, pt);
+				pt.X = 1 - pt.X;
+				//SetSymmetricPoints(lstPts, pt);
 			}
 			var ptUL = new PointD(-0.5, 1.5);
 			var ptLR = new PointD(1.5, -0.5);
@@ -102,6 +89,27 @@ namespace Tesselation
 			         		Viewport = new Rect(0, 0, width, height),
 			         		ViewportUnits = BrushMappingMode.Absolute
 			         	};
+		}
+
+		private static void SetSymmetricPoints(List<PointD> lstPts, PointD pt)
+		{
+			lstPts.Add(pt);
+			pt.X += 1;
+			lstPts.Add(pt);
+			pt.Y += 1;
+			lstPts.Add(pt);
+			pt.X -= 1;
+			lstPts.Add(pt);
+			pt.X -= 1;
+			lstPts.Add(pt);
+			pt.Y -= 1;
+			lstPts.Add(pt);
+			pt.Y -= 1;
+			lstPts.Add(pt);
+			pt.X += 1;
+			lstPts.Add(pt);
+			pt.X += 1;
+			lstPts.Add(pt);
 		}
 
 		private void rcMain_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

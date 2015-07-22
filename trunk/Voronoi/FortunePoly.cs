@@ -602,9 +602,30 @@ namespace DAP.CompGeom
 					}
 				}
 			}
-			else
+			else if (FortuneEdges[0].FSplit)
 			{
+				// I think the nontransitivity of the "order" here will cause the CLR Sort()
+				// to screw up our ordering in this case so we handle it specially...
+				if (Geometry.ICcw(FortuneEdges[0].VtxStart.Pt,
+					FortuneEdges[0].PolyOrderingTestPoint,
+					FortuneEdges[1].PolyOrderingTestPoint) > 0)
+				{
+					var edgeT = FortuneEdges[0];
+					FortuneEdges[0] = FortuneEdges[1];
+					FortuneEdges[1] = edgeT;
+				}
+				if (Geometry.ICcw(FortuneEdges[2].VtxStart.Pt,
+					FortuneEdges[2].PolyOrderingTestPoint,
+					FortuneEdges[3].PolyOrderingTestPoint) > 0)
+				{
+					var edgeT = FortuneEdges[2];
+					FortuneEdges[2] = FortuneEdges[3];
+					FortuneEdges[3] = edgeT;
+				}
+			}
+			else {
 				// More than 3 vertices just get a standard CLR sort
+				// TODO: Is nontransitivity screwing up here too and we're just not noticing?
 				FortuneEdges.Sort();
 			}
 		}
