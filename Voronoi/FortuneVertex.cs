@@ -227,7 +227,8 @@ namespace DAP.CompGeom
 			else
 			{
 				// Do the more complicated sort
-				FortuneEdges.Sort(CompareEdges); 
+				FortuneEdges.Sort(CompareEdges);
+				_fAlreadyOrdered = true;
 			}
 		}
 		#endregion

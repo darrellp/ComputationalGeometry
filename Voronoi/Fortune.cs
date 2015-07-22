@@ -406,7 +406,7 @@ namespace DAP.CompGeom
 						//
 						// This means that this edge is to the left as we look "out" from the
 						// interior of the voronoi diagram.
-						iLeadingInfiniteEdgeCw = iEdgeNext;
+						iLeadingInfiniteEdgeCw = iEdge;
 						break;
 					}
 				}
@@ -1026,6 +1026,26 @@ namespace DAP.CompGeom
 									100 * p.Y)).
 					ToList();
 				var we = ComputeVoronoi(lstPtsCur);
+				Assert.NotNull(we);
+			}
+
+			[Test]
+			public void TestGrid()
+			{
+				var wdth = 10;
+				var lstPtsCur = new List<PointD>();
+
+				for (int iX = -1; iX <= 1; iX++)
+				{
+					lstPtsCur.Add(new PointD(iX * wdth, 0));
+				}
+				var we = ComputeVoronoi(lstPtsCur);
+				foreach (FortunePoly poly in we.LstPolygons)
+				{
+					var edges = poly.Edges.ToList();
+					Assert.NotNull(edges);
+				}
+
 				Assert.NotNull(we);
 			}
 

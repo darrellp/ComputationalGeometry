@@ -7,6 +7,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using NetTrace;
 using DAP.CompGeom;
@@ -157,6 +158,7 @@ namespace FortuneTest
 				double infiniteLength = (double)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
 				foreach (FortunePoly poly in _lstPoly)
 				{
+					var edges = poly.Edges.ToList();
 					foreach (FortuneEdge edge in poly.Edges)
 					{
 						edge.Draw(e.Graphics, pen, (float)infiniteLength);
@@ -238,6 +240,12 @@ namespace FortuneTest
 			_lstPt.Add(new PointD(50, -100));
 			_lstPt.Add(new PointD(-50, 100));
 			_lstPt.Add(new PointD(50, 100));
+
+			_lstPt.Add(new PointD(-60, -100));
+			_lstPt.Add(new PointD(60, -100));
+			_lstPt.Add(new PointD(-60, 100));
+			_lstPt.Add(new PointD(60, 100));
+
 			pnlDraw.Invalidate();
 		}
 

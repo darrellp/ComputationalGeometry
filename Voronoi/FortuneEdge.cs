@@ -282,7 +282,7 @@ namespace DAP.CompGeom
 			Tracer.Indent();
 
 			// RQS- Take care of CW Predecessor
-			if (EdgeCWPredecessor.VtxStart == VtxEnd)
+			if (EdgeCWPredecessor.VtxEnd == VtxStart)
 			{
 				EdgeCWPredecessor.EdgeCCWSuccessor = EdgeCCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWPredecessor, EdgeCCWSuccessor);
@@ -295,7 +295,7 @@ namespace DAP.CompGeom
 			//-RQS
 
 			// RQS- and CCW Predecessor
-			if (EdgeCCWPredecessor.VtxStart == VtxEnd)
+			if (EdgeCCWPredecessor.VtxEnd == VtxStart)
 			{
 				EdgeCCWPredecessor.EdgeCWSuccessor = EdgeCWSuccessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWPredecessor, EdgeCWSuccessor);
@@ -308,7 +308,7 @@ namespace DAP.CompGeom
 			//-RQS
 
 			// RQS- and CW Successor
-			if (EdgeCWSuccessor.VtxStart == VtxStart)
+			if (EdgeCWSuccessor.VtxEnd == VtxEnd)
 			{
 				EdgeCWSuccessor.EdgeCCWSuccessor = EdgeCCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCCWSuccessor = {1}", EdgeCWSuccessor, EdgeCCWPredecessor);
@@ -321,7 +321,7 @@ namespace DAP.CompGeom
 			//-RQS
 
 			// RQS- and CCW Successor
-			if (EdgeCCWSuccessor.VtxStart == VtxStart)
+			if (EdgeCCWSuccessor.VtxEnd == VtxEnd)
 			{
 				EdgeCCWSuccessor.EdgeCWSuccessor = EdgeCWPredecessor;
 				Tracer.Trace(tv.ZeroLengthEdges, "{0} EdgeCWSuccessor = {1}", EdgeCCWSuccessor, EdgeCWPredecessor);
@@ -354,11 +354,11 @@ namespace DAP.CompGeom
 
 		internal void ReassignVertexEdges()
 		{
-			// Make all the end edges join to our start vertex rather than our end vertex
-			RelabelEndVerticesToStart();
-
 			// Put the end edges into our start vertex's list of edges
 			SpliceEndEdgesIntoStart();
+
+			// Make all the end edges join to our start vertex rather than our end vertex
+			RelabelEndVerticesToStart();
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
