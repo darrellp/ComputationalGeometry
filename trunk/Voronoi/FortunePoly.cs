@@ -602,7 +602,7 @@ namespace DAP.CompGeom
 					}
 				}
 			}
-			else if (FortuneEdges[0].FSplit)
+			else if (FortuneEdges.Count == 4 && FortuneEdges[0].FSplit)
 			{
 				// I think the nontransitivity of the "order" here will cause the CLR Sort()
 				// to screw up our ordering in this case so we handle it specially...
