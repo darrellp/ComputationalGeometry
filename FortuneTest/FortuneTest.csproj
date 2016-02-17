@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NetTrace">
-      <HintPath>..\..\..\NetTrace\trunk\bin\Debug\NetTrace.dll</HintPath>
+      <HintPath>..\..\..\NetTrace\trunk\bin\Release\NetTrace.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />

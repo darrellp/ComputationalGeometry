@@ -65,34 +65,36 @@ namespace DAP.CompGeom
 			Bchl = new Beachline();
 			QevEvents = new EventQueue();
 			Polygons = new List<FortunePoly>();
+		    var index = 0;
 			// For every point
 			foreach (var pt in points)
 			{
 				// Add it to our list
-				QevEvents.Add(new SiteEvent(InsertPoly(pt)));
+				QevEvents.Add(new SiteEvent(InsertPoly(pt, index++)));
 			}
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// <summary>	
-		/// Each polygon in the final solution is associated with a point in the input.  We initialize
-		/// that polygon for this point here. 
-		/// </summary>
-		///
-		/// <remarks>	Darrellp, 2/17/2011. </remarks>
-		///
-		/// <param name="pt">	The point. </param>
-		///
-		/// <returns>	The polygon produced. </returns>
-		////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		FortunePoly InsertPoly(PointD pt)
+	    ///  <summary>	
+	    ///  Each polygon in the final solution is associated with a point in the input.  We initialize
+	    ///  that polygon for this point here. 
+	    ///  </summary>
+	    /// 
+	    ///  <remarks>	Darrellp, 2/17/2011. </remarks>
+	    /// 
+	    ///  <param name="pt">	The point. </param>
+	    ///  <param name="index"> Identifying index for this point/poly</param>
+	    /// 
+	    /// <returns>	The polygon produced. </returns>
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
+	    FortunePoly InsertPoly(PointD pt, int index)
 		{
 			Tracer.Trace(tv.GeneratorList, "Generator {0}: ({1}, {2})",
 				Polygons.Count, pt.X, pt.Y);
 
 			// The count is being passed in only as a unique identifier for this point.
 			var poly = new FortunePoly(pt, Polygons.Count);
+		    poly.Cookie = index;
 			Polygons.Add(poly);
 			return poly;
 		}
