@@ -54,9 +54,8 @@
     <DocumentationFile>bin\Release\Computational Geometry.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NetTrace, Version=1.0.5181.28686, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\NetTrace\trunk\bin\Debug\NetTrace.dll</HintPath>
+    <Reference Include="NetTrace">
+      <HintPath>..\..\NetTrace\trunk\bin\Release\NetTrace.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
