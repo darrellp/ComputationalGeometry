@@ -17,7 +17,7 @@ namespace Tesselation
 	public partial class MainWindow
 	{
 		readonly Random _rnd = new Random();
-		private const int cRndPoints = 1;
+		private const int cRndPoints = 4;
 		public MainWindow()
 		{
 			InitializeComponent();

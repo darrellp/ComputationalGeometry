@@ -1,0 +1,19 @@
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.csprojResolveAssemblyReference.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\MainWindow.baml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\MainWindow.g.cs
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\App.g.cs
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation_MarkupCompile.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.g.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.Properties.Resources.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.csproj.GenerateResource.Cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Tesselation.exe.config
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Tesselation.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Tesselation.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Computational Geometry.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\nunit.framework.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\NetTrace.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Computational Geometry.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\Computational Geometry.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\bin\Debug\nunit.framework.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\Tesselation\obj\x86\Debug\Tesselation.pdb

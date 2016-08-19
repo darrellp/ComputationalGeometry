@@ -1,0 +1,19 @@
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.csprojResolveAssemblyReference.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\MainWindow.baml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\MainWindow.g.cs
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\App.g.cs
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest_MarkupCompile.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.g.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.Properties.Resources.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.csproj.GenerateResource.Cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\WpfTest.exe.config
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\WpfTest.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\WpfTest.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\Computational Geometry.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\nunit.framework.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\NetTrace.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\Computational Geometry.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\Computational Geometry.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\bin\Debug\nunit.framework.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\WpfTest\obj\x86\Debug\WpfTest.pdb

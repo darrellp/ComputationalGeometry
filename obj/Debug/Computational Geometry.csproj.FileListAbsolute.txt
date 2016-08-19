@@ -1,0 +1,9 @@
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\obj\Debug\Computational Geometry.csprojResolveAssemblyReference.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\Computational Geometry.XML
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\Computational Geometry.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\Computational Geometry.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\NetTrace.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\nunit.framework.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\bin\Debug\nunit.framework.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\obj\Debug\Computational Geometry.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\obj\Debug\Computational Geometry.pdb

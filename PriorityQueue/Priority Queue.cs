@@ -552,17 +552,16 @@ namespace DAP.CompGeom
 		}
 
 		[Test]
-		[ExpectedException(typeof(IndexOutOfRangeException))]
 		public void TestPeekException()
 		{
-			(new PriorityQueue<int>()).Peek();
+            Assert.Throws<IndexOutOfRangeException>(() => (new PriorityQueue<int>()).Peek());
 		}
 
 		[Test]
-		[ExpectedException(typeof(IndexOutOfRangeException))]
 		public void TestPopException()
 		{
-			(new PriorityQueue<int>()).Pop();
+            Assert.Throws<IndexOutOfRangeException>(() => (new PriorityQueue<int>()).Pop());
+            (new PriorityQueue<int>()).Pop();
 		}
 
 		[Test]

@@ -1,0 +1,15 @@
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.csprojResolveAssemblyReference.cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.frmFortuneTest.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.Properties.Resources.resources
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.csproj.GenerateResource.Cache
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\FortuneTest.exe.config
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\FortuneTest.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\FortuneTest.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\Computational Geometry.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\NetTrace.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\nunit.framework.dll
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\Computational Geometry.pdb
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\Computational Geometry.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\bin\Debug\nunit.framework.xml
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.exe
+C:\Users\Darrell\Documents\Visual Studio 2015\Projects\Github\ComputationalGeometry\FortuneTest\obj\Debug\FortuneTest.pdb
