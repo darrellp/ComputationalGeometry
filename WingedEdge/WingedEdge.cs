@@ -170,7 +170,8 @@ namespace DAP.CompGeom
 	#region NUnit
 #if DEBUG || NUNIT
 	[TestFixture]
-// ReSharper disable CSharpWarnings::CS1591
+
+#pragma warning disable 1591
 	public class TestWingedEdge
 	{
 		#region Private Variables

@@ -107,6 +107,7 @@ namespace DAP.CompGeom
 			Assert.IsTrue(output.Zip(expected, (i1, i2) => i1 == i2).All(t => t));
 		}
 
+#pragma warning disable 1591
 		[Test]
 		public void TestIntersection()
 		{

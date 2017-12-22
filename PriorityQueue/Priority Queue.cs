@@ -531,12 +531,13 @@ namespace DAP.CompGeom
 	}
 
 
-	#region NUnit
+    #region NUnit
 #if DEBUG || NUNIT
+#pragma warning disable 1591
 	/// <summary>
-	/// 
-	/// </summary>
-	[TestFixture]
+    /// 
+    /// </summary>
+    [TestFixture]
 	public class TestPriorityQueue
 	{
 		[SetUp]

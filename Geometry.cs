@@ -667,6 +667,7 @@ namespace DAP.CompGeom
 	#region NUnit
 #if NUNIT || DEBUG
 	[TestFixture]
+#pragma warning disable 1591
 	public class TestGeometry
 	{
 		[Test]

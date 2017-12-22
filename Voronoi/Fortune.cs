@@ -978,6 +978,7 @@ namespace DAP.CompGeom
 		public class TestVoronoi
 		{
 #if NUNIT || DEBUG
+#pragma warning disable 1591
 			static Fortune Example()
 			{
 				var pts = new[] {
