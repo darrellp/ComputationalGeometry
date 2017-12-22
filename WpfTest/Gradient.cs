@@ -7,7 +7,7 @@ namespace WpfTest
 	internal class Gradient
 	{
 		private static readonly Random Rnd = new Random();
-		private SortedList<Double, Color> Stops { get; set; }
+		private SortedList<Double, Color> Stops { get; }
 
 		public Gradient()
 		{
@@ -31,7 +31,9 @@ namespace WpfTest
 
 		public bool RemoveStop(double pos)
 		{
+		    // ReSharper disable CompareOfFloatsByEqualityOperator
 			if (pos == 0 || pos == 1)
+			    // ReSharper restore CompareOfFloatsByEqualityOperator
 			{
 				return false;
 			}

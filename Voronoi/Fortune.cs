@@ -93,9 +93,8 @@ namespace DAP.CompGeom
 				Polygons.Count, pt.X, pt.Y);
 
 			// The count is being passed in only as a unique identifier for this point.
-			var poly = new FortunePoly(pt, Polygons.Count);
-		    poly.Cookie = index;
-			Polygons.Add(poly);
+		    var poly = new FortunePoly(pt, Polygons.Count) {Cookie = index};
+		    Polygons.Add(poly);
 			return poly;
 		}
 		#endregion
@@ -107,7 +106,7 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		internal List<FortunePoly> Polygons { get; private set; }
+		internal List<FortunePoly> Polygons { get; }
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets the event queue. </summary>
@@ -533,13 +532,12 @@ namespace DAP.CompGeom
 			do
 			{
 				// Add the edge at infinity between our current poly and the poly at infinity
-				FortunePoly polyNext;
-				edgePreviousAtInfinity = AddEdgeAtInfinity(
+			    edgePreviousAtInfinity = AddEdgeAtInfinity(
 					polyAtInfinity,
 					polyCur,
 					iLeadingEdgeCw,
 					edgePreviousAtInfinity,
-					out polyNext,
+					out var polyNext,
 					out iLeadingEdgeNext);
 				we.AddEdge(edgePreviousAtInfinity);
 

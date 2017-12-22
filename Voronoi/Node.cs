@@ -11,7 +11,7 @@ namespace DAP.CompGeom
 	/// <remarks>	Darrellp, 2/18/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	abstract internal class Node
+	internal abstract class Node
 	{
 		#region Private Variables
 		Node _leftChild;
@@ -39,7 +39,7 @@ namespace DAP.CompGeom
 			TraceTreeWithIndent(traceEnumElement, 0);
 		}
 
-		abstract internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent);
+		internal abstract void TraceTreeWithIndent(tv traceEnumElement, int cIndent);
 #endif
 		#endregion
 
@@ -51,43 +51,25 @@ namespace DAP.CompGeom
 		/// <value>	The sibling. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal Node ImmediateSibling
-		{
-			get
-			{
-				return IsLeftChild ? NdParent.RightChild : NdParent.LeftChild;
-			}
-		}
+		internal Node ImmediateSibling => IsLeftChild ? NdParent.RightChild : NdParent.LeftChild;
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Tells whether we're our parent's left child. </summary>
 		///
 		/// <value>	true if is a left child, false if not. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal bool IsLeftChild
-		{
-			get
-			{
-				return this == NdParent.LeftChild;
-			}
-		}
+		internal bool IsLeftChild => this == NdParent.LeftChild;
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets a value indicating whether this node is leaf. </summary>
 		///
 		/// <value>	true if this object is leaf, false if not. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		internal bool IsLeaf
-		{
-			get
-			{
-				return LeftChild == null;
-			}
-		}
+		internal bool IsLeaf => LeftChild == null;
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets our parent node. </summary>
 		///
 		/// <value>	The parent. </value>
@@ -103,11 +85,8 @@ namespace DAP.CompGeom
 
 		internal Node LeftChild
 		{
-			get
-			{
-				return _leftChild;
-			}
-			set
+			get => _leftChild;
+		    set
 			{
 				_leftChild = value;
 				_leftChild.NdParent = (InternalNode)this;
@@ -122,11 +101,8 @@ namespace DAP.CompGeom
 
 		internal Node RightChild
 		{
-			get
-			{
-				return _rightChild;
-			}
-			set
+			get => _rightChild;
+		    set
 			{
 				_rightChild = value;
 				_rightChild.NdParent = (InternalNode)this;

@@ -58,7 +58,7 @@ namespace DAP.CompGeom
 
 		public override string ToString()
 		{
-			return string.Format("({0},{1})", X, Y);
+			return $"({X},{Y})";
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,9 @@ namespace DAP.CompGeom
 				return false;
 			}
 			var ptCompare = (PointD)obj;
+		    // ReSharper disable CompareOfFloatsByEqualityOperator
 			return X == ptCompare.X && Y == ptCompare.Y;
+		    // ReSharper restore CompareOfFloatsByEqualityOperator
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +194,9 @@ namespace DAP.CompGeom
 
 		public override int GetHashCode()
 		{
+		    // ReSharper disable NonReadonlyMemberInGetHashCode
 			return X.GetHashCode() ^ Y.GetHashCode();
+		    // ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 	}
 }

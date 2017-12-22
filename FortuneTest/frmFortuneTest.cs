@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text;
@@ -30,9 +28,10 @@ namespace FortuneTest
 		#endregion
 
 		#region Private Variables
-		List<PointD> _lstPt = new List<PointD>();
-		List<FortunePoly> _lstPoly = null;
-		Matrix _mtxFromWorld;
+
+	    readonly List<PointD> _lstPt = new List<PointD>();
+		List<FortunePoly> _lstPoly;
+	    readonly Matrix _mtxFromWorld;
 		Matrix _mtxToWorld;
 		int _iptSelected = -1;
 		#endregion
@@ -47,7 +46,9 @@ namespace FortuneTest
 #endif
 			InitializeComponent();
 			_mtxFromWorld = new Matrix();
+		    // ReSharper disable PossibleLossOfFraction
 			_mtxFromWorld.Translate(pnlDraw.Width / 2, pnlDraw.Height / 2);
+		    // ReSharper restore PossibleLossOfFraction
 			_mtxFromWorld.Scale(1, -1);
 			_mtxToWorld = _mtxFromWorld.Clone();
 			_mtxToWorld.Invert();
@@ -100,11 +101,12 @@ namespace FortuneTest
 						while (!sr.EndOfStream)
 						{
 							string str = sr.ReadLine();
+						    // ReSharper disable once PossibleNullReferenceException
 							if (str.StartsWith("//") || str == String.Empty)
 							{
 								continue;
 							}
-							string[] arstr = str.Split(new char[] { ',' });
+							string[] arstr = str.Split(',');
 							PointD ptNew = new PointD(double.Parse(arstr[0]), double.Parse(arstr[1]));
 							_lstPt.Add(ptNew);
 						}
@@ -124,7 +126,7 @@ namespace FortuneTest
 					{
 						foreach (PointD pt in _lstPt)
 						{
-							sw.WriteLine(string.Format("{0},{1}", pt.X, pt.Y));
+							sw.WriteLine($"{pt.X},{pt.Y}");
 						}
 						sw.Flush();
 					}
@@ -158,8 +160,7 @@ namespace FortuneTest
 				double infiniteLength = (double)Math.Max(pnlDraw.Height, pnlDraw.Width) * 1000;
 				foreach (FortunePoly poly in _lstPoly)
 				{
-					var edges = poly.Edges.ToList();
-					foreach (FortuneEdge edge in poly.Edges)
+				    foreach (FortuneEdge edge in poly.Edges)
 					{
 						edge.Draw(e.Graphics, pen, (float)infiniteLength);
 					}
@@ -261,7 +262,7 @@ namespace FortuneTest
 
 		private void btnCompute_Click(object sender, EventArgs e)
 		{
-			_lstPoly = (List<FortunePoly>) (Fortune.ComputeVoronoi(_lstPt).LstPolygons);
+			_lstPoly = Fortune.ComputeVoronoi(_lstPt).LstPolygons;
 			pnlDraw.Invalidate();
 		}
 
@@ -280,15 +281,15 @@ namespace FortuneTest
 		private void pnlDraw_MouseMove(object sender, MouseEventArgs e)
 		{
 			double distMin = double.MaxValue;
-			double distCur;
-			int iptSelected = -1;
+		    int iptSelected = -1;
 
-			if ((Control.ModifierKeys & Keys.Alt) != 0)
+			if ((ModifierKeys & Keys.Alt) != 0)
 			{
 				PointD ptMouse = PtfFromPt(new Point(e.X, e.Y));
 				for (int ipt = 0; ipt < _lstPt.Count; ipt++)
 				{
-					if ((distCur = Geometry.Distance(ptMouse, _lstPt[ipt])) < distMin && distCur <= radSelectPt)
+				    double distCur;
+				    if ((distCur = Geometry.Distance(ptMouse, _lstPt[ipt])) < distMin && distCur <= radSelectPt)
 					{
 						iptSelected = ipt;
 						distMin = distCur;

@@ -21,10 +21,10 @@ namespace DAP.CompGeom
 		#endregion
 
 		#region Properties
-		internal FortunePoly Poly1 { get { return _arPoly[0]; } }
-		internal FortunePoly Poly2 { get { return _arPoly[1]; } }
+		internal FortunePoly Poly1 => _arPoly[0];
+	    internal FortunePoly Poly2 => _arPoly[1];
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets a value indicating whether this is part of a split doubly infinite edge. </summary>
 		///
 		/// <value>	true if split, false if not. </value>
@@ -87,7 +87,7 @@ namespace DAP.CompGeom
 
 		public override string ToString()
 		{
-			return string.Format("{0} : Gens {1} - {2}:", base.ToString(), _arPoly[0].Index, _arPoly[1].Index);
+			return $"{base.ToString()} : Gens {_arPoly[0].Index} - {_arPoly[1].Index}:";
 		}
 		#endregion
 
@@ -168,7 +168,7 @@ namespace DAP.CompGeom
 		/// <returns>	true if the edges connect. </returns>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		static internal bool FConnectsTo(
+		internal static bool FConnectsTo(
 			FortuneEdge edge1,
 			FortuneEdge edge2,
 			out bool fEdge1ConnectsAtStartVtx,
@@ -516,8 +516,7 @@ namespace DAP.CompGeom
 		internal void SetSuccessorEdges()
 		{
 			// Locals
-			FortuneEdge edgeCW, edgeCCW;
-			var fvtx = ((FortuneVertex) VtxStart);
+		    var fvtx = ((FortuneVertex) VtxStart);
 
 			// If this is the degenerate case of a fully infinite line
 			//
@@ -552,8 +551,8 @@ namespace DAP.CompGeom
 			// Get our predecessor edges
 			GetSuccessorEdgesFromVertex(
 				((FortuneVertex)VtxStart),
-				out edgeCW,
-				out edgeCCW);
+				out var edgeCW,
+				out var edgeCCW);
 			EdgeCWPredecessor = edgeCW;
 			EdgeCCWPredecessor = edgeCCW;
 

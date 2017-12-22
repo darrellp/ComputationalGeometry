@@ -684,13 +684,13 @@ namespace DAP.CompGeom
 			double yScanLine,
 			EventQueue evq)
 		{
-			if (lfnLeft != null && lfnLeft.RightAdjacentLeaf != null)
+			if (lfnLeft?.RightAdjacentLeaf != null)
 			{
 				CreateCircleEventFromTriple(
 					lfnLeft, lfnLeft.RightAdjacentLeaf, lfnLeft.RightAdjacentLeaf.RightAdjacentLeaf, yScanLine, evq);
 			}
 
-			if (lfnRight != null && lfnRight.LeftAdjacentLeaf != null)
+			if (lfnRight?.LeftAdjacentLeaf != null)
 			{
 				CreateCircleEventFromTriple(
 					lfnRight.LeftAdjacentLeaf.LeftAdjacentLeaf, lfnRight.LeftAdjacentLeaf, lfnRight, yScanLine, evq);

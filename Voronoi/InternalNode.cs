@@ -45,7 +45,7 @@ namespace DAP.CompGeom
 
 		#region overrides
 #if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
+		internal override void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
 		{
 			var sbIndent = new StringBuilder();
 
@@ -139,7 +139,7 @@ namespace DAP.CompGeom
 		#region ToString
 		public override string ToString()
 		{
-			return string.Format("InternNode: Gens = {0}, {1}", PolyLeft.Index, PolyRight.Index);
+			return $"InternNode: Gens = {PolyLeft.Index}, {PolyRight.Index}";
 		}
 		#endregion
 

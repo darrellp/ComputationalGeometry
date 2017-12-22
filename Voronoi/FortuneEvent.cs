@@ -24,7 +24,7 @@ namespace DAP.CompGeom
 	/// </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	abstract internal class FortuneEvent : IPriorityQueueElement
+	internal abstract class FortuneEvent : IPriorityQueueElement
 	{
 		#region Private Variables
 		int _i = -1;				// Index we maintain for the IPriorityQueueElement operations
@@ -58,8 +58,8 @@ namespace DAP.CompGeom
 
 		int IPriorityQueueElement.Index
 		{
-			get { return _i; }
-			set { _i = value; }
+			get => _i;
+		    set { _i = value; }
 		}
 		#endregion
 
@@ -110,7 +110,7 @@ namespace DAP.CompGeom
 		/// Handle the event
 		/// </summary>
 		/// <param name="fortune">Fortune data structure being built</param>
-		abstract internal void Handle(Fortune fortune);
+		internal abstract void Handle(Fortune fortune);
 		#endregion
 
 		#region Circle creation
@@ -130,11 +130,10 @@ namespace DAP.CompGeom
 		internal static CircleEvent CreateCircleEvent(FortunePoly poly1, FortunePoly poly2, FortunePoly poly3, double yScanLine)
 		{
 			// Locals
-			PointD ptCenter;
-			CircleEvent cevtRet = null;
+		    CircleEvent cevtRet = null;
 
 			// Determine a circumcenter for the sites of poly1/2/3.
-			if (Geometry.FFindCircumcenter(poly1.VoronoiPoint, poly2.VoronoiPoint, poly3.VoronoiPoint, out ptCenter))
+			if (Geometry.FFindCircumcenter(poly1.VoronoiPoint, poly2.VoronoiPoint, poly3.VoronoiPoint, out var ptCenter))
 			{
 				// Determine y coordinate for the side of the circle
 				// The event will fire when the scan line hits that y position
@@ -207,7 +206,7 @@ namespace DAP.CompGeom
 		#region ToString
 		public override string ToString()
 		{
-			return string.Format("SiteEvent: Gen = {0}, Pt = ({1}, {2})", Poly.Index, Pt.X, Pt.Y);
+			return $"SiteEvent: Gen = {Poly.Index}, Pt = ({Pt.X}, {Pt.Y})";
 		}
 		#endregion
 
@@ -265,14 +264,9 @@ namespace DAP.CompGeom
 
 		internal LeafNode LfnEliminated { get; set; }
 
-		internal PointD VoronoiVertex
-		{
-			get
-			{
-				return new PointD(Pt.X, Pt.Y + _radius);
-			}
-		}
-		#endregion
+		internal PointD VoronoiVertex => new PointD(Pt.X, Pt.Y + _radius);
+
+	    #endregion
 
 		#region Constructor
 		internal CircleEvent(PointD pt, double radius) : base(pt)
@@ -285,8 +279,7 @@ namespace DAP.CompGeom
 		#region ToString
 		public override string ToString()
 		{
-			return string.Format("CircleEvent: Gen = {0}, vtx = ({1}, {2}), yscl = {3}",
-				LfnEliminated.Poly.Index, VoronoiVertex.X, VoronoiVertex.Y, Pt.Y);
+			return $"CircleEvent: Gen = {LfnEliminated.Poly.Index}, vtx = ({VoronoiVertex.X}, {VoronoiVertex.Y}), yscl = {Pt.Y}";
 		}
 		#endregion
 

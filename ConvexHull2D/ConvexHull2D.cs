@@ -101,6 +101,7 @@ namespace DAP.CompGeom
 	{
 // ReSharper disable CSharpWarnings::CS1591
 // ReSharper disable once UnusedParameter.Local
+	    // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 		private static void Check(IEnumerable<PointD> points, List<int> expected)
 		{
 			var output = ConvexHull2D.GrahamScan(points);

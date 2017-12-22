@@ -55,15 +55,9 @@ namespace DAP.CompGeom
 		/// <value>	The polygons. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public IEnumerable<WeEdge> Edges
-		{
-			get
-			{
-				return new EdgeEnumerable(this);
-			}
-		}
+		public IEnumerable<WeEdge> Edges => new EdgeEnumerable(this);
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets or sets a value indicating whether this is a point at infinity. </summary>
 		///
 		/// <value>	true if a point at infinity, false if not. </value>
@@ -171,7 +165,7 @@ namespace DAP.CompGeom
 
 		public override string ToString()
 		{
-			return String.Format("{0}({1}, {2})", FAtInfinity ? "I" : "", Pt.X, Pt.Y);
+			return $"{(FAtInfinity ? "I" : "")}({Pt.X}, {Pt.Y})";
 		}
 		#endregion
 
@@ -254,15 +248,9 @@ namespace DAP.CompGeom
 
 			#region IEnumerator Members
 
-			object System.Collections.IEnumerator.Current
-			{
-				get
-				{
-					return Current;
-				}
-			}
+			object System.Collections.IEnumerator.Current => Current;
 
-			public bool MoveNext()
+		    public bool MoveNext()
 			{
 				if (Current == null)
 				{

@@ -30,11 +30,9 @@ namespace DAP.CompGeom
 		///<summary>
 		/// Count of items in the priority queue
 		///</summary>
-		public int Count
-		{
-			get { return LstHeap.Count; }
-		}
-		#endregion
+		public int Count => LstHeap.Count;
+
+	    #endregion
 
 		#region Public methods
 
@@ -396,7 +394,7 @@ namespace DAP.CompGeom
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		[Conditional("DEBUG")]
-		virtual protected void TraceElement(int iPos, TPQ val)
+		protected virtual void TraceElement(int iPos, TPQ val)
 		{
 			Tracer.Trace(t.PqTrees, "Pos " + iPos + ":" + StrIndent + val);
 		}
@@ -689,7 +687,7 @@ namespace DAP.CompGeom
 			#endregion
 
 			// ReSharper disable once MemberCanBePrivate.Local
-			public int Val { get; set; }
+			public int Val { get; }
 
 			#region Constructor
 			public PQWDElement(int val)
@@ -706,8 +704,8 @@ namespace DAP.CompGeom
 
 			int IPriorityQueueElement.Index
 			{
-				get { return _i; }
-				set { _i = value; }
+				get => _i;
+			    set => _i = value;
 			}
 
 			#endregion

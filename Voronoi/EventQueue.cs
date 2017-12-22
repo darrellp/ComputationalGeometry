@@ -46,7 +46,7 @@ namespace DAP.CompGeom
 		///
 		/// <value>	The circle events. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
-		internal LinkedList<CircleEvent> CircleEvents { get; private set; }
+		internal LinkedList<CircleEvent> CircleEvents { get; }
 
 		#endregion
 	}

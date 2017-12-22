@@ -62,14 +62,9 @@ namespace DAP.CompGeom
 		/// <value>	The number of vertices. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public int VertexCount
-		{
-			get
-			{
-				return FortuneEdges.Count;
-			}
-		}
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+		public int VertexCount => FortuneEdges.Count;
+
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Indicates that this is the singleton polygon at infinity </summary>
 		///
 		/// <value>	true if at it's the polygon at infinity. </value>
@@ -145,10 +140,9 @@ namespace DAP.CompGeom
 				yield break;
 			}
 
-			IEnumerable<PointD> ptsToBeClipped;
-			var ptsBox = BoxPoints(ptUL, ptLR);
+		    var ptsBox = BoxPoints(ptUL, ptLR);
 
-			var fFound = FCheckEasy(out ptsToBeClipped);
+			var fFound = FCheckEasy(out var ptsToBeClipped);
 			if (!fFound)
 			{
 				fFound = FCheckParallelLines(ptsBox, out ptsToBeClipped);
@@ -252,7 +246,8 @@ namespace DAP.CompGeom
 					Where(d => d > 0);
 
 				// If there were no points to the left
-				if (!leftDistances.Any())
+			    var leftDistancesArray = leftDistances as double[] ?? leftDistances.ToArray();
+			    if (!leftDistancesArray.Any())
 				{
 					// return an empty array
 					ptsToBeClipped = new List<PointD>();
@@ -260,7 +255,7 @@ namespace DAP.CompGeom
 				}
 				
 				// Our rect width will be twice the largest of the left distances
-				var maxLineDist = 2 * leftDistances.Max();
+				var maxLineDist = 2 * leftDistancesArray.Max();
 
 				// Return the rectangle formed from our line segment extended out by maxLineDist
 				var vcOffset = (ptTail - ptHead).Normalize().Flip90Ccw()*maxLineDist;
@@ -312,7 +307,7 @@ namespace DAP.CompGeom
 			// The incoming edge is always two further away from the outgoing,
 			// separated by the edge at infinity.
 			var oeOut = oes[ioeOutgoing];
-			var oeIn = oes[(ioeOutgoing + 2)%oes.Count()];
+			var oeIn = oes[(ioeOutgoing + 2)%oes.Length];
 
 			// Make an initial guess for a good ray length
 			double length = CalcInitialGuess(oeIn, oeOut, ptsBox);
@@ -437,10 +432,9 @@ namespace DAP.CompGeom
 				yield break;
 			}
 
-			IEnumerable<PointD> points;
-			var ptsBox = BoxPoints(ptUL, ptLR);
+		    var ptsBox = BoxPoints(ptUL, ptLR);
 
-			var fFound = FCheckEasy(out points);
+			var fFound = FCheckEasy(out var points);
 			if (!fFound)
 			{
 				fFound = FCheckParallelLines(ptsBox, out points);

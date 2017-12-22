@@ -13,7 +13,7 @@ namespace DAP.CompGeom
 	/// <remarks>	Darrellp, 2/23/2011. </remarks>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	static public class ConvexPolyIntersection
+	public static class ConvexPolyIntersection
 	{
 		private enum InflagVals
 		{
@@ -115,8 +115,7 @@ namespace DAP.CompGeom
 				var aHalfPlaneContainsB = Math.Sign(Geometry.SignedArea(polyA[aPrev], polyA[aCur], polyB[bCur]));
 
 				// if A & B intersect
-				PointD ptCrossing;
-				var code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out ptCrossing);
+			    var code = Geometry.SegSegInt(polyA[aPrev], polyA[aCur], polyB[bPrev], polyB[bCur], out var ptCrossing);
 				if (code == Geometry.CrossingType.Normal || code == Geometry.CrossingType.Vertex)
 				{
 					// If this is the first intersection we've seen
@@ -303,7 +302,7 @@ namespace DAP.CompGeom
 			{
 				Assert.IsTrue(res.Contains(pt));
 			}
-			Assert.AreEqual(output.Count(), res.Count);
+			Assert.AreEqual(output.Length, res.Count);
 		}
 
 		/// <summary>

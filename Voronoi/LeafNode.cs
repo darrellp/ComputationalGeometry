@@ -57,13 +57,13 @@ namespace DAP.CompGeom
 		#region ToString
 		public override string ToString()
 		{
-			return string.Format("LeafNode: Gen = {0}", Poly.Index);
+			return $"LeafNode: Gen = {Poly.Index}";
 		}
 		#endregion
 
 		#region overrides
 #if DEBUG || NETTRACE
-		override internal void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
+		internal override void TraceTreeWithIndent(tv traceEnumElement, int cIndent)
 		{
 			var sbIndent = new StringBuilder();
 

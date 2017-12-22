@@ -92,28 +92,17 @@ namespace DAP.CompGeom
 		/// <value>	true if the edge is at infinity, false if not. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public bool FAtInfinity
-		{
-			get
-			{
-				return VtxEnd.FAtInfinity && VtxStart.FAtInfinity;
-			}
-		}
+		public bool FAtInfinity => VtxEnd.FAtInfinity && VtxStart.FAtInfinity;
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////
+	    ////////////////////////////////////////////////////////////////////////////////////////////////////
 		/// <summary>	Gets a value indicating whether this edge is a ray. </summary>
 		///
 		/// <value>	true if it's a ray, false if not. </value>
 		////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		public bool FRay
-		{
-			get
-			{
-				return !VtxStart.FAtInfinity && VtxEnd.FAtInfinity;
-			}
-		}
-		#endregion
+		public bool FRay => !VtxStart.FAtInfinity && VtxEnd.FAtInfinity;
+
+	    #endregion
 
 		#region Validation
 		/// <summary>
@@ -294,8 +283,8 @@ namespace DAP.CompGeom
 
 		public override string ToString()
 		{
-			var strStart = VtxStart == null ? "Inf" : VtxStart.ToString();
-			var strEnd = VtxEnd == null ? "Inf" : VtxEnd.ToString();
+			var strStart = VtxStart?.ToString() ?? "Inf";
+			var strEnd = VtxEnd?.ToString() ?? "Inf";
 			return strStart + " - " + strEnd;
 		}
 		#endregion

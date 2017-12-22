@@ -711,9 +711,8 @@ namespace DAP.CompGeom
 			var pt2 = new PointD(1, 1);
 			var pt3 = new PointD(1, -1);
 			var pt4 = new PointD(2, 2);
-			PointD ptOut;
 
-			Assert.IsTrue(Geometry.FFindCircumcenter(pt1, pt2, pt3, out ptOut));
+		    Assert.IsTrue(Geometry.FFindCircumcenter(pt1, pt2, pt3, out var ptOut));
 			Assert.IsTrue(Geometry.FCloseEnough(ptOut.X, 1));
 			Assert.IsTrue(Math.Abs(ptOut.Y) <= Geometry.Tolerance);
 			Assert.IsFalse(Geometry.FFindCircumcenter(pt1, pt2, pt4, out ptOut));
