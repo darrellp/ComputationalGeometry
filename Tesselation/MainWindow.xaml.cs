@@ -57,8 +57,14 @@ namespace Tesselation
 					_rnd.NextDouble(), 
 					new SiteMarker(iPt, grd.GetRandomColor()));
 				SetSymmetricPoints(lstPts, pt);
-				pt.X = 1 - pt.X;
-				//SetSymmetricPoints(lstPts, pt);
+
+#if HORZSYMMETRY
+				// Fudging to avoid bugs
+				// TODO: fix bugs and stop fudging!
+				pt.X = 1.001 - pt.X;
+				pt.Y = pt.Y + 0.001;
+				SetSymmetricPoints(lstPts, pt);
+#endif
 			}
 			var ptUL = new PointD(-0.5, 1.5);
 			var ptLR = new PointD(1.5, -0.5);

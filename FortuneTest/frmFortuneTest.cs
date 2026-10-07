@@ -201,9 +201,12 @@ namespace FortuneTest
 
 		private void btnVTriangle_Click(object sender, EventArgs e)
 		{
-			_lstPt.Add(new PointD(0, 0));
-			_lstPt.Add(new PointD(100, 100));
-			_lstPt.Add(new PointD(100, -100));
+			//_lstPt.Add(new PointD(0, 0));
+			//_lstPt.Add(new PointD(100, 100));
+			//_lstPt.Add(new PointD(100, -100));
+			_lstPt.Add(new PointD(1, 0));
+			_lstPt.Add(new PointD(-1, 0));
+			_lstPt.Add(new PointD(0, 1));
 			pnlDraw.Invalidate();
 		}
 
